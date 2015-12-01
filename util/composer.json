@@ -1,0 +1,132 @@
+{
+    "name": "tecnickcom/tc-lib-pdf-font-data",
+    "description": "Import TTF font files to be converted for tc-lib-pdf-font",
+    "type": "library",
+    "homepage": "http://www.tecnick.com",
+    "keywords": ["tc-lib-pdf-font-data", "PDF", "font", "TTF", "AFM", "PFB", "import"],
+    "authors": [
+        {
+            "name": "Nicola Asuni",
+            "email": "info@tecnick.com",
+            "role": "lead"
+        }
+    ],
+    "require": {
+        "font/core": "dev-master",
+        "font/pdfa": "dev-master",
+        "font/freefont": "dev-master",
+        "font/unifont": "dev-master",
+        "license/unifont": "dev-master",
+        "font/dejavu": "dev-master",
+        "font/noto": "dev-master"
+    },
+    "require-dev": {
+    },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "font/core",
+                "version": "master",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://partners.adobe.com/public/developer/en/pdf/Core14_AFMs.zip",
+                    "reference": "master"
+                },
+                "autoload": {
+                    "classmap": ["."]
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "font/pdfa",
+                "version": "master",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://github.com/tecnickcom/tc-font-pdfa/archive/master.zip",
+                    "reference": "master"
+                },
+                "autoload": {
+                    "classmap": ["."]
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "font/freefont",
+                "version": "master",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://ftp.gnu.org/gnu/freefont/freefont-ttf-20120503.zip",
+                    "reference": "master"
+                },
+                "autoload": {
+                    "classmap": ["."]
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "font/unifont",
+                "version": "master",
+                "dist": {
+                    "type": "file",
+                    "url": "http://unifoundry.com/pub/unifont-8.0.01/font-builds/unifont-8.0.01.ttf",
+                    "reference": "master"
+                },
+                "autoload": {
+                    "classmap": ["."]
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "license/unifont",
+                "version": "master",
+                "dist": {
+                    "type": "file",
+                    "url": "http://unifoundry.com/LICENSE.txt",
+                    "reference": "master"
+                },
+                "autoload": {
+                    "classmap": ["."]
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "font/dejavu",
+                "version": "master",
+                "dist": {
+                    "type": "zip",
+                    "url": "http://sourceforge.net/projects/dejavu/files/dejavu/2.35/dejavu-fonts-ttf-2.35.zip",
+                    "reference": "master"
+                },
+                "autoload": {
+                    "classmap": ["."]
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "font/noto",
+                "version": "master",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://noto-website-2.storage.googleapis.com/pkgs/Noto-hinted.zip",
+                    "reference": "master"
+                },
+                "autoload": {
+                    "classmap": ["."]
+                }
+            }
+        }
+    ]
+}

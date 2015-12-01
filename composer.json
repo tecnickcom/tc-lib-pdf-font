@@ -1,0 +1,50 @@
+{
+    "name": "tecnickcom/tc-lib-pdf-font",
+    "description": "PHP library containing PDF page formats and definitions",
+    "type": "library",
+    "homepage": "http://www.tecnick.com",
+    "license": "GNU-LGPL v3",
+    "keywords": ["tc-lib-pdf-font", "PDF", "font", "TTF", "AFM", "PFB", "import"],
+    "authors": [
+        {
+            "name": "Nicola Asuni",
+            "email": "info@tecnick.com",
+            "role": "lead"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "tecnickcom/tc-lib-file": "dev-master",
+        "tecnickcom/tc-lib-unicode-data": "dev-master",
+        "tecnickcom/tc-lib-pdf-encrypt": "dev-master"
+    },
+    "require-dev": {
+        "apigen/apigen" : "4.1.*",
+        "bartlett/php-compatinfo" : "4.5.*",
+        "pdepend/pdepend" : "2.2.*",
+        "phploc/phploc" : "2.1.*",
+        "phpmd/phpmd" : "2.3.*",
+        "phpunit/phpunit": "4.8.*",
+        "sebastian/phpcpd" : "2.0.*",
+        "squizlabs/php_codesniffer": "2.3.*"
+    },
+    "autoload": {
+        "psr-4":{
+            "Com\\Tecnick\\Pdf\\Font\\": "src"
+        }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:tecnickcom/tc-lib-file.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:tecnickcom/tc-lib-unicode-data.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:tecnickcom/tc-lib-pdf-encrypt.git"
+        }
+    ]
+}

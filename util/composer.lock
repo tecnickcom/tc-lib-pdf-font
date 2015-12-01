@@ -1,0 +1,139 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "06292895e7c30cabb6cbf17abc77809b",
+    "content-hash": "3bedbd5a75f86362f43e33b0c2f81444",
+    "packages": [
+        {
+            "name": "font/core",
+            "version": "master",
+            "dist": {
+                "type": "zip",
+                "url": "https://partners.adobe.com/public/developer/en/pdf/Core14_AFMs.zip",
+                "reference": "master",
+                "shasum": null
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "."
+                ]
+            }
+        },
+        {
+            "name": "font/dejavu",
+            "version": "master",
+            "dist": {
+                "type": "zip",
+                "url": "http://sourceforge.net/projects/dejavu/files/dejavu/2.35/dejavu-fonts-ttf-2.35.zip",
+                "reference": "master",
+                "shasum": null
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "."
+                ]
+            }
+        },
+        {
+            "name": "font/freefont",
+            "version": "master",
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.gnu.org/gnu/freefont/freefont-ttf-20120503.zip",
+                "reference": "master",
+                "shasum": null
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "."
+                ]
+            }
+        },
+        {
+            "name": "font/noto",
+            "version": "master",
+            "dist": {
+                "type": "zip",
+                "url": "https://noto-website-2.storage.googleapis.com/pkgs/Noto-hinted.zip",
+                "reference": "master",
+                "shasum": null
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "."
+                ]
+            }
+        },
+        {
+            "name": "font/pdfa",
+            "version": "master",
+            "dist": {
+                "type": "zip",
+                "url": "https://github.com/tecnickcom/tc-font-pdfa/archive/master.zip",
+                "reference": "master",
+                "shasum": null
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "."
+                ]
+            }
+        },
+        {
+            "name": "font/unifont",
+            "version": "master",
+            "dist": {
+                "type": "file",
+                "url": "http://unifoundry.com/pub/unifont-8.0.01/font-builds/unifont-8.0.01.ttf",
+                "reference": "master",
+                "shasum": null
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "."
+                ]
+            }
+        },
+        {
+            "name": "license/unifont",
+            "version": "master",
+            "dist": {
+                "type": "file",
+                "url": "http://unifoundry.com/LICENSE.txt",
+                "reference": "master",
+                "shasum": null
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "."
+                ]
+            }
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "font/core": 20,
+        "font/pdfa": 20,
+        "font/freefont": 20,
+        "font/unifont": 20,
+        "license/unifont": 20,
+        "font/dejavu": 20,
+        "font/noto": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}

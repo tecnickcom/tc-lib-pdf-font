@@ -1,0 +1,15 @@
+vendor
+target
+target/fonts
+src/fonts
+resources/util/vendor
+phpunit.xml
+**/auth.json
+**/.vagrant
+**/nbproject
+**/.idea
+**/.DS_Store
+**/.#*
+**/._*
+**/*.tmp
+**/*.bak
