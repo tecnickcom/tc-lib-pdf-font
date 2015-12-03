@@ -102,10 +102,6 @@ class Import extends ImportUtil
             throw new FontException('the font name is empty');
         }
         $this->fdt['dir'] = $this->findOutputPath($output_path);
-        if (!is_writable($this->fdt['dir'])) {
-            throw new FontException('unable to write in the following directory: '.$this->fdt['dir']);
-        }
-
         $this->fdt['datafile'] = $this->fdt['dir'].$this->fdt['file_name'].'.json';
         if (@file_exists($this->fdt['datafile'])) {
             throw new FontException('this font has been already imported: '.$this->fdt['datafile']);
@@ -216,9 +212,6 @@ class Import extends ImportUtil
         } else {
             $pfile .= ',"originalsize":'.$this->fdt['originalsize'];
             if ($this->fdt['type'] == 'cidfont0') {
-                if (!isset(UniToCid::$type[$this->fdt['settype']])) {
-                    $this->fdt['settype'] = 'CID0CT';
-                }
                 $pfile .= ','.UniToCid::$type[$this->fdt['settype']];
             } else {
                 // TrueType
