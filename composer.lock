@@ -12,7 +12,7 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "git@github.com:tecnickcom/tc-lib-file.git",
+                "url": "https://github.com/tecnickcom/tc-lib-file.git",
                 "reference": "e8ff39770cc2f852b98e3a3a4bd2c1b163e33ae5"
             },
             "dist": {
@@ -62,6 +62,10 @@
                 "short",
                 "tc-lib-file"
             ],
+            "support": {
+                "source": "https://github.com/tecnickcom/tc-lib-file/tree/1.1.17",
+                "issues": "https://github.com/tecnickcom/tc-lib-file/issues"
+            },
             "time": "2015-12-03 10:10:40"
         },
         {
@@ -69,7 +73,7 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "git@github.com:tecnickcom/tc-lib-pdf-encrypt.git",
+                "url": "https://github.com/tecnickcom/tc-lib-pdf-encrypt.git",
                 "reference": "15d8d073debf4d4e85cd1bb57ceda9f507c0399a"
             },
             "dist": {
@@ -117,6 +121,10 @@
                 "encryption",
                 "tc-lib-pdf-encrypt"
             ],
+            "support": {
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/1.1.2",
+                "issues": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/issues"
+            },
             "time": "2015-12-03 10:11:25"
         },
         {
@@ -124,7 +132,7 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "git@github.com:tecnickcom/tc-lib-unicode-data.git",
+                "url": "https://github.com/tecnickcom/tc-lib-unicode-data.git",
                 "reference": "75a395c672856c061b7586335819b63dcd891d98"
             },
             "dist": {
@@ -170,6 +178,10 @@
                 "font",
                 "tc-lib-unicode-data"
             ],
+            "support": {
+                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/1.4.19",
+                "issues": "https://github.com/tecnickcom/tc-lib-unicode-data/issues"
+            },
             "time": "2015-12-03 10:13:31"
         }
     ],

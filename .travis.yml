@@ -39,6 +39,7 @@ before_script:
   - if [ `phpenv version-name` == "5.3" ]; then flags="--ignore-platform-reqs"; fi
   - composer install --no-interaction $flags
   - composer require satooshi/php-coveralls:dev-master --no-interaction $flags
+  - cd util && make deps
 
 script:
   - make qa_all
