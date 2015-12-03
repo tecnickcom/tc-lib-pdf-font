@@ -20,6 +20,7 @@ Requires:  php(language) >= 5.4.0
 Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 1.1.16
 Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 1.4.18
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 1.1.1
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-core) >= 1.0.2
 
 Provides:  php-composer(%{c_vendor}/%{gh_project}) = %{version}
 Provides:  php-%{gh_project} = %{version}

@@ -62,13 +62,13 @@ PATHINSTDOC=$(DESTDIR)/$(DOCPATH)
 CURRENTDIR=$(shell pwd)
 
 # RPM Packaging path (where RPMs will be stored)
-PATHRPMPKG=$(CURRENTDIR)/../target/RPM/fonts/$(PKGFONTDIR)
+PATHRPMPKG=$(CURRENTDIR)/../target/RPM_FONTS/$(PKGFONTDIR)
 
 # DEB Packaging path (where DEBs will be stored)
-PATHDEBPKG=$(CURRENTDIR)/../target/DEB/fonts/$(PKGFONTDIR)
+PATHDEBPKG=$(CURRENTDIR)/../target/DEB_FONTS/$(PKGFONTDIR)
 
 # BZ2 Packaging path (where BZ2s will be stored)
-PATHBZ2PKG=$(CURRENTDIR)/../target/BZ2/fonts/$(PKGFONTDIR)
+PATHBZ2PKG=$(CURRENTDIR)/../target/BZ2_FONTS/$(PKGFONTDIR)
 
 
 # Composer executable (disable APC to as a work-around of a bug)
