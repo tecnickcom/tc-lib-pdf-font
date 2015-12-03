@@ -86,7 +86,7 @@ abstract class ImportUtil
      * Find the path where to store the processed font.
      *
      * @param string $output_path    Output path for generated font files (must be writeable by the web server).
-     *                               Leave null for default font folder.
+     *                               Leave null for default font folder (K_PATH_FONTS).
      *
      * @return string
      */
