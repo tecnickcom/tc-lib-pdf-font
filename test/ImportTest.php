@@ -31,6 +31,10 @@ class ImportTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         //$this->markTestSkipped(); // skip this test
+
+        if (!defined('K_PATH_FONTS')) {
+            define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
+        }
     }
 
     public function testImportEmptyName()
@@ -57,7 +61,6 @@ class ImportTest extends \PHPUnit_Framework_TestCase
 
     public function testImportDefaultOutput()
     {
-        define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         new \Com\Tecnick\Pdf\Font\Import(__DIR__.'/../util/vendor/font/core/Missing.afm');
     }
