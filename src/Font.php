@@ -89,7 +89,9 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *                          regular (default)
      *                          B: bold
      *                          I: italic
-     *                          BI: bold italic
+     *                          U: underline
+     *                          D: strikeout (linethrough)
+     *                          O: overline
      * @param string $ifile  The font definition file.
      *                       By default, the name is built from the family and style, in lower case with no spaces.
      * @param bool   $subset If true embedd only a subset of the font

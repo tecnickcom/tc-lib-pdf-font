@@ -15,9 +15,6 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\OutUtil;
-use \Com\Tecnick\Pdf\Font\Font;
-use \Com\Tecnick\Pdf\Font\Subset;
 use \Com\Tecnick\Unicode\Data\Identity;
 use \Com\Tecnick\Pdf\Encrypt\Encrypt;
 use \Com\Tecnick\Pdf\Font\Exception as FontException;
@@ -33,7 +30,7 @@ use \Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
  */
-abstract class OutFont extends OutUtil
+abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
 {
     /**
      * Current PDF object number

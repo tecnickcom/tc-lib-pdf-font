@@ -144,6 +144,7 @@ class Buffer
      *                       If you subset the font, the person who receives your PDF would need to have
      *                       your same font in order to make changes to your PDF.
      *                       The file size of the PDF would also be smaller because you are embedding only a subset.
+     *                       NOTE: This otion is computational and memory intensive.
      * @param bool $unicode  True if we are in Unicode mode, False otherwhise.
      * @param bool $pdfa     True if we are in PDF/A mode.
      *
@@ -155,6 +156,7 @@ class Buffer
     {
         $fobj = new Font($font, $style, $ifile, $subset, $unicode, $pdfa);
         $key = $fobj->getFontkey();
+
         if (isset($this->font[$key])) {
             return $key;
         }

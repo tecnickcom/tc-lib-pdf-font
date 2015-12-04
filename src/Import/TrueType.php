@@ -92,6 +92,16 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     }
 
     /**
+     * Get glyphs in the subset
+     *
+     * @return array
+     */
+    public function getSubGlyphs()
+    {
+        return $this->subglyphs;
+    }
+
+    /**
      * Process TrueType font
      */
     protected function process()
@@ -132,6 +142,11 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      */
     protected function setFontFile()
     {
+        if (!empty($this->fdt['desc'])) {
+            // subsetting mode
+            $this->fdt['Flags'] = $this->fdt['desc']['Flags'];
+            return;
+        }
         if ($this->fdt['type'] != 'cidfont0') {
             if ($this->fdt['linked']) {
                 // creates a symbolic link to the existing font

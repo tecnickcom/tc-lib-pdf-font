@@ -43,7 +43,7 @@ abstract class Load
         $this->checkType();
         $this->setName();
         $this->setDefaultWidth();
-        if (($this->data['type'] == 'Core') || !$this->data['fakestyle']) {
+        if (($this->data['type'] == 'Core') || $this->data['fakestyle']) {
             $this->setArtificialStyles();
         }
         $this->setFileData();
@@ -90,6 +90,7 @@ abstract class Load
         if (!empty($this->data['ifile'])) {
             return;
         }
+
         $this->data['ifile'] = strtolower($this->data['key']).'.json';
         $dirobj = new Dir();
 
@@ -113,12 +114,12 @@ abstract class Load
                 strtolower($this->data['family']).'.json'
             )
         );
-        
+
         foreach ($files as $file) {
             foreach ($dirs as $dir) {
                 if (@is_readable($dir.$file)) {
                     $this->data['ifile'] = $dir.$file;
-                    break;
+                    break 2;
                 }
             }
             // we haven't found the version with style variations

@@ -15,10 +15,7 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\OutFont;
-use \Com\Tecnick\Pdf\Font\Font;
 use \Com\Tecnick\Pdf\Font\Subset;
-use \Com\Tecnick\Unicode\Data\Identity;
 use \Com\Tecnick\Pdf\Encrypt\Encrypt;
 use \Com\Tecnick\Pdf\Font\Exception as FontException;
 
@@ -33,7 +30,7 @@ use \Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
  */
-class Output extends OutFont
+class Output extends \Com\Tecnick\Pdf\Font\OutFont
 {
     /**
      * Array of imported fonts data
@@ -57,7 +54,7 @@ class Output extends OutFont
     protected $out = '';
 
     /**
-     * Map methods to be used to process each font type
+     * Map methods used to process each font type
      *
      * @var array
      */
@@ -158,7 +155,7 @@ class Output extends OutFont
                     $font_data = file_get_contents($fontfile);
                     if ($font['subset']) {
                         $font_data = gzuncompress($font_data);
-                        $sub = new Subset($font_data, $this->subchars[md5($font['file'])]);
+                        $sub = new Subset($font_data, $font, $this->subchars[md5($font['file'])]);
                         $font_data = $sub->getSubsetFont();
                         $font['length1'] = strlen($font_data);
                         $font_data = gzcompress($font_data);

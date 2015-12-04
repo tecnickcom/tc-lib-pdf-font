@@ -146,7 +146,6 @@ class BufferTest extends \PHPUnit_Framework_TestCase
 
         $objnum = 1;
         $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
-        
 
         new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
         $buffer->add($objnum, 'pdfasymbol');

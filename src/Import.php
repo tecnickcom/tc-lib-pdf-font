@@ -195,7 +195,9 @@ class Import extends ImportUtil
             .',"up":'.$this->fdt['underlinePosition']
             .',"ut":'.$this->fdt['underlineThickness']
             .',"dw":'.(($this->fdt['MissingWidth'] > 0) ? $this->fdt['MissingWidth'] : $this->fdt['AvgWidth'])
-            .',"diff":"'.$this->fdt['diff'].'"';
+            .',"diff":"'.$this->fdt['diff'].'"'
+            .',"platform_id":'.$this->fdt['platform_id']
+            .',"encoding_id":'.$this->fdt['encoding_id'];
 
         if ($this->fdt['type'] == 'Core') {
             // Core
