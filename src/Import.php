@@ -20,9 +20,6 @@ use \Com\Tecnick\File\Byte;
 use \Com\Tecnick\File\Dir;
 use \Com\Tecnick\File\File;
 use \Com\Tecnick\Unicode\Data\Encoding;
-use \Com\Tecnick\Pdf\Font\Import\Core;
-use \Com\Tecnick\Pdf\Font\Import\TypeOne;
-use \Com\Tecnick\Pdf\Font\Import\TrueType;
 use \Com\Tecnick\Pdf\Font\UniToCid;
 use \Com\Tecnick\Pdf\Font\Exception as FontException;
 
@@ -126,11 +123,11 @@ class Import extends ImportUtil
         $this->fdt['linked'] = (bool)$linked;
 
         if ($this->fdt['type'] == 'Core') {
-            $processor = new Core($this->font, $this->fdt);
+            $processor = new \Com\Tecnick\Pdf\Font\Import\Core($this->font, $this->fdt);
         } elseif ($this->fdt['type'] == 'Type1') {
-            $processor = new TypeOne($this->font, $this->fdt);
+            $processor = new \Com\Tecnick\Pdf\Font\Import\TypeOne($this->font, $this->fdt);
         } else {
-            $processor = new TrueType($this->font, $this->fdt, $this->fbyte);
+            $processor = new \Com\Tecnick\Pdf\Font\Import\TrueType($this->font, $this->fdt, $this->fbyte);
         }
         $this->fdt = $processor->getFontMetrics();
         $this->saveFontData();

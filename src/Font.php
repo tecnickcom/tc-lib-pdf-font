@@ -59,7 +59,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         'ut'          => 50,
         'cw'          => array(),
         'cbbox'       => array(),
-        'dw'          => 600,
+        'dw'          => 0,
         'enc'         => '',
         'cidinfo'     => array(
             'Registry'    => 'Adobe',

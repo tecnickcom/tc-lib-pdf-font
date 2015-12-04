@@ -15,7 +15,6 @@
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
-use \Com\Tecnick\Pdf\Font\Import\Core;
 use \Com\Tecnick\File\File;
 use \Com\Tecnick\Unicode\Data\Encoding;
 use \Com\Tecnick\Pdf\Font\Exception as FontException;
@@ -31,7 +30,7 @@ use \Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
  */
-class TypeOne extends Core
+class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 {
     /**
      * Store font data
@@ -171,7 +170,7 @@ class TypeOne extends Core
         if (preg_match('#/StdVW[\s]*\[([^\]]*)#', $eplain, $matches) > 0) {
             $this->fdt['StemV'] = intval($matches[1]);
         } elseif (($this->fdt['weight'] == 'bold') || ($this->fdt['weight'] == 'black')) {
-            $this->fdt['StemV'] = 120;
+            $this->fdt['StemV'] = 123;
         } else {
             $this->fdt['StemV'] = 70;
         }

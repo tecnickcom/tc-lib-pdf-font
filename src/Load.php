@@ -40,8 +40,9 @@ abstract class Load
     public function load()
     {
         $this->data = array_merge($this->data, $this->getFontInfo());
-        $this->setDefaultWidth();
+        $this->checkType();
         $this->setName();
+        $this->setDefaultWidth();
         if (($this->data['type'] == 'Core') || !$this->data['fakestyle']) {
             $this->setArtificialStyles();
         }
@@ -143,6 +144,17 @@ abstract class Load
     }
 
     /**
+     * Check Font Type
+     */
+    protected function checkType()
+    {
+        if (in_array($this->data['type'], array('Core', 'Type1', 'TrueType', 'TrueTypeUnicode', 'cidfont0'))) {
+            return;
+        }
+        throw new FontException('Unknow font type: '.$this->data['type']);
+    }
+
+    /**
      * Set name
      */
     protected function setName()
@@ -150,16 +162,12 @@ abstract class Load
         if ($this->data['type'] == 'Core') {
             $this->data['name'] = Core::$font[$this->data['key']];
             $this->data['subset'] = false;
-        } elseif (($this->data['type'] == 'TrueType') || ($this->data['type'] == 'Type1')) {
+        } elseif (($this->data['type'] == 'Type1') || ($this->data['type'] == 'TrueType')) {
             $this->data['subset'] = false;
         } elseif ($this->data['type'] == 'TrueTypeUnicode') {
             $this->data['enc'] = 'Identity-H';
-        } elseif ($this->data['type'] == 'cidfont0') {
-            if ($this->data['pdfa']) {
-                $this->Error('CID0 fonts are not supported, all fonts must be embedded in PDF/A mode!');
-            }
-        } else {
-            $this->Error('Unknow font type: '.$this->data['type']);
+        } elseif (($this->data['type'] == 'cidfont0') && ($this->data['pdfa'])) {
+            throw new FontException('CID0 fonts are not supported, all fonts must be embedded in PDF/A mode!');
         }
         if (empty($this->data['name'])) {
             $this->data['name'] = $this->data['key'];
