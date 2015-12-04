@@ -25,16 +25,19 @@ namespace Test;
  * @copyright   2011-2015 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @SuppressWarnings(PHPMD.LongVariable)
  */
 class BufferTest extends \PHPUnit_Framework_TestCase
 {
+    protected $preserveGlobalState = false;
+    protected $runTestInSeparateProcess = true;
+
     public function setUp()
     {
         //$this->markTestSkipped(); // skip this test
 
-        if (!defined('K_PATH_FONTS')) {
-            define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
-        }
+        define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
         system('rm -rf '.K_PATH_FONTS.' && mkdir -p '.K_PATH_FONTS);
     }
 

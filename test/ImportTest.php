@@ -25,16 +25,17 @@ namespace Test;
  * @copyright   2011-2015 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @SuppressWarnings(PHPMD.LongVariable)
  */
 class ImportTest extends \PHPUnit_Framework_TestCase
 {
+    protected $preserveGlobalState = false;
+    protected $runTestInSeparateProcess = true;
+
     public function setUp()
     {
         //$this->markTestSkipped(); // skip this test
-
-        if (!defined('K_PATH_FONTS')) {
-            define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
-        }
     }
 
     public function testImportEmptyName()
@@ -61,6 +62,7 @@ class ImportTest extends \PHPUnit_Framework_TestCase
 
     public function testImportDefaultOutput()
     {
+        define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         new \Com\Tecnick\Pdf\Font\Import(__DIR__.'/../util/vendor/font/core/Missing.afm');
     }

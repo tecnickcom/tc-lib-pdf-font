@@ -341,9 +341,6 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
                 $this->offset += 4; // skip String length, String offset
             }
         }
-        if (empty($this->fdt['name'])) {
-            $this->fdt['name'] = $this->font_name;
-        }
     }
 
     /**
