@@ -75,9 +75,6 @@ class Core
      */
     protected function setFlags()
     {
-        if (!empty($this->fdt['Flags'])) {
-            return;
-        }
         if (($this->fdt['FontName'] == 'Symbol') || ($this->fdt['FontName'] == 'ZapfDingbats')) {
             $this->fdt['Flags'] |= 4;
         } else {
