@@ -79,6 +79,27 @@ abstract class Load
     }
 
     /**
+     * Returns a list of font directories
+     *
+     * @return array Font directories
+     */
+    protected function findFontDirectories()
+    {
+        $dirobj = new Dir();
+        $dirs =  array('');
+        if (defined('K_PATH_FONTS')) {
+            $dirs[] = K_PATH_FONTS;
+            $dirs = array_merge($dirs, array_filter(glob(K_PATH_FONTS.'/*'), 'is_dir'));
+        }
+        $parent_font_dir = $dirobj->findParentDir('fonts', __DIR__);
+        if (!empty($parent_font_dir)) {
+            $dirs[] = $parent_font_dir;
+            $dirs = array_merge($dirs, array_filter(glob($parent_font_dir.'/*'), 'is_dir'));
+        }
+        return array_unique($dirs);
+    }
+
+    /**
      * Load the font data
      *
      * @return array Font data
@@ -92,20 +113,9 @@ abstract class Load
         }
 
         $this->data['ifile'] = strtolower($this->data['key']).'.json';
-        $dirobj = new Dir();
-
+ 
         // directories where to search for the font definition file
-        $dirs =  array('');
-        if (defined('K_PATH_FONTS')) {
-            $dirs[] = K_PATH_FONTS;
-            $dirs = array_merge($dirs, array_filter(glob(K_PATH_FONTS.'/*'), 'is_dir'));
-        }
-        $parent_font_dir = $dirobj->findParentDir('fonts', __DIR__);
-        if (!empty($parent_font_dir)) {
-            $dirs[] = $parent_font_dir;
-            $dirs = array_merge($dirs, array_filter(glob($parent_font_dir.'/*'), 'is_dir'));
-        }
-        $dirs = array_unique($dirs);
+        $dirs = $this->findFontDirectories();
 
         // find font definition file names
         $files = array_unique(
