@@ -24,6 +24,10 @@
     },
     "repositories": [
         {
+            "type": "vcs",
+            "url": "git@github.com:tecnickcom/tc-font-pdfa.git"
+        },
+        {
             "type": "package",
             "package": {
                 "name": "font/core",
@@ -31,21 +35,6 @@
                 "dist": {
                     "type": "zip",
                     "url": "https://partners.adobe.com/public/developer/en/pdf/Core14_AFMs.zip",
-                    "reference": "master"
-                },
-                "autoload": {
-                    "classmap": ["."]
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "font/pdfa",
-                "version": "master",
-                "dist": {
-                    "type": "zip",
-                    "url": "https://github.com/tecnickcom/tc-font-pdfa/archive/master.zip",
                     "reference": "master"
                 },
                 "autoload": {

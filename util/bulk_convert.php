@@ -159,7 +159,7 @@ foreach ($fontdir as $dir) {
         $encoding = null;
         if ($dir == 'cid0') {
             $type = strtoupper(basename($font, '.ttf'));
-        } elseif (strpos($font, 'PDFA') === 0) {
+        } elseif (($dir == 'core') || ($dir == 'pdfa')) {
             if (strpos($font, 'Symbol') !== false) {
                 $encoding = 'symbol';
             } elseif (strpos($font, 'ZapfDingbats') === false) {

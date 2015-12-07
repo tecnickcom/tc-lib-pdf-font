@@ -20,9 +20,6 @@ use \Com\Tecnick\File\Byte;
 use \Com\Tecnick\File\Dir;
 use \Com\Tecnick\File\File;
 use \Com\Tecnick\Unicode\Data\Encoding;
-use \Com\Tecnick\Pdf\Font\Import\Core;
-use \Com\Tecnick\Pdf\Font\Import\TypeOne;
-use \Com\Tecnick\Pdf\Font\Import\TrueType;
 use \Com\Tecnick\Pdf\Font\UniToCid;
 use \Com\Tecnick\Pdf\Font\Exception as FontException;
 
@@ -102,10 +99,6 @@ class Import extends ImportUtil
             throw new FontException('the font name is empty');
         }
         $this->fdt['dir'] = $this->findOutputPath($output_path);
-        if (!is_writable($this->fdt['dir'])) {
-            throw new FontException('unable to write in the following directory: '.$this->fdt['dir']);
-        }
-
         $this->fdt['datafile'] = $this->fdt['dir'].$this->fdt['file_name'].'.json';
         if (@file_exists($this->fdt['datafile'])) {
             throw new FontException('this font has been already imported: '.$this->fdt['datafile']);
@@ -130,11 +123,11 @@ class Import extends ImportUtil
         $this->fdt['linked'] = (bool)$linked;
 
         if ($this->fdt['type'] == 'Core') {
-            $processor = new Core($this->font, $this->fdt);
+            $processor = new \Com\Tecnick\Pdf\Font\Import\Core($this->font, $this->fdt);
         } elseif ($this->fdt['type'] == 'Type1') {
-            $processor = new TypeOne($this->font, $this->fdt);
+            $processor = new \Com\Tecnick\Pdf\Font\Import\TypeOne($this->font, $this->fdt);
         } else {
-            $processor = new TrueType($this->font, $this->fdt, $this->fbyte);
+            $processor = new \Com\Tecnick\Pdf\Font\Import\TrueType($this->font, $this->fdt, $this->fbyte);
         }
         $this->fdt = $processor->getFontMetrics();
         $this->saveFontData();
@@ -202,7 +195,9 @@ class Import extends ImportUtil
             .',"up":'.$this->fdt['underlinePosition']
             .',"ut":'.$this->fdt['underlineThickness']
             .',"dw":'.(($this->fdt['MissingWidth'] > 0) ? $this->fdt['MissingWidth'] : $this->fdt['AvgWidth'])
-            .',"diff":"'.$this->fdt['diff'].'"';
+            .',"diff":"'.$this->fdt['diff'].'"'
+            .',"platform_id":'.$this->fdt['platform_id']
+            .',"encoding_id":'.$this->fdt['encoding_id'];
 
         if ($this->fdt['type'] == 'Core') {
             // Core
@@ -216,9 +211,6 @@ class Import extends ImportUtil
         } else {
             $pfile .= ',"originalsize":'.$this->fdt['originalsize'];
             if ($this->fdt['type'] == 'cidfont0') {
-                if (!isset(UniToCid::$type[$this->fdt['settype']])) {
-                    $this->fdt['settype'] = 'CID0CT';
-                }
                 $pfile .= ','.UniToCid::$type[$this->fdt['settype']];
             } else {
                 // TrueType

@@ -14,7 +14,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 # List special make targets that are not associated with files
-.PHONY: help all clean build update install uninstall rpm deb bz2
+.PHONY: help all clean deps depsfix build update install uninstall rpm deb bz2
 
 # Folder containing the font to install (package)
 PKGFONTDIR=.
@@ -102,9 +102,10 @@ clean:
 	rm -rf ./vendor/
 	rm -rf ../target/fonts
 
-# clean and download the composer dependencies (all TTF font files)
-build:
+deps:
 	($(COMPOSER) install --no-dev --no-interaction)
+
+depsfix:
 	@mkdir -p vendor/font/cid0
 	@mv -u vendor/font/core/Times-Roman.afm vendor/font/core/Times.afm || true
 	@mv -u vendor/font/unifont/unifont-8.0.01.ttf vendor/font/unifont/unifont.ttf || true
@@ -118,6 +119,9 @@ build:
 	cp -f vendor/font/noto/LICENSE_OFL.txt vendor/font/noto/LICENSE
 	rm -f vendor/font/noto/*.otf
 	sed -e "s/<[^>]\+>//g" -e "s/[\t]\+//g" vendor/font/core/MustRead.html > vendor/font/core/LICENSE
+
+# clean and download the composer dependencies (all TTF font files)
+build: deps depsfix
 	./bulk_convert.php
 
 # update composer dependencies

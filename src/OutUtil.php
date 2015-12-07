@@ -15,10 +15,7 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\Font;
-use \Com\Tecnick\Pdf\Font\Subset;
-use \Com\Tecnick\Unicode\Data\Identity;
-use \Com\Tecnick\Pdf\Encrypt\Encrypt;
+use \Com\Tecnick\File\Dir;
 use \Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**

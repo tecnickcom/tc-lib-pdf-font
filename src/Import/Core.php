@@ -75,9 +75,6 @@ class Core
      */
     protected function setFlags()
     {
-        if (!empty($this->fdt['Flags'])) {
-            return;
-        }
         if (($this->fdt['FontName'] == 'Symbol') || ($this->fdt['FontName'] == 'ZapfDingbats')) {
             $this->fdt['Flags'] |= 4;
         } else {
@@ -98,10 +95,9 @@ class Core
      */
     protected function setCharWidths($cwidths)
     {
+        $this->fdt['MissingWidth'] = 600;
         if (!empty($cwidths[32])) {
             $this->fdt['MissingWidth'] = $cwidths[32];
-        } else {
-            $this->fdt['MissingWidth'] = 600;
         }
         $this->fdt['MaxWidth'] = $this->fdt['MissingWidth'];
         $this->fdt['AvgWidth'] = 0;

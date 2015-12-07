@@ -54,6 +54,13 @@ class Subset
     protected $fdt = array();
 
     /**
+     * Array containing subset glyphs indexes of chars from cmap table
+     *
+     * @var array
+     */
+    protected $subglyphs = array();
+
+    /**
      * Subset font
      *
      * @var string
@@ -65,19 +72,19 @@ class Subset
      *
      * @param string $font     Content of the input font file
      * @param array  $fdt      Extracted font metrics
-     * @param Byte   $fbyte    Object used to read font bytes
      * @param array  $subchars Array containing subset chars
      *
      * @throws FontException in case of error
      */
-    public function __construct($font, $subchars = array())
+    public function __construct($font, $fdt, $subchars = array())
     {
         $this->fbyte = new Byte($font);
-        $processor = new TrueType($font, $this->fdt, $this->fbyte, $subchars);
+        $processor = new TrueType($font, $fdt, $this->fbyte, $subchars);
         $this->fdt = $processor->getFontMetrics();
+        $this->subglyphs = $processor->getSubGlyphs();
         $this->addCompositeGlyphs();
-        $this->removeUnusedTables();
         $this->addProcessedTables();
+        $this->removeUnusedTables();
         $this->buildSubsetFont();
     }
 
@@ -183,7 +190,7 @@ class Subset
         // array of table names to preserve (loca and glyf tables will be added later)
         // the cmap table is not needed and shall not be present,
         // since the mapping from character codes to glyph descriptions is provided separately
-        $table_names = array ('head', 'hhea', 'hmtx', 'maxp', 'cvt ', 'fpgm', 'prep'); // minimum required table names
+        $table_names = array ('head', 'hhea', 'hmtx', 'maxp', 'cvt ', 'fpgm', 'prep', 'glyf', 'loca');
         // get the tables to preserve
         $this->offset = 12;
         $tabname = array_keys($this->fdt['table']);
@@ -226,7 +233,10 @@ class Subset
         $this->offset = 0;
         $glyf_offset = $this->fdt['table']['glyf']['offset'];
         for ($i = 0; $i < $this->fdt['tot_num_glyphs']; ++$i) {
-            if (isset($this->subglyphs[$i])) {
+            if (isset($this->subglyphs[$i])
+                && isset($this->fdt['indexToLoc'][$i])
+                && isset($this->fdt['indexToLoc'][($i + 1)])
+            ) {
                 $length = ($this->fdt['indexToLoc'][($i + 1)] - $this->fdt['indexToLoc'][$i]);
                 $glyf .= substr($this->font, ($glyf_offset + $this->fdt['indexToLoc'][$i]), $length);
             } else {

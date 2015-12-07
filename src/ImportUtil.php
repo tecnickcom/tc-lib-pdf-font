@@ -68,13 +68,6 @@ abstract class ImportUtil
     protected function makeFontName($font_file)
     {
         $font_path_parts = pathinfo($font_file);
-        if (!isset($font_path_parts['filename'])) {
-            $font_path_parts['filename'] = substr(
-                $font_path_parts['basename'],
-                0,
-                -(strlen($font_path_parts['extension']) + 1)
-            );
-        }
         return str_replace(
             array('bold', 'oblique', 'italic', 'regular'),
             array('b', 'i', 'i', ''),
@@ -102,6 +95,9 @@ abstract class ImportUtil
         $dir = $dirobj->findParentDir('fonts', __DIR__);
         if ($dir == '/') {
             $dir = sys_get_temp_dir();
+        }
+        if (substr($dir, -1) !== '/') {
+            $dir .= '/';
         }
         return $dir;
     }

@@ -40,9 +40,10 @@ abstract class Load
     public function load()
     {
         $this->data = array_merge($this->data, $this->getFontInfo());
-        $this->setDefaultWidth();
+        $this->checkType();
         $this->setName();
-        if (($this->data['type'] == 'Core') || !$this->data['fakestyle']) {
+        $this->setDefaultWidth();
+        if (($this->data['type'] == 'Core') || $this->data['fakestyle']) {
             $this->setArtificialStyles();
         }
         $this->setFileData();
@@ -78,6 +79,27 @@ abstract class Load
     }
 
     /**
+     * Returns a list of font directories
+     *
+     * @return array Font directories
+     */
+    protected function findFontDirectories()
+    {
+        $dirobj = new Dir();
+        $dirs =  array('');
+        if (defined('K_PATH_FONTS')) {
+            $dirs[] = K_PATH_FONTS;
+            $dirs = array_merge($dirs, array_filter(glob(K_PATH_FONTS.'/*'), 'is_dir'));
+        }
+        $parent_font_dir = $dirobj->findParentDir('fonts', __DIR__);
+        if (!empty($parent_font_dir)) {
+            $dirs[] = $parent_font_dir;
+            $dirs = array_merge($dirs, array_filter(glob($parent_font_dir.'/*'), 'is_dir'));
+        }
+        return array_unique($dirs);
+    }
+
+    /**
      * Load the font data
      *
      * @return array Font data
@@ -89,21 +111,11 @@ abstract class Load
         if (!empty($this->data['ifile'])) {
             return;
         }
-        $this->data['ifile'] = strtolower($this->data['key']).'.json';
-        $dirobj = new Dir();
 
+        $this->data['ifile'] = strtolower($this->data['key']).'.json';
+ 
         // directories where to search for the font definition file
-        $dirs =  array('');
-        if (defined('K_PATH_FONTS')) {
-            $dirs[] = K_PATH_FONTS;
-            $dirs = array_merge($dirs, array_filter(glob(K_PATH_FONTS.'/*'), 'is_dir'));
-        }
-        $parent_font_dir = $dirobj->findParentDir('fonts', __DIR__);
-        if (!empty($parent_font_dir)) {
-            $dirs[] = $parent_font_dir;
-            $dirs = array_merge($dirs, array_filter(glob($parent_font_dir.'/*'), 'is_dir'));
-        }
-        $dirs = array_unique($dirs);
+        $dirs = $this->findFontDirectories();
 
         // find font definition file names
         $files = array_unique(
@@ -112,12 +124,12 @@ abstract class Load
                 strtolower($this->data['family']).'.json'
             )
         );
-        
+
         foreach ($files as $file) {
             foreach ($dirs as $dir) {
                 if (@is_readable($dir.$file)) {
                     $this->data['ifile'] = $dir.$file;
-                    break;
+                    break 2;
                 }
             }
             // we haven't found the version with style variations
@@ -143,6 +155,17 @@ abstract class Load
     }
 
     /**
+     * Check Font Type
+     */
+    protected function checkType()
+    {
+        if (in_array($this->data['type'], array('Core', 'Type1', 'TrueType', 'TrueTypeUnicode', 'cidfont0'))) {
+            return;
+        }
+        throw new FontException('Unknow font type: '.$this->data['type']);
+    }
+
+    /**
      * Set name
      */
     protected function setName()
@@ -150,16 +173,12 @@ abstract class Load
         if ($this->data['type'] == 'Core') {
             $this->data['name'] = Core::$font[$this->data['key']];
             $this->data['subset'] = false;
-        } elseif (($this->data['type'] == 'TrueType') || ($this->data['type'] == 'Type1')) {
+        } elseif (($this->data['type'] == 'Type1') || ($this->data['type'] == 'TrueType')) {
             $this->data['subset'] = false;
         } elseif ($this->data['type'] == 'TrueTypeUnicode') {
             $this->data['enc'] = 'Identity-H';
-        } elseif ($this->data['type'] == 'cidfont0') {
-            if ($this->data['pdfa']) {
-                $this->Error('CID0 fonts are not supported, all fonts must be embedded in PDF/A mode!');
-            }
-        } else {
-            $this->Error('Unknow font type: '.$this->data['type']);
+        } elseif (($this->data['type'] == 'cidfont0') && ($this->data['pdfa'])) {
+            throw new FontException('CID0 fonts are not supported, all fonts must be embedded in PDF/A mode!');
         }
         if (empty($this->data['name'])) {
             $this->data['name'] = $this->data['key'];

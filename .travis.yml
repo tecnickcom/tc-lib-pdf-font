@@ -22,7 +22,6 @@ php:
 matrix:
   allow_failures:
     - php: 5.3
-    - php: hhvm
     - php: nightly
 
 addons:
@@ -33,12 +32,14 @@ addons:
 
 before_install:
   - composer self-update
+  - if [ -n "$GH_TOKEN" ]; then composer config github-oauth.github.com ${GH_TOKEN}; fi;
 
 before_script:
   - flags=""
   - if [ `phpenv version-name` == "5.3" ]; then flags="--ignore-platform-reqs"; fi
   - composer install --no-interaction $flags
   - composer require satooshi/php-coveralls:dev-master --no-interaction $flags
+  - cd util && composer install --no-dev --no-interaction $flags && make depsfix && cd ..
 
 script:
   - make qa_all

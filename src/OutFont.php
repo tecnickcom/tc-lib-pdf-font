@@ -15,9 +15,6 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\OutUtil;
-use \Com\Tecnick\Pdf\Font\Font;
-use \Com\Tecnick\Pdf\Font\Subset;
 use \Com\Tecnick\Unicode\Data\Identity;
 use \Com\Tecnick\Pdf\Encrypt\Encrypt;
 use \Com\Tecnick\Pdf\Font\Exception as FontException;
@@ -33,7 +30,7 @@ use \Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
  */
-abstract class OutFont extends OutUtil
+abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
 {
     /**
      * Current PDF object number
@@ -65,11 +62,9 @@ abstract class OutFont extends OutUtil
         }
         $this->uniToCid($font, $cidoffset);
         $name = $font['name'];
-        $enc = $font['enc'];
-        if ($enc) {
-            $longname = $name.'-'.$enc;
-        } else {
-            $longname = $name;
+        $longname = $name;
+        if (!empty($font['enc'])) {
+            $longname .= '-'.$font['enc'];
         }
         
         // obj 1
@@ -78,8 +73,8 @@ abstract class OutFont extends OutUtil
             .' /Subtype /Type0'
             .' /BaseFont /'.$longname
             .' /Name /F'.$font['i'];
-        if ($enc) {
-            $out .= ' /Encoding /'.$enc;
+        if (!empty($font['enc'])) {
+            $out .= ' /Encoding /'.$font['enc'];
         }
         $out .= ' /DescendantFonts ['.($this->pon + 1).' 0 R]'
             .' >>'."\n"
@@ -105,10 +100,7 @@ abstract class OutFont extends OutUtil
             .'<</Type /FontDescriptor /FontName /'.$name;
         foreach ($font['desc'] as $key => $val) {
             if ($key != 'Style') {
-                if (is_float($val)) {
-                    $val = sprintf('%F', $val);
-                }
-                $out .= ' /'.$key.' '.$val.'';
+                $out .= $this->getKeyValOut($key, $val);
             }
         }
         $out .= '>>'."\n"
@@ -209,11 +201,8 @@ abstract class OutFont extends OutUtil
         $out .= (++$this->pon).' 0 obj'."\n"
             .'<< /Type /FontDescriptor'
             .' /FontName /'.$fontname;
-        foreach ($font['desc'] as $key => $value) {
-            if (is_float($value)) {
-                $value = sprintf('%F', $value);
-            }
-            $out .= ' /'.$key.' '.$value;
+        foreach ($font['desc'] as $key => $val) {
+            $out .= $this->getKeyValOut($key, $val);
         }
 
         if (!empty($font['file_n'])) {
@@ -289,7 +278,7 @@ abstract class OutFont extends OutUtil
             .' /FirstChar 32 /LastChar 255'
             .' /Widths '.($this->pon + 1).' 0 R'
             .' /FontDescriptor '.($this->pon + 2).' 0 R';
-        if ($font['enc']) {
+        if (!empty($font['enc'])) {
             if (isset($font['diff_n'])) {
                 $out .= ' /Encoding '.$font['diff_n'].' 0 R';
             } else {
@@ -316,10 +305,7 @@ abstract class OutFont extends OutUtil
         $out .= (++$this->pon).' 0 obj'."\n"
             .'<</Type /FontDescriptor /FontName /'.$font['name'];
         foreach ($font['desc'] as $fdk => $fdv) {
-            if (is_float($fdv)) {
-                $fdv = sprintf('%F', $fdv);
-            }
-            $out .= ' /'.$fdk.' '.$fdv.'';
+            $out .= $this->getKeyValOut($fdk, $fdv);
         }
         if (!empty($font['file'])) {
             $out .= ' /FontFile'.($font['type'] == 'Type1' ? '' : '2').' '.$font['file_n'].' 0 R';
@@ -328,5 +314,21 @@ abstract class OutFont extends OutUtil
             .'endobj'."\n";
 
         return $out;
+    }
+
+    /**
+     * Returns the formatted key/value PDF string
+     *
+     * @param string $key   Key name
+     * @param mixed  $value Value
+     *
+     * @return string
+     */
+    protected function getKeyValOut($key, $val)
+    {
+        if (is_float($val + 0)) {
+            $val = sprintf('%F', $val);
+        }
+        return ' /'.$key.' '.$val.'';
     }
 }

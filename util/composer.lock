@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "06292895e7c30cabb6cbf17abc77809b",
-    "content-hash": "3bedbd5a75f86362f43e33b0c2f81444",
+    "hash": "6f9acbc3af2b26b5ee7ff37b8059dca6",
+    "content-hash": "2f0f90266aaa1b4b01c7018348364612",
     "packages": [
         {
             "name": "font/core",
@@ -73,19 +73,36 @@
         },
         {
             "name": "font/pdfa",
-            "version": "master",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tecnickcom/tc-font-pdfa.git",
+                "reference": "4fddf0dcdaf5c6d78f2cccc1c93a68f28ec829e4"
+            },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/tecnickcom/tc-font-pdfa/archive/master.zip",
-                "reference": "master",
-                "shasum": null
+                "url": "https://api.github.com/repos/tecnickcom/tc-font-pdfa/zipball/4fddf0dcdaf5c6d78f2cccc1c93a68f28ec829e4",
+                "reference": "4fddf0dcdaf5c6d78f2cccc1c93a68f28ec829e4",
+                "shasum": ""
             },
             "type": "library",
-            "autoload": {
-                "classmap": [
-                    "."
-                ]
-            }
+            "license": [
+                "GNU-GPL v3"
+            ],
+            "description": "Type1 core fonts for PDF/A",
+            "homepage": "http://www.tecnick.com",
+            "keywords": [
+                "PDF/A",
+                "PFB",
+                "core",
+                "font",
+                "tc-font-pdf"
+            ],
+            "support": {
+                "source": "https://github.com/tecnickcom/tc-font-pdfa/tree/master",
+                "issues": "https://github.com/tecnickcom/tc-font-pdfa/issues"
+            },
+            "time": "2015-12-04 21:46:37"
         },
         {
             "name": "font/unifont",
