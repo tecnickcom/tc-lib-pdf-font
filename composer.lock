@@ -13,12 +13,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-file.git",
-                "reference": "9633843d1d4948466f009c6d38004c1636f21627"
+                "reference": "bc21e2396c80e64d77483712e38375eb49f319af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/9633843d1d4948466f009c6d38004c1636f21627",
-                "reference": "9633843d1d4948466f009c6d38004c1636f21627",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/bc21e2396c80e64d77483712e38375eb49f319af",
+                "reference": "bc21e2396c80e64d77483712e38375eb49f319af",
                 "shasum": ""
             },
             "require": {
@@ -63,10 +63,10 @@
                 "tc-lib-file"
             ],
             "support": {
-                "source": "https://github.com/tecnickcom/tc-lib-file/tree/1.1.18",
+                "source": "https://github.com/tecnickcom/tc-lib-file/tree/1.1.19",
                 "issues": "https://github.com/tecnickcom/tc-lib-file/issues"
             },
-            "time": "2015-12-07 11:27:04"
+            "time": "2015-12-07 12:24:53"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-encrypt",
@@ -74,12 +74,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-encrypt.git",
-                "reference": "405388d53d0636db6b475889791fb3bb6581e1fa"
+                "reference": "69ec4c5b14c2f6bf2976daccb8ce004c459f0d55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/405388d53d0636db6b475889791fb3bb6581e1fa",
-                "reference": "405388d53d0636db6b475889791fb3bb6581e1fa",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/69ec4c5b14c2f6bf2976daccb8ce004c459f0d55",
+                "reference": "69ec4c5b14c2f6bf2976daccb8ce004c459f0d55",
                 "shasum": ""
             },
             "require": {
@@ -122,10 +122,10 @@
                 "tc-lib-pdf-encrypt"
             ],
             "support": {
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/1.1.3",
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/1.1.4",
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/issues"
             },
-            "time": "2015-12-07 11:27:02"
+            "time": "2015-12-07 12:24:49"
         },
         {
             "name": "tecnickcom/tc-lib-unicode-data",
@@ -133,12 +133,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-unicode-data.git",
-                "reference": "c35707cd1028561b6b31cccb1da1272db73e40a2"
+                "reference": "534f2003a0b51d5a32033fe799cff4dd0e3b9b31"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/c35707cd1028561b6b31cccb1da1272db73e40a2",
-                "reference": "c35707cd1028561b6b31cccb1da1272db73e40a2",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/534f2003a0b51d5a32033fe799cff4dd0e3b9b31",
+                "reference": "534f2003a0b51d5a32033fe799cff4dd0e3b9b31",
                 "shasum": ""
             },
             "require": {
@@ -179,10 +179,10 @@
                 "tc-lib-unicode-data"
             ],
             "support": {
-                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/1.4.20",
+                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/1.4.21",
                 "issues": "https://github.com/tecnickcom/tc-lib-unicode-data/issues"
             },
-            "time": "2015-12-07 11:31:14"
+            "time": "2015-12-07 12:24:42"
         }
     ],
     "packages-dev": [
