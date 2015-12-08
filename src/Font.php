@@ -144,16 +144,6 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     }
 
     /**
-     * Returns true if the font is Unicode type (TrueTypeUnicode or cidfont0)
-     *
-     * @return boolean
-     */
-    public function isUnicode()
-    {
-        return (($this->data['type'] == 'TrueTypeUnicode') || ($this->data['type'] == 'cidfont0'));
-    }
-
-    /**
      * Set style and normalize the font name
      *
      * @param string $style Style

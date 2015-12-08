@@ -112,6 +112,7 @@ class Import extends ImportUtil
         
         $this->fdt['settype'] = $type;
         $this->fdt['type'] = $this->getFontType($type);
+        $this->fdt['isUnicode'] = (($this->fdt['type'] == 'TrueTypeUnicode') || ($this->fdt['type'] == 'cidfont0'));
         $this->fdt['Flags'] = intval($flags);
         $this->initFlags();
         $this->fdt['enc'] = $this->getEncodingTable($encoding);
@@ -228,6 +229,11 @@ class Import extends ImportUtil
                 fwrite($fpt, gzcompress($cidtogidmap));
                 fclose($fpt);
             }
+        }
+        if ($this->fdt['isUnicode']) {
+            $pfile .=',"isUnicode":true';
+        } else {
+            $pfile .=',"isUnicode":false';
         }
 
         $pfile .= ',"desc":{'

@@ -91,7 +91,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *                           Set this to null to use the default value.
      *                           NOTE: This option is computational and memory intensive.
      *
-     * @return string PDF output string
+     * @return array Font data
      *
      * @throws FontException in case of error
      */
@@ -242,7 +242,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             $width += $this->GetCharWidth($ord);
         }
         $width += ($this->stack[$this->index]['spacing']
-            * $this->stack[$this->index]['sepsize']
+            * $this->stack[$this->index]['stretching']
             * (count($uniarr) - 1)
         );
         return $width;
@@ -272,7 +272,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return int the replaced char or the old char in case the new char i not defined
      */
-    protected function replaceChar($oldchar, $newchar)
+    public function replaceChar($oldchar, $newchar)
     {
         if ($this->isCharDefined($newchar)) {
             // add the new char on the subset list
