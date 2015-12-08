@@ -92,12 +92,12 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *                          U: underline
      *                          D: strikeout (linethrough)
      *                          O: overline
-     * @param string $ifile  The font definition file.
+     * @param string $ifile  The font definition file (or empty for autodetect).
      *                       By default, the name is built from the family and style, in lower case with no spaces.
      * @param bool   $subset If true embedd only a subset of the font
      *                       (stores only the information related to the used characters);
      *                       If false embedd full font;
-     *                       This option is valid only for TrueTypeUnicode fonts and it is disable for PDF/A.
+     *                       This option is valid only for TrueTypeUnicode fonts and it is disabled for PDF/A.
      *                       If you want to enable users to modify the document, set this parameter to false.
      *                       If you subset the font, the person who receives your PDF would need to have
      *                       your same font in order to make changes to your PDF.
@@ -141,6 +141,16 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     public function getFontData()
     {
         return $this->data;
+    }
+
+    /**
+     * Returns true if the font is Unicode type (TrueTypeUnicode or cidfont0)
+     *
+     * @return boolean
+     */
+    public function isUnicode()
+    {
+        return (($this->data['type'] == 'TrueTypeUnicode') || ($this->data['type'] == 'cidfont0'));
     }
 
     /**

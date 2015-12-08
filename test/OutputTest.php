@@ -46,7 +46,7 @@ class OutputTest extends \PHPUnit_Framework_TestCase
         $indir = __DIR__.'/../util/vendor/font/';
 
         $objnum = 1;
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
 
         new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
         $buffer->add($objnum, 'pdfasymbol');

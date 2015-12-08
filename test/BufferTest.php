@@ -41,41 +41,41 @@ class BufferTest extends \PHPUnit_Framework_TestCase
         system('rm -rf '.K_PATH_FONTS.' && mkdir -p '.K_PATH_FONTS);
     }
 
-    public function testBufferMissingKey()
+    public function testStackMissingKey()
     {
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $buffer->getFont('missing');
     }
 
-    public function testBufferMissingFontName()
+    public function testStackMissingFontName()
     {
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         $buffer->add($objnum, '');
     }
 
-    public function testBufferIFileMissing()
+    public function testStackIFileMissing()
     {
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         $buffer->add($objnum, 'something', '', '/missing/nothere.json');
     }
 
-    public function testBufferIFileNotJson()
+    public function testStackIFileNotJson()
     {
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
-        $buffer->add($objnum, 'something', '', __DIR__.'/BufferTest.php');
+        $buffer->add($objnum, 'something', '', __DIR__.'/StackTest.php');
     }
 
-    public function testBufferIFileWrongFormat()
+    public function testStackIFileWrongFormat()
     {
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'badformat.json', '{"bad":"format"}');
         $buffer->add($objnum, 'something', '', K_PATH_FONTS.'badformat.json');
@@ -83,7 +83,7 @@ class BufferTest extends \PHPUnit_Framework_TestCase
 
     public function testLoadDeafultWidthA()
     {
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'test.json', '{"type":"Type1","cw":{"0":100}}');
         $buffer->add($objnum, 'test', '', K_PATH_FONTS.'test.json');
@@ -93,7 +93,7 @@ class BufferTest extends \PHPUnit_Framework_TestCase
 
     public function testLoadDeafultWidthB()
     {
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'test.json', '{"type":"Type1","cw":{"32":123}}');
         $buffer->add($objnum, 'test', '', K_PATH_FONTS.'test.json');
@@ -103,7 +103,7 @@ class BufferTest extends \PHPUnit_Framework_TestCase
 
     public function testLoadDeafultWidthC()
     {
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'test.json', '{"type":"Type1","desc":{"MissingWidth":234},"cw":{"0":600}}');
         $buffer->add($objnum, 'test', '', K_PATH_FONTS.'test.json');
@@ -114,7 +114,7 @@ class BufferTest extends \PHPUnit_Framework_TestCase
     public function testLoadWrongType()
     {
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'test.json', '{"type":"WRONG","cw":{"0":600}}');
         $buffer->add($objnum, 'test', '', K_PATH_FONTS.'test.json');
@@ -123,15 +123,15 @@ class BufferTest extends \PHPUnit_Framework_TestCase
     public function testLoadCidOnPdfa()
     {
         $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1, false, true, true);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'test.json', '{"type":"cidfont0","cw":{"0":600}}');
-        $buffer->add($objnum, 'test', '', K_PATH_FONTS.'test.json', false, true, true);
+        $buffer->add($objnum, 'test', '', K_PATH_FONTS.'test.json', false);
     }
 
     public function testLoadArtificialStyles()
     {
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(
             K_PATH_FONTS.'test.json',
@@ -145,7 +145,7 @@ class BufferTest extends \PHPUnit_Framework_TestCase
         $indir = __DIR__.'/../util/vendor/font/';
 
         $objnum = 1;
-        $buffer = new \Com\Tecnick\Pdf\Font\Buffer();
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1, false, true, false);
 
         new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
         $buffer->add($objnum, 'pdfasymbol');
@@ -194,14 +194,22 @@ class BufferTest extends \PHPUnit_Framework_TestCase
         $font = $buffer->getFont('newfont');
         $this->assertEquals('tval', $font['tfield']);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFAHelveticaBoldOblique.pfb');
-        $buffer->add($objnum, 'arial', 'BIUDO', '', true, false, true);
-        $font = $buffer->getFont('pdfahelveticaBI');
-        $this->assertNotEmpty($font);
-
         new \Com\Tecnick\Pdf\Font\Import($indir.'core/ZapfDingbats.afm');
         $buffer->add($objnum, 'zapfdingbats', 'BIUDO');
         $font = $buffer->getFont('zapfdingbats');
+        $this->assertNotEmpty($font);
+    }
+
+    public function testBufferPdfa()
+    {
+        $indir = __DIR__.'/../util/vendor/font/';
+
+        $objnum = 1;
+        $buffer = new \Com\Tecnick\Pdf\Font\Stack(1, true, false, true);
+
+        new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFAHelveticaBoldOblique.pfb');
+        $buffer->add($objnum, 'arial', 'BIUDO', '', true);
+        $font = $buffer->getFont('pdfahelveticaBI');
         $this->assertNotEmpty($font);
     }
 }
