@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "417499a6bc27ce8b0ec6bce03601f3fb",
-    "content-hash": "386c7024dfd9587ac6bc1ec5ce08ad55",
+    "hash": "15970676ea2641ee7824ec78c4e8d083",
+    "content-hash": "f7d3b2c820e8595ec350ab3043a67d39",
     "packages": [
         {
             "name": "tecnickcom/tc-lib-file",
@@ -13,12 +13,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-file.git",
-                "reference": "bc21e2396c80e64d77483712e38375eb49f319af"
+                "reference": "860bac058880c771927375b3a41789377fbf6db6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/bc21e2396c80e64d77483712e38375eb49f319af",
-                "reference": "bc21e2396c80e64d77483712e38375eb49f319af",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/860bac058880c771927375b3a41789377fbf6db6",
+                "reference": "860bac058880c771927375b3a41789377fbf6db6",
                 "shasum": ""
             },
             "require": {
@@ -30,7 +30,7 @@
                 "pdepend/pdepend": "2.2.*",
                 "phploc/phploc": "2.1.*",
                 "phpmd/phpmd": "2.3.*",
-                "phpunit/phpunit": "4.8.*",
+                "phpunit/phpunit": "4.8.19|5.*",
                 "sebastian/phpcpd": "2.0.*",
                 "squizlabs/php_codesniffer": "2.3.*"
             },
@@ -63,10 +63,10 @@
                 "tc-lib-file"
             ],
             "support": {
-                "source": "https://github.com/tecnickcom/tc-lib-file/tree/1.1.19",
+                "source": "https://github.com/tecnickcom/tc-lib-file/tree/1.1.20",
                 "issues": "https://github.com/tecnickcom/tc-lib-file/issues"
             },
-            "time": "2015-12-07 12:24:53"
+            "time": "2015-12-10 19:27:16"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-encrypt",
@@ -74,12 +74,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-encrypt.git",
-                "reference": "69ec4c5b14c2f6bf2976daccb8ce004c459f0d55"
+                "reference": "175494d22efd35361162e973e46d08f1c2b811d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/69ec4c5b14c2f6bf2976daccb8ce004c459f0d55",
-                "reference": "69ec4c5b14c2f6bf2976daccb8ce004c459f0d55",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/175494d22efd35361162e973e46d08f1c2b811d0",
+                "reference": "175494d22efd35361162e973e46d08f1c2b811d0",
                 "shasum": ""
             },
             "require": {
@@ -122,10 +122,10 @@
                 "tc-lib-pdf-encrypt"
             ],
             "support": {
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/1.1.4",
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/1.1.5",
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/issues"
             },
-            "time": "2015-12-07 12:24:49"
+            "time": "2015-12-10 19:27:22"
         },
         {
             "name": "tecnickcom/tc-lib-unicode-data",
@@ -133,12 +133,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-unicode-data.git",
-                "reference": "534f2003a0b51d5a32033fe799cff4dd0e3b9b31"
+                "reference": "1c85d70250829709efc35486f616816e8405fbf9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/534f2003a0b51d5a32033fe799cff4dd0e3b9b31",
-                "reference": "534f2003a0b51d5a32033fe799cff4dd0e3b9b31",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/1c85d70250829709efc35486f616816e8405fbf9",
+                "reference": "1c85d70250829709efc35486f616816e8405fbf9",
                 "shasum": ""
             },
             "require": {
@@ -150,7 +150,7 @@
                 "pdepend/pdepend": "2.2.*",
                 "phploc/phploc": "2.1.*",
                 "phpmd/phpmd": "2.3.*",
-                "phpunit/phpunit": "4.8.*",
+                "phpunit/phpunit": "4.8.19|5.*",
                 "sebastian/phpcpd": "2.0.*",
                 "squizlabs/php_codesniffer": "2.3.*"
             },
@@ -179,10 +179,10 @@
                 "tc-lib-unicode-data"
             ],
             "support": {
-                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/1.4.21",
+                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/1.4.22",
                 "issues": "https://github.com/tecnickcom/tc-lib-unicode-data/issues"
             },
-            "time": "2015-12-07 12:24:42"
+            "time": "2015-12-10 19:27:51"
         }
     ],
     "packages-dev": [
@@ -2705,23 +2705,23 @@
         },
         {
             "name": "sebastian/diff",
-            "version": "1.4.0",
+            "version": "1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/diff.git",
-                "reference": "2b0112e42c338afa9ad9dfeb94d66f6d84c2f828"
+                "reference": "13edfd8706462032c2f52b4b862974dd46b71c9e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/diff/zipball/2b0112e42c338afa9ad9dfeb94d66f6d84c2f828",
-                "reference": "2b0112e42c338afa9ad9dfeb94d66f6d84c2f828",
+                "url": "https://api.github.com/repos/sebastianbergmann/diff/zipball/13edfd8706462032c2f52b4b862974dd46b71c9e",
+                "reference": "13edfd8706462032c2f52b4b862974dd46b71c9e",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "~5"
+                "phpunit/phpunit": "~4.8"
             },
             "type": "library",
             "extra": {
@@ -2753,7 +2753,7 @@
             "keywords": [
                 "diff"
             ],
-            "time": "2015-12-06 07:21:36"
+            "time": "2015-12-08 07:14:41"
         },
         {
             "name": "sebastian/environment",
