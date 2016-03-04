@@ -64,7 +64,7 @@
                 "version": "master",
                 "dist": {
                     "type": "file",
-                    "url": "http://unifoundry.com/pub/unifont-8.0.01/font-builds/unifont-8.0.01.ttf",
+                    "url": "https://ftp.gnu.org/gnu/unifont/unifont-8.0.01/unifont-8.0.01.ttf",
                     "reference": "master"
                 },
                 "autoload": {
@@ -94,7 +94,7 @@
                 "version": "master",
                 "dist": {
                     "type": "zip",
-                    "url": "http://sourceforge.net/projects/dejavu/files/dejavu/2.35/dejavu-fonts-ttf-2.35.zip",
+                    "url": "https://sourceforge.net/projects/dejavu/files/dejavu/2.35/dejavu-fonts-ttf-2.35.zip",
                     "reference": "master"
                 },
                 "autoload": {
@@ -117,5 +117,8 @@
                 }
             }
         }
-    ]
+    ],
+    "config": {
+        "secure-http": false
+    }
 }
