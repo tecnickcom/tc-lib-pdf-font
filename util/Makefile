@@ -4,7 +4,7 @@
 # @category    Library
 # @package     PdfFont
 # @author      Nicola Asuni <info@tecnick.com>
-# @copyright   2011-2015 Nicola Asuni - Tecnick.com LTD
+# @copyright   2011-2016 Nicola Asuni - Tecnick.com LTD
 # @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE)
 # @link        https://github.com/tecnickcom/tc-lib-pdf-font
 #
@@ -79,7 +79,7 @@ COMPOSER=$(shell which php) -d "apc.enable_cli=0" $(shell which composer)
 # Display general help about this command
 help:
 	@echo ""
-	@echo "Welcome to ${PROJECT} make."
+	@echo "${PROJECT} Makefile."
 	@echo "The following commands are available:"
 	@echo ""
 	@echo "    make clean       : Delete the vendor and target directory"
@@ -118,6 +118,7 @@ depsfix:
 	cp -f vendor/font/freefont/COPYING vendor/font/freefont/LICENSE
 	cp -f vendor/font/noto/LICENSE_OFL.txt vendor/font/noto/LICENSE
 	rm -f vendor/font/noto/*.otf
+	rm -f vendor/font/noto/NotoColorEmoji.ttf
 	sed -e "s/<[^>]\+>//g" -e "s/[\t]\+//g" vendor/font/core/MustRead.html > vendor/font/core/LICENSE
 
 # clean and download the composer dependencies (all TTF font files)
