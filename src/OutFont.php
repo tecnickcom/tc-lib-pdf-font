@@ -170,7 +170,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
 
         // ToUnicode Object
         $out .= (++$this->pon).' 0 obj'."\n";
-        $stream = $this->enc->encryptString(gzcompress(Identity::CIDHMAP)); // ToUnicode map for Identity-H
+        $stream = $this->enc->encryptString(gzcompress(Identity::CIDHMAP), $this->pon); // ToUnicode map for Identity-H
         $out .= '<</Filter /FlateDecode /Length '.strlen($stream).'>> stream'."\n"
             .$stream."\n"
             .'endstream'."\n"

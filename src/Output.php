@@ -160,8 +160,9 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                         $font['length1'] = strlen($font_data);
                         $font_data = gzcompress($font_data);
                     }
-                    $stream = $this->enc->encryptString($font_data);
-                    $out .= (++$this->pon).' 0 obj'."\n"
+                    ++$this->pon;
+                    $stream = $this->enc->encryptString($font_data, $this->pon);
+                    $out .= $this->pon.' 0 obj'."\n"
                         .'<< /Length '.strlen($stream)
                         .' /Filter /FlateDecode'
                         .' /Length1 '.$font['length1'];
