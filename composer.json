@@ -3,7 +3,7 @@
     "description": "PHP library containing PDF page formats and definitions",
     "type": "library",
     "homepage": "http://www.tecnick.com",
-    "license": "GNU-LGPL v3",
+    "license": "LGPL-3.0",
     "keywords": ["tc-lib-pdf-font", "PDF", "font", "TTF", "AFM", "PFB", "import"],
     "authors": [
         {
