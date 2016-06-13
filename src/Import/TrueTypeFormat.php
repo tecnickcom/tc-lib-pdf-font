@@ -79,7 +79,6 @@ abstract class TrueTypeFormat
                     $method = 'processFormat'.$format;
                     $this->$method();
                 }
-                
             }
         }
         if (!isset($this->fdt['ctgdata'][0])) {
