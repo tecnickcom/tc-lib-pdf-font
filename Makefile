@@ -12,7 +12,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 # List special make targets that are not associated with files
-.PHONY: help all test docs phpcs phpcs_test phpcbf phpcbf_test phpmd phpmd_test phpcpd phploc phpdep phpcmpinfo report qa qa_test qa_all clean build build_dev update server install uninstall rpm deb bz2 fonts rpm_fonts deb_fonts bz2_fonts
+.PHONY: help all test docs phpcs phpcs_test phpcbf phpcbf_test phpmd phpmd_test phpcpd phploc phpdep phpcmpinfo report qa qa_test qa_all clean build build_dev update server install uninstall rpm deb bz2 bintray fonts rpm_fonts deb_fonts bz2_fonts
 
 # Project owner
 OWNER=tecnickcom
@@ -73,6 +73,9 @@ PORT?=8000
 
 # Composer executable (disable APC to as a work-around of a bug)
 COMPOSER=$(shell which php) -d "apc.enable_cli=0" $(shell which composer)
+
+# list of fonts to process
+FONTLIST=core pdfa cid0 freefont unifont dejavu noto
 
 # --- MAKE TARGETS ---
 
@@ -260,7 +263,7 @@ deb: build
 	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#RELEASE#~/$(RELEASE)/" {} \;
 	echo $(LIBPATH) > $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/$(PKGNAME).dirs
 	echo "$(LIBPATH)* $(LIBPATH)" > $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/install
-	echo $(DOCPATH) >> $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/$(PKGNAME).dirs
+	echo $(DOCPATH) >> $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/$(PKGNAME).di
 	echo "$(DOCPATH)* $(DOCPATH)" >> $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/install
 ifneq ($(strip $(CONFIGPATH)),)
 	echo $(CONFIGPATH) >> $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/$(PKGNAME).dirs
@@ -285,30 +288,25 @@ fonts:
 	
 # Build fonts RPM packages for RedHat-like Linux distributions
 rpm_fonts:
-	cd util && make rpm PKGFONTDIR=core PKGFONTLICENSE=Adobe-AFM
-	cd util && make rpm PKGFONTDIR=pdfa PKGFONTLICENSE=GPL-3.0+
-	cd util && make rpm PKGFONTDIR=cid0 PKGFONTLICENSE=GPL-2.0+
-	cd util && make rpm PKGFONTDIR=freefont PKGFONTLICENSE=GPL-3.0+
-	cd util && make rpm PKGFONTDIR=unifont PKGFONTLICENSE=GPL-2.0+
-	cd util && make rpm PKGFONTDIR=dejavu PKGFONTLICENSE=Bitstream-Vera
-	cd util && make rpm PKGFONTDIR=noto PKGFONTLICENSE=OFL-1.1
+	$(foreach PKGFONTDIR,$(FONTLIST), \
+		cd ${CURRENTDIR}/util && make rpm PKGFONTDIR=${PKGFONTDIR} ; \
+	)
 
 # Build fonts DEB packages for Debian-like Linux distributions
 deb_fonts:
-	cd util && make deb PKGFONTDIR=core PKGFONTLICENSE=Adobe-AFM
-	cd util && make deb PKGFONTDIR=pdfa PKGFONTLICENSE=GPL-3.0+
-	cd util && make deb PKGFONTDIR=cid0 PKGFONTLICENSE=GPL-2.0+
-	cd util && make deb PKGFONTDIR=freefont PKGFONTLICENSE=GPL-3.0+
-	cd util && make deb PKGFONTDIR=unifont PKGFONTLICENSE=GPL-2.0+
-	cd util && make deb PKGFONTDIR=dejavu PKGFONTLICENSE=Bitstream-Vera
-	cd util && make deb PKGFONTDIR=noto PKGFONTLICENSE=OFL-1.1
+	$(foreach PKGFONTDIR,$(FONTLIST), \
+		cd ${CURRENTDIR}/util && make deb PKGFONTDIR=${PKGFONTDIR} ; \
+	)
 
 # build fonts compressed bz2 archives
 bz2_fonts:
-	cd util && make bz2 PKGFONTDIR=core
-	cd util && make bz2 PKGFONTDIR=pdfa
-	cd util && make bz2 PKGFONTDIR=cid0
-	cd util && make bz2 PKGFONTDIR=freefont
-	cd util && make bz2 PKGFONTDIR=unifont
-	cd util && make bz2 PKGFONTDIR=dejavu
-	cd util && make bz2 PKGFONTDIR=noto
+	$(foreach PKGFONTDIR,$(FONTLIST), \
+		cd ${CURRENTDIR}/util && make bz2 PKGFONTDIR=${PKGFONTDIR} ; \
+	)
+
+# upload linux packages to bintray
+bintray: rpm_fonts deb_fonts
+	$(foreach FONT,$(FONTLIST), \
+		cd ${PRJDIR} && curl -T ${CURRENTDIR}/target/RPM_FONTS/${FONT}/RPMS/noarch/php-tecnickcom-${PROJECT}-data-${FONT}-${VERSION}-${RELEASE}.noarch.rpm -u${APIUSR}:${APIKEY} -H "X-Bintray-Package:${PROJECT}-data-${FONT}" -H "X-Bintray-Version:${VERSION}" -H "X-Bintray-Publish:1" -H "X-Bintray-Override:1" https://api.bintray.com/content/tecnickcom/rpm/php-tecnickcom-${PROJECT}-data-${FONT}-${VERSION}-${RELEASE}.noarch.rpm && \
+		cd ${PRJDIR} && curl -T ${CURRENTDIR}/target/DEB_FONTS/${FONT}/php-tecnickcom-${PROJECT}-data-${FONT}_${VERSION}-${RELEASE}_all.deb -u${APIUSR}:${APIKEY} -H "X-Bintray-Package:${PROJECT}-data-${FONT}" -H "X-Bintray-Version:${VERSION}" -H "X-Bintray-Debian-Distribution:all" -H "X-Bintray-Debian-Component:main" -H "X-Bintray-Debian-Architecture:all" -H "X-Bintray-Publish:1" -H "X-Bintray-Override:1" https://api.bintray.com/content/tecnickcom/deb/php-tecnickcom-${PROJECT}-data-${FONT}_${VERSION}-${RELEASE}_all.deb ; \
+	)

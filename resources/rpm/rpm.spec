@@ -18,11 +18,11 @@ BuildArch: noarch
 
 Requires:  php(language) >= 5.4.0
 Requires:  php-composer(%{c_vendor}/tc-lib-file) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 1.6.0
+Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 1.6.2
 Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 1.6.0
+Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 1.6.2
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 1.4.0
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 1.4.2
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) < 2.0.0
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) >= 1.7.0
 
