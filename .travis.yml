@@ -48,10 +48,7 @@ before_script:
 script:
   - make qa_all
   - make report
-  - make rpm
-  - make deb
-  - make rpm_fonts
-  - make deb_fonts
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PHP_VERSION" = "7.0" ]; then make rpm && make deb && make rpm_fonts && make deb_fonts; fi;
 
 after_failure:
   - cat ./target/logs/junit.xml
