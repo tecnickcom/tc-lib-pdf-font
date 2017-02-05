@@ -34,7 +34,7 @@
                 "version": "master",
                 "dist": {
                     "type": "zip",
-                    "url": "https://partners.adobe.com/public/developer/en/pdf/Core14_AFMs.zip",
+                    "url": "https://www.adobe.com/devnet/font/pdfs/Core14_AFMs.zip",
                     "reference": "master"
                 },
                 "autoload": {
@@ -64,7 +64,7 @@
                 "version": "master",
                 "dist": {
                     "type": "file",
-                    "url": "https://ftp.gnu.org/gnu/unifont/unifont-8.0.01/unifont-8.0.01.ttf",
+                    "url": "https://ftp.gnu.org/gnu/unifont/unifont-9.0.06/unifont-9.0.06.ttf",
                     "reference": "master"
                 },
                 "autoload": {
@@ -94,7 +94,7 @@
                 "version": "master",
                 "dist": {
                     "type": "zip",
-                    "url": "https://sourceforge.net/projects/dejavu/files/dejavu/2.35/dejavu-fonts-ttf-2.35.zip",
+                    "url": "https://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.zip",
                     "reference": "master"
                 },
                 "autoload": {

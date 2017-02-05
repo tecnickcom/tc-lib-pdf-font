@@ -108,7 +108,7 @@ deps:
 depsfix:
 	@mkdir -p vendor/font/cid0
 	@mv -u vendor/font/core/Times-Roman.afm vendor/font/core/Times.afm || true
-	@mv -u vendor/font/unifont/unifont-8.0.01.ttf vendor/font/unifont/unifont.ttf || true
+	@mv -u vendor/font/unifont/unifont-9.0.06.ttf vendor/font/unifont/unifont.ttf || true
 	cp -f vendor/license/unifont/LICENSE.txt vendor/font/unifont/LICENSE
 	cp -f vendor/font/unifont/unifont.ttf vendor/font/cid0/cid0jp.ttf
 	cp -f vendor/font/unifont/unifont.ttf vendor/font/cid0/cid0kr.ttf
