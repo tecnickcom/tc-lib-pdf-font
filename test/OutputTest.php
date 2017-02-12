@@ -15,6 +15,8 @@
 
 namespace Test;
 
+use PHPUnit\Framework\TestCase;
+
 /**
  * Output Test
  *
@@ -28,7 +30,7 @@ namespace Test;
  *
  * @SuppressWarnings(PHPMD.LongVariable)
  */
-class OutputTest extends \PHPUnit_Framework_TestCase
+class OutputTest extends TestCase
 {
     protected $preserveGlobalState = false;
     protected $runTestInSeparateProcess = true;

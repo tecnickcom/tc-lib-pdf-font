@@ -15,6 +15,8 @@
 
 namespace Test;
 
+use PHPUnit\Framework\TestCase;
+
 /**
  * Buffer Test
  *
@@ -28,7 +30,7 @@ namespace Test;
  *
  * @SuppressWarnings(PHPMD.LongVariable)
  */
-class BufferTest extends \PHPUnit_Framework_TestCase
+class BufferTest extends TestCase
 {
     protected $preserveGlobalState = false;
     protected $runTestInSeparateProcess = true;
@@ -41,40 +43,50 @@ class BufferTest extends \PHPUnit_Framework_TestCase
         system('rm -rf '.K_PATH_FONTS.' && mkdir -p '.K_PATH_FONTS);
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testStackMissingKey()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $stack->getFont('missing');
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testStackMissingFontName()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         $stack->add($objnum, '');
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testStackIFileMissing()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         $stack->add($objnum, 'something', '', '/missing/nothere.json');
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testStackIFileNotJson()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         $stack->add($objnum, 'something', '', __DIR__.'/StackTest.php');
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testStackIFileWrongFormat()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'badformat.json', '{"bad":"format"}');
@@ -111,18 +123,22 @@ class BufferTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(234, $font['dw']);
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testLoadWrongType()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'test.json', '{"type":"WRONG","cw":{"0":600}}');
         $stack->add($objnum, 'test', '', K_PATH_FONTS.'test.json');
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testLoadCidOnPdfa()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, false, true, true);
         $objnum = 1;
         file_put_contents(K_PATH_FONTS.'test.json', '{"type":"cidfont0","cw":{"0":600}}');
@@ -137,7 +153,8 @@ class BufferTest extends \PHPUnit_Framework_TestCase
             K_PATH_FONTS.'test.json',
             '{"type":"Core","cw":{"0":600},"mode":{"bold":true,"italic":true}}'
         );
-        $stack->add($objnum, 'symbol', '', K_PATH_FONTS.'test.json');
+        $key = $stack->add($objnum, 'symbol', '', K_PATH_FONTS.'test.json');
+        $this->assertNotEmpty($key);
     }
 
     public function testBuffer()

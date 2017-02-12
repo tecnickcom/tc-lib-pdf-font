@@ -15,6 +15,8 @@
 
 namespace Test;
 
+use PHPUnit\Framework\TestCase;
+
 /**
  * Buffer Test
  *
@@ -28,7 +30,7 @@ namespace Test;
  *
  * @SuppressWarnings(PHPMD.LongVariable)
  */
-class StackTest extends \PHPUnit_Framework_TestCase
+class StackTest extends TestCase
 {
     protected $preserveGlobalState = false;
     protected $runTestInSeparateProcess = true;
@@ -109,16 +111,20 @@ class StackTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($afont, $font);
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testEmptyStack()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $stack->popLastFont();
     }
 
+    /**
+     * @expectedException \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testStackMIssingFont()
     {
-        $this->setExpectedException('\Com\Tecnick\Pdf\Font\Exception');
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         $stack->insert($objnum, 'missing');
