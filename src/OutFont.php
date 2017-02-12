@@ -326,7 +326,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      */
     protected function getKeyValOut($key, $val)
     {
-        if (is_float($val + 0)) {
+        if (is_float($val)) {
             $val = sprintf('%F', $val);
         }
         return ' /'.$key.' '.$val.'';
