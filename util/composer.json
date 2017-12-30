@@ -1,124 +1,32 @@
 {
-    "name": "tecnickcom/tc-lib-pdf-font-data",
-    "description": "Import TTF font files to be converted for tc-lib-pdf-font",
-    "type": "library",
-    "homepage": "http://www.tecnick.com",
-    "keywords": ["tc-lib-pdf-font-data", "PDF", "font", "TTF", "AFM", "PFB", "import"],
-    "authors": [
-        {
-            "name": "Nicola Asuni",
-            "email": "info@tecnick.com",
-            "role": "lead"
-        }
-    ],
-    "require": {
-        "font/core": "dev-master",
-        "font/pdfa": "dev-master",
-        "font/freefont": "dev-master",
-        "font/unifont": "dev-master",
-        "license/unifont": "dev-master",
-        "font/dejavu": "dev-master",
-        "font/noto": "dev-master"
-    },
-    "require-dev": {
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:tecnickcom/tc-font-pdfa.git"
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "font/core",
-                "version": "master",
-                "dist": {
-                    "type": "zip",
-                    "url": "https://www.adobe.com/devnet/font/pdfs/Core14_AFMs.zip",
-                    "reference": "master"
-                },
-                "autoload": {
-                    "classmap": ["."]
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "font/freefont",
-                "version": "master",
-                "dist": {
-                    "type": "zip",
-                    "url": "https://ftp.gnu.org/gnu/freefont/freefont-ttf-20120503.zip",
-                    "reference": "master"
-                },
-                "autoload": {
-                    "classmap": ["."]
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "font/unifont",
-                "version": "master",
-                "dist": {
-                    "type": "file",
-                    "url": "https://ftp.gnu.org/gnu/unifont/unifont-9.0.06/unifont-9.0.06.ttf",
-                    "reference": "master"
-                },
-                "autoload": {
-                    "classmap": ["."]
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "license/unifont",
-                "version": "master",
-                "dist": {
-                    "type": "file",
-                    "url": "http://unifoundry.com/LICENSE.txt",
-                    "reference": "master"
-                },
-                "autoload": {
-                    "classmap": ["."]
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "font/dejavu",
-                "version": "master",
-                "dist": {
-                    "type": "zip",
-                    "url": "https://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.zip",
-                    "reference": "master"
-                },
-                "autoload": {
-                    "classmap": ["."]
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "font/noto",
-                "version": "master",
-                "dist": {
-                    "type": "zip",
-                    "url": "https://noto-website-2.storage.googleapis.com/pkgs/Noto-hinted.zip",
-                    "reference": "master"
-                },
-                "autoload": {
-                    "classmap": ["."]
-                }
-            }
-        }
-    ],
-    "config": {
-        "secure-http": false
+  "name": "tecnickcom/tc-lib-pdf-font",
+  "description": "Import TTF font files to be converted for tc-lib-pdf-font",
+  "type": "library",
+  "homepage": "http://www.tecnick.com",
+  "keywords": [
+    "tc-lib-pdf-font-data",
+    "PDF",
+    "font",
+    "TTF",
+    "AFM",
+    "PFB",
+    "import"
+  ],
+  "authors": [
+    {
+      "name": "Nicola Asuni",
+      "email": "info@tecnick.com",
+      "role": "lead"
     }
+  ],
+  "require": {
+    "font": "dev-master"
+  },
+  "require-dev": {},
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "git@github.com:tecnickcom/tc-font-mirror.git"
+    }
+  ]
 }

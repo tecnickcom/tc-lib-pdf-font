@@ -100,7 +100,7 @@ $convert_success = 0;
 
 require_once (dirname(__DIR__).'/vendor/autoload.php');
 
-$fontdir = array_diff(scandir($ttfdir), array('.', '..'));
+$fontdir = array_diff(scandir($ttfdir), array('.', '..', '.git'));
 
 // URL of websites containing the font sources
 $font_url = array(
@@ -115,6 +115,9 @@ $font_url = array(
 );
 
 foreach ($fontdir as $dir) {
+    if (!is_dir($ttfdir.$dir)) {
+        continue;
+    }
     // search font files in sub directories
     $all_files  = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($ttfdir.$dir));
     $fonts = iterator_to_array(new RegexIterator($all_files, '/\.ttf$/'));

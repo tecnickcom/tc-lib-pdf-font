@@ -205,7 +205,7 @@ build:
 # clean and download the composer dependencies including dev ones
 build_dev:
 	rm -rf ./vendor/ && ($(COMPOSER) install -vvv --no-interaction)
-	rm -rf target/fonts && cd util && make deps && make depsfix
+	rm -rf target/fonts && cd util && make deps
 
 # update composer dependencies
 update:

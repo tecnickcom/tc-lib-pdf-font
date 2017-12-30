@@ -14,7 +14,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 # List special make targets that are not associated with files
-.PHONY: help all clean deps depsfix build update install uninstall rpm deb bz2
+.PHONY: help all clean deps build update install uninstall rpm deb bz2
 
 # Folder containing the font to install (package)
 PKGFONTDIR=.
@@ -105,24 +105,8 @@ clean:
 deps:
 	($(COMPOSER) install --no-dev --no-interaction)
 
-depsfix:
-	@mkdir -p vendor/font/cid0
-	@mv -u vendor/font/core/Times-Roman.afm vendor/font/core/Times.afm || true
-	@mv -u vendor/font/unifont/unifont-9.0.06.ttf vendor/font/unifont/unifont.ttf || true
-	cp -f vendor/license/unifont/LICENSE.txt vendor/font/unifont/LICENSE
-	cp -f vendor/font/unifont/unifont.ttf vendor/font/cid0/cid0jp.ttf
-	cp -f vendor/font/unifont/unifont.ttf vendor/font/cid0/cid0kr.ttf
-	cp -f vendor/font/unifont/unifont.ttf vendor/font/cid0/cid0cs.ttf
-	cp -f vendor/font/unifont/unifont.ttf vendor/font/cid0/cid0ct.ttf
-	cp -f vendor/font/unifont/LICENSE vendor/font/cid0/LICENSE
-	cp -f vendor/font/freefont/COPYING vendor/font/freefont/LICENSE
-	cp -f vendor/font/noto/LICENSE_OFL.txt vendor/font/noto/LICENSE
-	rm -f vendor/font/noto/*.otf
-	rm -f vendor/font/noto/NotoColorEmoji.ttf
-	sed -e "s/<[^>]\+>//g" -e "s/[\t]\+//g" vendor/font/core/MustRead.html > vendor/font/core/LICENSE
-
 # clean and download the composer dependencies (all TTF font files)
-build: deps depsfix
+build: deps
 	./bulk_convert.php
 
 # update composer dependencies
