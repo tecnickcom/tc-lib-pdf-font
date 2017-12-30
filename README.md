@@ -93,16 +93,17 @@ Create a composer.json in your projects root-directory:
 ```json
 {
     "require": {
-        "tecnickcom/tc-lib-pdf-font": "dev-master"
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:tecnickcom/tc-lib-pdf-font.git"
-        }
-    ]
+        "tecnickcom/tc-lib-pdf-font": "^1.7"
+    }
 }
 ```
+
+Or add to an existing project with: 
+
+```bash
+composer require tecnickcom/tc-lib-pdf-font ^1.7
+```
+
 ## Font conversion
 
 To import fonts in bulk, please check the convert program in resources/cli.

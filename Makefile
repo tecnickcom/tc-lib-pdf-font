@@ -200,11 +200,11 @@ clean:
 
 # clean and download the composer dependencies
 build:
-	rm -rf ./vendor/ && ($(COMPOSER) install --no-dev --no-interaction)
+	rm -rf ./vendor/ && ($(COMPOSER) install -vvv --no-dev --no-interaction)
 
 # clean and download the composer dependencies including dev ones
 build_dev:
-	rm -rf ./vendor/ && ($(COMPOSER) install --no-interaction)
+	rm -rf ./vendor/ && ($(COMPOSER) install -vvv --no-interaction)
 	rm -rf target/fonts && cd util && make deps && make depsfix
 
 # update composer dependencies
@@ -283,7 +283,7 @@ bz2: build
 
 # import and convert fonts
 fonts:
-	cd util && ($(COMPOSER) install --no-interaction)
+	cd util && ($(COMPOSER) install -vvv --no-interaction)
 	cd util && make build
 	
 # Build fonts RPM packages for RedHat-like Linux distributions
