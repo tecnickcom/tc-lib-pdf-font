@@ -25,9 +25,9 @@
     "ext-json": "*",
     "ext-pcre": "*",
     "ext-zlib": "*",
-    "tecnickcom/tc-lib-file": "^1.6.7",
-    "tecnickcom/tc-lib-unicode-data": "^1.6.7",
-    "tecnickcom/tc-lib-pdf-encrypt": "^1.5.6"
+    "tecnickcom/tc-lib-file": "^1.6.8",
+    "tecnickcom/tc-lib-unicode-data": "^1.6.8",
+    "tecnickcom/tc-lib-pdf-encrypt": "^1.5.7"
   },
   "require-dev": {
     "apigen/apigen": "^4.1.2",
