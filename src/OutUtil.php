@@ -52,8 +52,8 @@ abstract class OutUtil
             )
         );
         foreach ($dirs as $dir) {
-            if (@is_readable($dir.$file)) {
-                return $dir.$file;
+            if (@is_readable($dir.DIRECTORY_SEPARATOR.$file)) {
+                return $dir.DIRECTORY_SEPARATOR.$file;
             }
         }
         throw new FontException('Unable to locate the file: '.$file);
