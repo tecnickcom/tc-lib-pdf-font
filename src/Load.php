@@ -39,7 +39,8 @@ abstract class Load
      */
     public function load()
     {
-        $this->data = array_merge($this->data, $this->getFontInfo());
+        $fontInfo = $this->getFontInfo();
+        $this->data = array_merge($this->data, $fontInfo);
         $this->checkType();
         $this->setName();
         $this->setDefaultWidth();
