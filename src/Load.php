@@ -130,6 +130,7 @@ abstract class Load
             foreach ($dirs as $dir) {
                 if (@is_readable($dir.DIRECTORY_SEPARATOR.$file)) {
                     $this->data['ifile'] = $dir.DIRECTORY_SEPARATOR.$file;
+                    $this->data['dir'] = $dir;
                     break 2;
                 }
             }
