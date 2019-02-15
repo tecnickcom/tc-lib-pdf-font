@@ -89,12 +89,12 @@ abstract class Load
         $dirs =  array('');
         if (defined('K_PATH_FONTS')) {
             $dirs[] = K_PATH_FONTS;
-            $dirs = array_merge($dirs, array_filter(glob(K_PATH_FONTS.'/*'), 'is_dir'));
+            $dirs = array_merge($dirs, glob(K_PATH_FONTS.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR));
         }
         $parent_font_dir = $dirobj->findParentDir('fonts', __DIR__);
         if (!empty($parent_font_dir)) {
             $dirs[] = $parent_font_dir;
-            $dirs = array_merge($dirs, array_filter(glob($parent_font_dir.'/*'), 'is_dir'));
+            $dirs = array_merge($dirs, glob($parent_font_dir.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR));
         }
         return array_unique($dirs);
     }
