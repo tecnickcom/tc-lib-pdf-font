@@ -39,7 +39,8 @@ abstract class Load
      */
     public function load()
     {
-        $this->data = array_merge($this->data, $this->getFontInfo());
+        $fontInfo = $this->getFontInfo();
+        $this->data = array_merge($this->data, $fontInfo);
         $this->checkType();
         $this->setName();
         $this->setDefaultWidth();
@@ -89,12 +90,12 @@ abstract class Load
         $dirs =  array('');
         if (defined('K_PATH_FONTS')) {
             $dirs[] = K_PATH_FONTS;
-            $dirs = array_merge($dirs, array_filter(glob(K_PATH_FONTS.'/*'), 'is_dir'));
+            $dirs = array_merge($dirs, glob(K_PATH_FONTS.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR));
         }
         $parent_font_dir = $dirobj->findParentDir('fonts', __DIR__);
         if (!empty($parent_font_dir)) {
             $dirs[] = $parent_font_dir;
-            $dirs = array_merge($dirs, array_filter(glob($parent_font_dir.'/*'), 'is_dir'));
+            $dirs = array_merge($dirs, glob($parent_font_dir.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR));
         }
         return array_unique($dirs);
     }
@@ -127,8 +128,9 @@ abstract class Load
 
         foreach ($files as $file) {
             foreach ($dirs as $dir) {
-                if (@is_readable($dir.$file)) {
-                    $this->data['ifile'] = $dir.$file;
+                if (@is_readable($dir.DIRECTORY_SEPARATOR.$file)) {
+                    $this->data['ifile'] = $dir.DIRECTORY_SEPARATOR.$file;
+                    $this->data['dir'] = $dir;
                     break 2;
                 }
             }
