@@ -21,13 +21,13 @@ Requires:  php-json
 Requires:  php-pcre
 Requires:  php-zlib
 Requires:  php-composer(%{c_vendor}/tc-lib-file) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 1.6.12
+Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 1.6.14
 Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 1.6.9
+Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 1.6.11
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 1.5.8
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 1.5.10
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) >= 1.7.0
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) >= 1.8.7
 
 Provides:  php-composer(%{c_vendor}/%{gh_project}) = %{version}
 Provides:  php-%{gh_project} = %{version}
