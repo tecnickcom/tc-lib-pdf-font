@@ -155,7 +155,7 @@ class BufferTest extends TestUtil
     public function testBuffer()
     {
         $this->setupTest();
-        $indir = __DIR__.'/../util/vendor/font/';
+        $indir = __DIR__.'/../util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, false, true, false);
@@ -216,7 +216,7 @@ class BufferTest extends TestUtil
     public function testBufferPdfa()
     {
         $this->setupTest();
-        $indir = __DIR__.'/../util/vendor/font/';
+        $indir = __DIR__.'/../util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, true, false, true);
