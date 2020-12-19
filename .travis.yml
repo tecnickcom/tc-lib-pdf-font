@@ -47,7 +47,6 @@ before_install:
 
 before_script:
   - composer install --no-interaction
-  - cd util && composer install --no-interaction
   - if [ "$TRAVIS_PHP_VERSION" = "7.4" ]; then composer require php-coveralls/php-coveralls --no-interaction; fi
   - cd util && composer install --no-dev --no-interaction && ./bulk_convert.php && cd ..
 
