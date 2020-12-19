@@ -23,9 +23,9 @@ Requires:  php-zlib
 Requires:  php-composer(%{c_vendor}/tc-lib-file) < 2.0.0
 Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 1.6.14
 Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 1.6.11
+Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 1.7.0
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 1.5.10
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 1.6.0
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) < 2.0.0
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) >= 1.8.7
 
@@ -36,7 +36,7 @@ Provides:  php-%{gh_project} = %{version}
 PHP library containing PDF font methods and utilities
 
 %build
-(cd %{_current_directory} && make build)
+#(cd %{_current_directory} && make build)
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -44,7 +44,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
-(cd %{_current_directory} && make clean)
+#(cd %{_current_directory} && make clean)
 
 %files
 %attr(-,root,root) %{_libpath}

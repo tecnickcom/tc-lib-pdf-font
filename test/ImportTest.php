@@ -30,29 +30,20 @@ use PHPUnit\Framework\TestCase;
  *
  * @SuppressWarnings(PHPMD.LongVariable)
  */
-class ImportTest extends TestCase
+class ImportTest extends TestUtil
 {
     protected $preserveGlobalState = false;
     protected $runTestInSeparateProcess = true;
 
-    public function setUp()
-    {
-        //$this->markTestSkipped(); // skip this test
-    }
-
-    /**
-     * @expectedException \Com\Tecnick\Pdf\Font\Exception
-     */
     public function testImportEmptyName()
     {
+        $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
         new \Com\Tecnick\Pdf\Font\Import('');
     }
 
-    /**
-     * @expectedException \Com\Tecnick\Pdf\Font\Exception
-     */
     public function testImportExist()
     {
+        $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
         $fin = __DIR__.'/../util/vendor/font/core/Helvetica.afm';
         $outdir = __DIR__.'/../target/tmptest/';
         system('rm -rf '.$outdir.' && mkdir -p '.$outdir);
@@ -60,39 +51,31 @@ class ImportTest extends TestCase
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir);
     }
 
-    /**
-     * @expectedException \Com\Tecnick\Pdf\Font\Exception
-     */
     public function testImportWrongFile()
     {
+        $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
         new \Com\Tecnick\Pdf\Font\Import(__DIR__.'/../util/vendor/font/core/Missing.afm');
     }
 
-    /**
-     * @expectedException \Com\Tecnick\Pdf\Font\Exception
-     */
     public function testImportDefaultOutput()
     {
+        $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
         define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
         new \Com\Tecnick\Pdf\Font\Import(__DIR__.'/../util/vendor/font/core/Missing.afm');
     }
 
-    /**
-     * @expectedException \Com\Tecnick\Pdf\Font\Exception
-     */
     public function testImportUnsupportedType()
     {
+        $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
         $fin = __DIR__.'/../util/vendor/font/core/Helvetica.afm';
         $outdir = __DIR__.'/../target/tmptest/core/';
         system('rm -rf '.$outdir.' && mkdir -p '.$outdir);
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir, 'ERROR');
     }
 
-    /**
-     * @expectedException \Com\Tecnick\Pdf\Font\Exception
-     */
     public function testImportUnsupportedOpenType()
     {
+        $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
         $outdir = __DIR__.'/../target/tmptest/core/';
         system('rm -rf '.$outdir.' && mkdir -p '.$outdir);
         file_put_contents($outdir.'test.ttf', 'OTTO 1234');

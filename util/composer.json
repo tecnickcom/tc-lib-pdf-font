@@ -20,14 +20,14 @@
     }
   ],
   "require": {
-    "font": "dev-master"
+    "tecnickcom/tc-font-mirror": "dev-master"
   },
   "require-dev": {},
   "repositories": [
     {
       "type": "package",
       "package": {
-        "name": "font",
+        "name": "tecnickcom/tc-font-mirror",
         "version": "master",
         "dist": {
           "type": "zip",

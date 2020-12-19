@@ -4,7 +4,7 @@
 # @category    Library
 # @package     PdfFont
 # @author      Nicola Asuni <info@tecnick.com>
-# @copyright   2011-2020 Nicola Asuni - Tecnick.com LTD
+# @copyright   2011-2021 Nicola Asuni - Tecnick.com LTD
 # @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE)
 # @link        https://github.com/tecnickcom/tc-lib-pdf-font
 #
@@ -12,9 +12,6 @@
 #
 # Download and convert fonts for tc-lib-pdf-font.
 # ----------------------------------------------------------------------------------------------------------------------
-
-# List special make targets that are not associated with files
-.PHONY: help all clean deps build update install uninstall rpm deb bz2
 
 # Folder containing the font to install (package)
 PKGFONTDIR=.
@@ -59,7 +56,7 @@ PATHINSTFONT=$(DESTDIR)/$(FONTPATH)
 PATHINSTDOC=$(DESTDIR)/$(DOCPATH)
 
 # Current directory
-CURRENTDIR=$(shell pwd)
+CURRENTDIR=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # RPM Packaging path (where RPMs will be stored)
 PATHRPMPKG=$(CURRENTDIR)/../target/RPM_FONTS/$(PKGFONTDIR)
@@ -77,6 +74,7 @@ COMPOSER=$(shell which php) -d "apc.enable_cli=0" $(shell which composer)
 # --- MAKE TARGETS ---
 
 # Display general help about this command
+.PHONY: help
 help:
 	@echo ""
 	@echo "${PROJECT} Makefile."
@@ -85,35 +83,39 @@ help:
 	@echo "    make clean       : Delete the vendor and target directory"
 	@echo "    make build       : Clean and download the composer dependencies"
 	@echo "    make update      : Update composer dependencies"
-	@echo ""
 	@echo "    make install     : Install this library"
 	@echo "    make uninstall   : Remove all installed files"
-	@echo ""
 	@echo "    make rpm         : Build an RPM package"
 	@echo "    make deb         : Build a DEB package"
 	@echo "    make bz2         : Build a tar bz2 (tbz2) compressed archive"
 	@echo ""
 
 # alias for help target
+.PHONY: all
 all: help
 
 # delete the vendor and target directory
+.PHONY: clean
 clean:
 	rm -rf ./vendor/
 	rm -rf ../target/fonts
 
+.PHONY: deps
 deps:
 	($(COMPOSER) install --no-dev --no-interaction)
 
 # clean and download the composer dependencies (all TTF font files)
+.PHONY: build
 build: deps
 	./bulk_convert.php
 
 # update composer dependencies
+.PHONY: update
 update:
 	($(COMPOSER) update --no-interaction)
 
 # Install this application
+.PHONY: install
 install: uninstall
 	mkdir -p $(PATHINSTFONT)
 	cp -rf ../target/fonts/$(PKGFONTDIR)/*.json $(PATHINSTFONT)
@@ -128,17 +130,33 @@ install: uninstall
 	chmod -R 644 $(PATHINSTDOC)*
 
 # Remove all installed files
+.PHONY: uninstall
 uninstall:
 	rm -rf $(PATHINSTFONT)
 
 # --- PACKAGING ---
 
 # Build the RPM package for RedHat-like Linux distributions
+.PHONY: rpm
 rpm:
 	rm -rf $(PATHRPMPKG)
-	rpmbuild --define "_topdir $(PATHRPMPKG)" --define "_vendor $(VENDOR)" --define "_owner $(OWNER)" --define "_project $(PROJECT)" --define "_package $(PKGNAME)" --define "_version $(VERSION)" --define "_release $(RELEASE)" --define "_current_directory $(CURRENTDIR)" --define "_fontpath /$(FONTPATH)" --define "_docpath /$(DOCPATH)" --define "_fontdir $(PKGFONTDIR)" --define "_license $(PKGFONTLICENSE)" -bb ../resources/rpm/fonts.spec
+	rpmbuild --define \
+	"_topdir $(PATHRPMPKG)" \
+	--define "_vendor $(VENDOR)" \
+	--define "_owner $(OWNER)" \
+	--define "_project $(PROJECT)" \
+	--define "_package $(PKGNAME)" \
+	--define "_version $(VERSION)" \
+	--define "_release $(RELEASE)" \
+	--define "_current_directory $(CURRENTDIR)" \
+	--define "_fontpath /$(FONTPATH)" \
+	--define "_docpath /$(DOCPATH)" \
+	--define "_fontdir $(PKGFONTDIR)" \
+	--define "_license $(PKGFONTLICENSE)" \
+	-bb ../resources/rpm/fonts.spec
 
 # Build the DEB package for Debian-like Linux distributions
+.PHONY: deb
 deb:
 	echo resources/fonts/control/$(DEBCOPYRIGHT)
 	rm -rf $(PATHDEBPKG)
@@ -162,6 +180,7 @@ deb:
 	cd $(PATHDEBPKG)/$(PKGNAME)-$(VERSION) && debuild -us -uc
 
 # build a compressed bz2 archive
+.PHONY: bz2
 bz2:
 	rm -rf $(PATHBZ2PKG)
 	make install DESTDIR=$(PATHBZ2PKG) PKGFONTDIR=$(PKGFONTDIR)

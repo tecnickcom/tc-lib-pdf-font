@@ -30,21 +30,20 @@ use PHPUnit\Framework\TestCase;
  *
  * @SuppressWarnings(PHPMD.LongVariable)
  */
-class StackTest extends TestCase
+class StackTest extends TestUtil
 {
     protected $preserveGlobalState = false;
     protected $runTestInSeparateProcess = true;
 
-    public function setUp()
+    protected function setupTest()
     {
-        //$this->markTestSkipped(); // skip this test
-
         define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
         system('rm -rf '.K_PATH_FONTS.' && mkdir -p '.K_PATH_FONTS);
     }
 
     public function testStack()
     {
+        $this->setupTest();
         $indir = __DIR__.'/../util/vendor/font/';
 
         $objnum = 1;
@@ -66,22 +65,22 @@ class StackTest extends TestCase
 
         $this->assertEquals('BT /F2 14.000000 Tf ET', $bfont['out']);
         $this->assertEquals('pdfahelveticaBI', $bfont['key']);
-        $this->assertEquals(14, $bfont['size'], '', 0.0001);
-        $this->assertEquals(0.3, $bfont['spacing'], '', 0.0001);
-        $this->assertEquals(1.2, $bfont['stretching'], '', 0.0001);
-        $this->assertEquals(18.6667, $bfont['usize'], '', 0.0001);
-        $this->assertEquals(0.0187, $bfont['cratio'], '', 0.0001);
-        $this->assertEquals(-2.0720, $bfont['up'], '', 0.0001);
-        $this->assertEquals(1.288, $bfont['ut'], '', 0.0001);
-        $this->assertEquals(6.2272, $bfont['dw'], '', 0.0001);
-        $this->assertEquals(17.7893, $bfont['ascent'], '', 0.0001);
-        $this->assertEquals(-4.1067, $bfont['descent'], '', 0.0001);
-        $this->assertEquals(13.5147, $bfont['capheight'], '', 0.0001);
-        $this->assertEquals(10.08, $bfont['xheight'], '', 0.0001);
-        $this->assertEquals(12.6560, $bfont['avgwidth'], '', 0.0001);
-        $this->assertEquals(22.4000, $bfont['maxwidth'], '', 0.0001);
-        $this->assertEquals(6.2272, $bfont['missingwidth'], '', 0.0001);
-        $this->assertEquals(array (-1.456, -4.1067, 24.7968, 17.7893), $bfont['fbbox'], '', 0.0001);
+        $this->bcAssertEqualsWithDelta(14, $bfont['size'], 0.0001);
+        $this->bcAssertEqualsWithDelta(0.3, $bfont['spacing'], 0.0001);
+        $this->bcAssertEqualsWithDelta(1.2, $bfont['stretching'], 0.0001);
+        $this->bcAssertEqualsWithDelta(18.6667, $bfont['usize'], 0.0001);
+        $this->bcAssertEqualsWithDelta(0.0187, $bfont['cratio'], 0.0001);
+        $this->bcAssertEqualsWithDelta(-2.0720, $bfont['up'], 0.0001);
+        $this->bcAssertEqualsWithDelta(1.288, $bfont['ut'], 0.0001);
+        $this->bcAssertEqualsWithDelta(6.2272, $bfont['dw'], 0.0001);
+        $this->bcAssertEqualsWithDelta(17.7893, $bfont['ascent'], 0.0001);
+        $this->bcAssertEqualsWithDelta(-4.1067, $bfont['descent'], 0.0001);
+        $this->bcAssertEqualsWithDelta(13.5147, $bfont['capheight'], 0.0001);
+        $this->bcAssertEqualsWithDelta(10.08, $bfont['xheight'], 0.0001);
+        $this->bcAssertEqualsWithDelta(12.6560, $bfont['avgwidth'], 0.0001);
+        $this->bcAssertEqualsWithDelta(22.4000, $bfont['maxwidth'], 0.0001);
+        $this->bcAssertEqualsWithDelta(6.2272, $bfont['missingwidth'], 0.0001);
+        $this->bcAssertEqualsWithDelta(array (-1.456, -4.1067, 24.7968, 17.7893), $bfont['fbbox'], 0.0001);
 
         $font = $stack->getCurrentFont();
         $this->assertEquals($bfont, $font);
@@ -94,12 +93,12 @@ class StackTest extends TestCase
 
         $this->assertEquals(array(0, 0, 0, 0), $stack->getCharBBox(300));
 
-        $this->assertEquals(16.1728, $stack->getCharWidth(65), '', 0.0001);
-        $this->assertEquals(0, $stack->getCharWidth(173), '', 0.0001);
-        $this->assertEquals(6.2272, $stack->getCharWidth(300), '', 0.0001);
+        $this->bcAssertEqualsWithDelta(16.1728, $stack->getCharWidth(65), 0.0001);
+        $this->bcAssertEqualsWithDelta(0, $stack->getCharWidth(173), 0.0001);
+        $this->bcAssertEqualsWithDelta(6.2272, $stack->getCharWidth(300), 0.0001);
 
         $uniarr = array(65, 173, 300);
-        $this->assertEquals(23.12, $stack->getOrdArrWidth($uniarr), '', 0.0001);
+        $this->bcAssertEqualsWithDelta(23.12, $stack->getOrdArrWidth($uniarr), 0.0001);
 
         $subs = array(65 => array(400, 75), 173 => array(76, 300), 300 => array(400, 77));
         $this->assertEquals(array(65, 173, 77), $stack->replaceMissingChars($uniarr, $subs));
@@ -111,20 +110,18 @@ class StackTest extends TestCase
         $this->assertEquals($afont, $font);
     }
 
-    /**
-     * @expectedException \Com\Tecnick\Pdf\Font\Exception
-     */
     public function testEmptyStack()
     {
+        $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
+        $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $stack->popLastFont();
     }
 
-    /**
-     * @expectedException \Com\Tecnick\Pdf\Font\Exception
-     */
     public function testStackMIssingFont()
     {
+        $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
+        $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         $stack->insert($objnum, 'missing');

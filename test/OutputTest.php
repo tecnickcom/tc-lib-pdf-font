@@ -30,21 +30,20 @@ use PHPUnit\Framework\TestCase;
  *
  * @SuppressWarnings(PHPMD.LongVariable)
  */
-class OutputTest extends TestCase
+class OutputTest extends TestUtil
 {
     protected $preserveGlobalState = false;
     protected $runTestInSeparateProcess = true;
 
-    public function setUp()
+    protected function setupTest()
     {
-        //$this->markTestSkipped(); // skip this test
-
         define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
         system('rm -rf '.K_PATH_FONTS.' && mkdir -p '.K_PATH_FONTS);
     }
 
     public function testOutput()
     {
+        $this->setupTest();
         $indir = __DIR__.'/../util/vendor/font/';
 
         $objnum = 1;
