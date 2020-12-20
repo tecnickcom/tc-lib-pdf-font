@@ -37,7 +37,7 @@ class BufferTest extends TestUtil
 
     protected function setupTest()
     {
-        define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
+        define('K_PATH_FONTS', dirname(__DIR__).'/target/tmptest/');
         system('rm -rf '.K_PATH_FONTS.' && mkdir -p '.K_PATH_FONTS);
     }
 
@@ -155,7 +155,7 @@ class BufferTest extends TestUtil
     public function testBuffer()
     {
         $this->setupTest();
-        $indir = __DIR__.'/../util/vendor/tecnickcom/tc-font-mirror/';
+        $indir = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, false, true, false);
@@ -216,7 +216,7 @@ class BufferTest extends TestUtil
     public function testBufferPdfa()
     {
         $this->setupTest();
-        $indir = __DIR__.'/../util/vendor/tecnickcom/tc-font-mirror/';
+        $indir = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, true, false, true);

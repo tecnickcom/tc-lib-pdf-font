@@ -86,7 +86,7 @@ if (!is_writable($options['outpath'])) {
     exit(2);
 }
 
-$ttfdir = __DIR__.'vendor/tecnickcom/tc-font-mirror';
+$ttfdir = __DIR__.'/vendor/tecnickcom/tc-font-mirror';
 if (!is_dir($ttfdir)) {
     fwrite(STDERR, 'ERROR: The '.$ttfdir.' directory is empty, please execute \'make build\' before this command.'."\n\n");
     exit(3);

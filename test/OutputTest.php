@@ -37,14 +37,14 @@ class OutputTest extends TestUtil
 
     protected function setupTest()
     {
-        define('K_PATH_FONTS', __DIR__.'/../target/tmptest/');
+        define('K_PATH_FONTS', dirname(__DIR__).'/target/tmptest/');
         system('rm -rf '.K_PATH_FONTS.' && mkdir -p '.K_PATH_FONTS);
     }
 
     public function testOutput()
     {
         $this->setupTest();
-        $indir = __DIR__.'/../util/vendor/tecnickcom/tc-font-mirror/';
+        $indir = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
