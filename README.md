@@ -17,8 +17,6 @@
 * **license**     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
 * **link**        https://github.com/tecnickcom/tc-lib-pdf-font
 * **SRC DOC**     https://tcpdf.org/docs/srcdoc/tc-lib-pdf-font
-* **RPM**         https://bintray.com/tecnickcom/rpm/tc-lib-pdf-font
-* **DEB**         https://bintray.com/tecnickcom/deb/tc-lib-pdf-font
 
 ## Description
 
@@ -100,7 +98,6 @@ When this library is installed using an RPM or DEB package, you can use it your 
 require_once ('/usr/share/php/Com/Tecnick/Pdf/Font/autoload.php');
 ```
 
-**NOTE:** Updated RPM and Debian packages of this library can be downloaded from: https://bintray.com/tecnickcom
 
 
 ## Developer(s) Contact
