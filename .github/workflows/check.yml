@@ -53,6 +53,8 @@ jobs:
                   key: composer-cache
             - name: Install dependencies
               run: composer install --no-interaction
+            - name: Install fonts
+              run: cd util && composer install --no-dev --no-interaction && ./bulk_convert.php && cd ..
             - name: Run all tests
               run: make qa
             - name: Send coverage
