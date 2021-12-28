@@ -86,7 +86,7 @@ if (!is_writable($options['outpath'])) {
     exit(2);
 }
 
-$ttfdir = __DIR__.'/vendor/tecnickcom/tc-font-mirror';
+$ttfdir = __DIR__.'/vendor/tecnickcom/tc-font-mirror/';
 if (!is_dir($ttfdir)) {
     fwrite(STDERR, 'ERROR: The '.$ttfdir.' directory is empty, please execute \'make build\' before this command.'."\n\n");
     exit(3);
@@ -115,11 +115,12 @@ $font_url = array(
 );
 
 foreach ($fontdir as $dir) {
-    if (!is_dir($ttfdir.$dir)) {
+	$indir = $ttfdir.$dir;
+    if (!is_dir($indir)) {
         continue;
     }
     // search font files in sub directories
-    $all_files  = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($ttfdir.$dir));
+    $all_files  = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($indir));
     $fonts = iterator_to_array(new RegexIterator($all_files, '/\.ttf$/'));
     $fonts = array_merge($fonts, iterator_to_array(new RegexIterator($all_files, '/\.pfb$/')));
     $fonts = array_merge($fonts, iterator_to_array(new RegexIterator($all_files, '/\.otf$/')));
@@ -135,7 +136,7 @@ foreach ($fontdir as $dir) {
     if (!is_dir($outdir)) {
         mkdir($outdir, 0755, true);
     }
-    copy($ttfdir.$dir.'/LICENSE', $outdir.'LICENSE');
+    copy($indir.'/LICENSE', $outdir.'LICENSE');
 
     // generate a README file
     $readme = '# '.$dir.' font files for tc-lib-pdf-font'."\n\n"
