@@ -137,14 +137,17 @@ abstract class ImportUtil
     /**
      * Get the encoding table
      *
-     * @param string $encoding  Name of the encoding table to use. Leave empty for default mode.
+     * @param string|null $encoding  Name of the encoding table to use. Leave empty for default mode.
      *                          Omit this parameter for TrueType Unicode and symbolic fonts
      *                          like Symbol or ZapfDingBats.
      */
     protected function getEncodingTable($encoding)
     {
-        if (empty($encoding) && ($this->fdt['type'] == 'Type1') && (($this->fdt['Flags'] & 4) == 0)) {
-            return 'cp1252';
+        if (is_null($encoding) || empty($encoding)) {
+            if (($this->fdt['type'] == 'Type1') && (($this->fdt['Flags'] & 4) == 0)) {
+                return 'cp1252';
+            }
+            return '';
         }
         return preg_replace('/[^A-Za-z0-9_\-]/', '', $encoding);
     }
