@@ -118,7 +118,7 @@ class StackTest extends TestUtil
         $stack->popLastFont();
     }
 
-    public function testStackMIssingFont()
+    public function testStackMissingFont()
     {
         $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
         $this->setupTest();

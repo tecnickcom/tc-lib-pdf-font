@@ -87,7 +87,7 @@ class Import extends ImportUtil
         $file,
         $output_path = null,
         $type = null,
-        $encoding = null,
+        $encoding = '',
         $flags = 32,
         $platform_id = 3,
         $encoding_id = 1,
