@@ -44,7 +44,7 @@ abstract class Load
         $this->checkType();
         $this->setName();
         $this->setDefaultWidth();
-        if (($this->data['type'] == 'Core') || $this->data['fakestyle']) {
+        if ($this->data['fakestyle']) {
             $this->setArtificialStyles();
         }
         $this->setFileData();

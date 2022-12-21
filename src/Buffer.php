@@ -259,7 +259,7 @@ abstract class Buffer
         $this->setFontFile($key);
         $this->setFontDiff($key);
 
-        $this->font[$key]['i'] = $this->numfonts++;
+        $this->font[$key]['i'] = ++$this->numfonts;
         $this->font[$key]['n'] = ++$objnum;
 
         return $key;

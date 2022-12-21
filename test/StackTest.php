@@ -63,7 +63,7 @@ class StackTest extends TestUtil
         $bfont = $stack->insert($objnum, 'helvetica', 'BIUDO', null, null, null, '', null);
         $this->assertNotEmpty($bfont);
 
-        $this->assertEquals('BT /F2 14.000000 Tf ET', $bfont['out']);
+        $this->assertEquals('BT /F3 14.000000 Tf ET', $bfont['out']);
         $this->assertEquals('pdfahelveticaBI', $bfont['key']);
         $this->bcAssertEqualsWithDelta(14, $bfont['size'], 0.0001);
         $this->bcAssertEqualsWithDelta(0.3, $bfont['spacing'], 0.0001);
