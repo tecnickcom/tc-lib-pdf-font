@@ -108,8 +108,6 @@ $font_url = array(
     'core'     => 'https://partners.adobe.com/public/developer/en/pdf/Core14_AFMs.zip',
     'dejavu'   => 'http://sourceforge.net/projects/dejavu/files/dejavu/2.35/dejavu-fonts-ttf-2.35.zip',
     'freefont' => 'https://ftp.gnu.org/gnu/freefont/freefont-ttf-20120503.zip',
-    'noto'     => 'https://www.google.com/get/noto',
-    'notocjk'  => 'https://www.google.com/get/noto',
     'pdfa'     => 'https://github.com/tecnickcom/tc-font-pdfa',
     'unifont'  => 'http://unifoundry.com/unifont.html',
 );
