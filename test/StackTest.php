@@ -53,7 +53,7 @@ class StackTest extends TestUtil
         $cfont = $stack->insert($objnum, 'freesans', '', 12, -0.1, 0.9, '', null);
         $this->assertNotEmpty($cfont);
         $this->assertNotEmpty($cfont['cbbox']);
-        $this->assertEqualsWithDelta(array(0.2160, 0, 9.3744, 11.664), $stack->getCharBBox(65), 0.0001);
+        $this->bcAssertEqualsWithDelta(array(0.2160, 0, 9.3744, 11.664), $stack->getCharBBox(65), 0.0001);
 
         new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFATimes.pfb');
         $afont = $stack->insert($objnum, 'times', '', 14, 0.3, 1.2, '', null);
