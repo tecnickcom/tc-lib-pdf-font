@@ -163,8 +163,9 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     ++$this->pon;
                     $stream = $this->enc->encryptString($font_data, $this->pon);
                     $out .= $this->pon.' 0 obj'."\n"
-                        .'<< /Length '.strlen($stream)
+                        .'<<'
                         .' /Filter /FlateDecode'
+                        .' /Length '.strlen($stream)
                         .' /Length1 '.$font['length1'];
                     if (isset($font['length2'])) {
                         $out .= ' /Length2 '.$font['length2']

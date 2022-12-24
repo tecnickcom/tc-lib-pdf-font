@@ -141,6 +141,8 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * @param array $font Font to process
      *
      * return string
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     protected function getTrueTypeUnicode(array $font)
     {
@@ -169,9 +171,17 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             .'endobj'."\n";
 
         // ToUnicode Object
-        $out .= (++$this->pon).' 0 obj'."\n";
-        $stream = $this->enc->encryptString(gzcompress(Identity::CIDHMAP), $this->pon); // ToUnicode map for Identity-H
-        $out .= '<</Filter /FlateDecode /Length '.strlen($stream).'>> stream'."\n"
+        $out .= (++$this->pon).' 0 obj'."\n"
+            .'<<';
+        $cidhmap = Identity::CIDHMAP;
+        if ($font['compress']) {
+            $out .= '/Filter /FlateDecode';
+            $cidhmap = gzcompress($cidhmap);
+        }
+        $stream = $this->enc->encryptString($cidhmap, $this->pon); // ToUnicode map for Identity-H
+        $out .= '/Length '.strlen($stream)
+            .'>>'
+            .' stream'."\n"
             .$stream."\n"
             .'endstream'."\n"
             .'endobj'."\n";

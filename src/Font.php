@@ -104,11 +104,19 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *                       The file size of the PDF would also be smaller because you are embedding only a subset.
      * @param bool $unicode  True if we are in Unicode mode, False otherwhise.
      * @param bool $pdfa     True if we are in PDF/A mode.
+     * @param bool $compress Set to false to disable stream compression.
      *
      * @throws FontException in case of error
      */
-    public function __construct($font, $style = '', $ifile = '', $subset = false, $unicode = true, $pdfa = false)
-    {
+    public function __construct(
+        $font,
+        $style = '',
+        $ifile = '',
+        $subset = false,
+        $unicode = true,
+        $pdfa = false,
+        $compress = true
+    ) {
         if (empty($font)) {
             throw new FontException('empty font family name');
         }
@@ -116,6 +124,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         $this->data['family'] = $font;
         $this->data['unicode'] = (bool) $unicode;
         $this->data['pdfa'] = (bool) $pdfa;
+        $this->data['compress'] = (bool) $compress;
         $this->data['subset'] = $subset;
         $this->data['subsetchars'] = array_fill(0, 255, true);
         
