@@ -239,7 +239,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     {
         $width = 0;
         foreach ($uniarr as $ord) {
-            $width += $this->GetCharWidth($ord);
+            $width += $this->getCharWidth($ord);
         }
         $width += ($this->stack[$this->index]['spacing']
             * $this->stack[$this->index]['stretching']
