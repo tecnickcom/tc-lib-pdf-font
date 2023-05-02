@@ -15,13 +15,9 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\ImportUtil;
-use \Com\Tecnick\File\Byte;
-use \Com\Tecnick\File\Dir;
-use \Com\Tecnick\File\File;
-use \Com\Tecnick\Unicode\Data\Encoding;
-use \Com\Tecnick\Pdf\Font\UniToCid;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\File\Byte;
+use Com\Tecnick\File\File;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Import
@@ -109,7 +105,7 @@ class Import extends ImportUtil
             throw new FontException('unable to read the input font file: '.$file);
         }
         $this->fbyte = new Byte($this->font);
-        
+
         $this->fdt['settype'] = $type;
         $this->fdt['type'] = $this->getFontType($type);
         $this->fdt['isUnicode'] = (($this->fdt['type'] == 'TrueTypeUnicode') || ($this->fdt['type'] == 'cidfont0'));

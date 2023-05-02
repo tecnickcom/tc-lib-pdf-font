@@ -15,8 +15,6 @@
 
 namespace Test;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Buffer Test
  *
@@ -44,22 +42,21 @@ class StackTest extends TestUtil
     public function testStack()
     {
         $this->setupTest();
-        $indir = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSans.ttf');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSans.ttf');
         $cfont = $stack->insert($objnum, 'freesans', '', 12, -0.1, 0.9, '', null);
         $this->assertNotEmpty($cfont);
         $this->assertNotEmpty($cfont['cbbox']);
         $this->bcAssertEqualsWithDelta(array(0.2160, 0, 9.3744, 11.664), $stack->getCharBBox(65), 0.0001);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFATimes.pfb');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'pdfa/pfb/PDFATimes.pfb');
         $afont = $stack->insert($objnum, 'times', '', 14, 0.3, 1.2, '', null);
         $this->assertNotEmpty($afont);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFAHelveticaBoldOblique.pfb');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'pdfa/pfb/PDFAHelveticaBoldOblique.pfb');
         $bfont = $stack->insert($objnum, 'helvetica', 'BIUDO', null, null, null, '', null);
         $this->assertNotEmpty($bfont);
 

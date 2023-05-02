@@ -15,8 +15,6 @@
 
 namespace Test;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Output Test
  *
@@ -44,39 +42,38 @@ class OutputTest extends TestUtil
     public function testOutput()
     {
         $this->setupTest();
-        $indir = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
         $buffer->add($objnum, 'pdfasymbol');
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/Helvetica.afm');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/Helvetica.afm');
         $buffer->add($objnum, 'helvetica');
-        
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/Helvetica-Bold.afm');
+
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/Helvetica-Bold.afm');
         $buffer->add($objnum, 'helvetica', 'B');
-        
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/Helvetica-BoldOblique.afm');
+
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/Helvetica-BoldOblique.afm');
         $buffer->add($objnum, 'helveticaBI');
-        
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/Helvetica-Oblique.afm');
+
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/Helvetica-Oblique.afm');
         $buffer->add($objnum, 'helvetica', 'I');
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSans.ttf');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSans.ttf');
         $buffer->add($objnum, 'freesans', '');
-        
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSansBold.ttf');
+
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSansBold.ttf');
         $buffer->add($objnum, 'freesans', 'B');
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSansOblique.ttf');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSansOblique.ttf');
         $buffer->add($objnum, 'freesans', 'I');
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSansBoldOblique.ttf');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSansBoldOblique.ttf');
         $buffer->add($objnum, 'freesans', 'BIUDO', '', true);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'cid0/cid0jp.ttf', null, 'CID0JP');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'cid0/cid0jp.ttf', null, 'CID0JP');
         $buffer->add($objnum, 'cid0jp');
 
         $fonts = $buffer->getFonts();

@@ -15,8 +15,6 @@
 
 namespace Test;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Buffer Test
  *
@@ -155,36 +153,35 @@ class BufferTest extends TestUtil
     public function testBuffer()
     {
         $this->setupTest();
-        $indir = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, false, true, false);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
         $stack->add($objnum, 'pdfasymbol');
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/Helvetica.afm');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/Helvetica.afm');
         $stack->add($objnum, 'helvetica');
-        
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/Helvetica-Bold.afm');
+
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/Helvetica-Bold.afm');
         $stack->add($objnum, 'helvetica', 'B');
-        
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/Helvetica-BoldOblique.afm');
+
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/Helvetica-BoldOblique.afm');
         $stack->add($objnum, 'helveticaBI');
-        
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/Helvetica-Oblique.afm');
+
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/Helvetica-Oblique.afm');
         $stack->add($objnum, 'helvetica', 'I');
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSans.ttf');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSans.ttf');
         $stack->add($objnum, 'freesans', '');
-        
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSansBold.ttf');
+
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSansBold.ttf');
         $stack->add($objnum, 'freesans', 'B');
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSansOblique.ttf');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSansOblique.ttf');
         $stack->add($objnum, 'freesans', 'I');
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'freefont/FreeSansBoldOblique.ttf');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'freefont/FreeSansBoldOblique.ttf');
         $stack->add($objnum, 'freesans', 'BIUDO', '', true);
 
         $fontkey = $stack->add($objnum, 'freesans', 'BI', '', true);
@@ -207,7 +204,7 @@ class BufferTest extends TestUtil
         $font = $stack->getFont('newfont');
         $this->assertEquals('tval', $font['tfield']);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'core/ZapfDingbats.afm');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'core/ZapfDingbats.afm');
         $stack->add($objnum, 'zapfdingbats', 'BIUDO');
         $font = $stack->getFont('zapfdingbats');
         $this->assertNotEmpty($font);
@@ -216,12 +213,11 @@ class BufferTest extends TestUtil
     public function testBufferPdfa()
     {
         $this->setupTest();
-        $indir = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, true, false, true);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir.'pdfa/pfb/PDFAHelveticaBoldOblique.pfb');
+        new \Com\Tecnick\Pdf\Font\Import(FONT_MIRROR.'pdfa/pfb/PDFAHelveticaBoldOblique.pfb');
         $stack->add($objnum, 'arial', 'BIUDO', '', true);
         $font = $stack->getFont('pdfahelveticaBI');
         $this->assertNotEmpty($font);
