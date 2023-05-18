@@ -122,7 +122,7 @@ class ImportTest extends TestUtil
         $this->assertEquals($metric['MissingWidth'], $json['desc']['MissingWidth']);
     }
 
-    public function importDataProvider()
+    public static function importDataProvider()
     {
         return array(
             array('core', 'Courier.afm', 'courier'),

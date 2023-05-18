@@ -209,7 +209,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
-     * Returns true if the specified unicode value is defined in the current font
+     * Returns the width of the specified character
      *
      * @param int   $ord    Unicode character value.
      *
