@@ -47,6 +47,13 @@ abstract class TrueTypeFormat
     protected $subglyphs = array();
 
     /**
+     * Pointer position on the original font data
+     *
+     * @var int
+     */
+    protected $offset = 0;
+
+    /**
      * Add CTG entry
      *
      * @param int $cid

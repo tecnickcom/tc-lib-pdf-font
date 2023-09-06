@@ -45,20 +45,13 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      * @var array
      */
     protected $fdt = array();
-    
+
     /**
      * Object used to read font bytes
      *
      * @var \Com\Tecnick\File\Byte
      */
     protected $fbyte;
-    
-    /**
-     * Pointer position on the original font data
-     *
-     * @var int
-     */
-    protected $offset = 0;
 
     /**
      * Process TrueType font

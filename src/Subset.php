@@ -68,6 +68,13 @@ class Subset
     protected $subfont = '';
 
     /**
+     * Pointer position on the original font data
+     *
+     * @var int
+     */
+    protected $offset = 0;
+
+    /**
      * Process TrueType font
      *
      * @param string $font     Content of the input font file
