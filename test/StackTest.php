@@ -65,6 +65,7 @@ class StackTest extends TestUtil
 
         $this->assertEquals('BT /F3 14.000000 Tf ET', $bfont['out']);
         $this->assertEquals('pdfahelveticaBI', $bfont['key']);
+        $this->assertEquals('Type1', $bfont['type']);
         $this->bcAssertEqualsWithDelta(14, $bfont['size'], 0.0001);
         $this->bcAssertEqualsWithDelta(0.3, $bfont['spacing'], 0.0001);
         $this->bcAssertEqualsWithDelta(1.2, $bfont['stretching'], 0.0001);
@@ -108,6 +109,12 @@ class StackTest extends TestUtil
 
         $font = $stack->getCurrentFont();
         $this->assertEquals($afont, $font);
+
+        $type = $stack->getCurrentFontType();
+        $this->assertEquals('Type1', $type);
+
+        $bytefont = $stack->isCurrentByteFont();
+        $this->assertFalse($bytefont);
     }
 
     public function testEmptyStack()

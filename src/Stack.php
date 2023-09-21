@@ -154,6 +154,27 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
+     * Returns the current font type (i.e.: Core, TrueType, TrueTypeUnicode, Type1).
+     *
+     * @return string
+     */
+    public function getCurrentFontType()
+    {
+        return $this->getFont($this->stack[$this->index]['key'])['type'];
+    }
+
+    /**
+     * Returns if the current font type is Core, TrueType or Type1.
+     *
+     * @return bool
+     */
+    public function isCurrentByteFont()
+    {
+        $type = $this->getCurrentFontType();
+        return !(($type == 'Core') || ($type == 'TrueType') || ($type == 'Type1'));
+    }
+
+    /**
      * Remove and return the last inserted font
      *
      * @return array
@@ -307,6 +328,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $this->metric[$mkey] = array(
             'out'          => sprintf('BT /F%d %F Tf ET', $data['i'], $font['size']), // PDF output string
             'key'          => $font['key'],
+            'type'         => $data['type'],
             'size'         => $font['size'],                                          // size in points
             'spacing'      => $font['spacing'],
             'stretching'   => $font['stretching'],
