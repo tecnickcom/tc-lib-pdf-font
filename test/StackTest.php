@@ -118,6 +118,13 @@ class StackTest extends TestUtil
 
         $ftype = $stack->isCurrentByteFont();
         $this->assertFalse($ftype);
+
+        $uniarr = array(65, 173, 300, 32, 65, 173, 300, 32, 65, 173, 300);
+        $widths = $stack->getOrdArrDims($uniarr);
+        $this->assertEquals(11, $widths['chars']);
+        $this->assertEquals(2, $widths['spaces']);
+        $this->bcAssertEqualsWithDelta(80.0512, $widths['totwidth'], 0.0001);
+        $this->bcAssertEqualsWithDelta(11.56, $widths['totspacewidth'], 0.0001);
     }
 
     public function testEmptyStack()

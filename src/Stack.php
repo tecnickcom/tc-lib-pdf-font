@@ -269,15 +269,39 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getOrdArrWidth($uniarr)
     {
-        $width = 0;
+        return $this->getOrdArrDims($uniarr)['totwidth'];
+    }
+
+    /**
+     * Returns various dimensions of the string specified using an array of codepoints.
+     *
+     * @param array $uniarr Array of character codepoints.
+     *
+     * @return array  ('chars', 'spaces', 'totwidth', 'totspacewidth')
+     */
+    public function getOrdArrDims($uniarr)
+    {
+        $chars = count($uniarr); // total number of chars
+        $spaces = 0; // total number of spaces
+        $totwidth = 0; // total string width
+        $totspacewidth = 0; // total space width
+        $spw = $this->getCharWidth(32); // width of a single space
         foreach ($uniarr as $ord) {
-            $width += $this->getCharWidth($ord);
+            $totwidth += $this->getCharWidth($ord);
+            if ($ord == 32) {
+                ++$spaces;
+                $totspacewidth += $spw;
+            }
         }
-        $width += ($this->stack[$this->index]['spacing']
-            * $this->stack[$this->index]['stretching']
-            * (count($uniarr) - 1)
+        $fact = ($this->stack[$this->index]['spacing'] * $this->stack[$this->index]['stretching']);
+        $totwidth += ($fact * ($chars - 1));
+        $totspacewidth += ($fact * ($spaces - 1));
+        return array(
+            'chars' => $chars,
+            'spaces' => $spaces,
+            'totwidth' => $totwidth,
+            'totspacewidth' => $totspacewidth
         );
-        return $width;
     }
 
     /**
