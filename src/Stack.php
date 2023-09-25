@@ -164,7 +164,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
-     * Returns if the current font type is Core, TrueType or Type1.
+     * Returns true if the current font type is Core, TrueType or Type1.
      *
      * @return bool
      */
@@ -172,6 +172,17 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     {
         $type = $this->getCurrentFontType();
         return !(($type == 'Core') || ($type == 'TrueType') || ($type == 'Type1'));
+    }
+
+    /**
+     * Returns true if the current font type is TrueTypeUnicode or cidfont0.
+     *
+     * @return bool
+     */
+    public function isCurrentUnicodeFont()
+    {
+        $type = $this->getCurrentFontType();
+        return !(($type == 'TrueTypeUnicode') || ($type == 'cidfont0'));
     }
 
     /**

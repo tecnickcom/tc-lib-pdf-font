@@ -113,8 +113,11 @@ class StackTest extends TestUtil
         $type = $stack->getCurrentFontType();
         $this->assertEquals('Type1', $type);
 
-        $bytefont = $stack->isCurrentByteFont();
-        $this->assertFalse($bytefont);
+        $ftype = $stack->isCurrentUnicodeFont();
+        $this->assertTrue($ftype);
+
+        $ftype = $stack->isCurrentByteFont();
+        $this->assertFalse($ftype);
     }
 
     public function testEmptyStack()
