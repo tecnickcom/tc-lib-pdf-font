@@ -164,6 +164,16 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
+     * Returns the PDF code to use the current font.
+     *
+     * @return string
+     */
+    public function getOutCurrentFont()
+    {
+        return $this->getFontMetric($this->stack[$this->index])['out'];
+    }
+
+    /**
      * Returns true if the current font type is Core, TrueType or Type1.
      *
      * @return bool
@@ -353,22 +363,23 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         if (!empty($this->metric[$mkey])) {
             return $this->metric[$mkey];
         }
-
-        $usize = ((float) $font['size'] / $this->kunit);
-        $cratio = ($usize / 1000);
+        $size = ((float) $font['size']);
+        $usize = ($size / $this->kunit);
+        $cratio = ($size / 1000);
         $wratio = ($cratio * $font['stretching']); // horizontal ratio
         $data = $this->getFont($font['key']);
-
+        $outfont = sprintf('/F%d %F Tf', $data['i'], $font['size']); // PDF output string
         // add this font in the stack wit metrics in internal units
         $this->metric[$mkey] = array(
-            'out'          => sprintf('BT /F%d %F Tf ET', $data['i'], $font['size']), // PDF output string
+            'outraw'       => $outfont,
+            'out'          => sprintf('BT '.$outfont.' ET'."\r"), // PDF output string
             'key'          => $font['key'],
             'type'         => $data['type'],
-            'size'         => $font['size'],                                          // size in points
+            'size'         => $size,   // size in points
             'spacing'      => $font['spacing'],
             'stretching'   => $font['stretching'],
-            'usize'        => $usize,                                                 // size in internal units
-            'cratio'       => $cratio,                                                // conversion ratio
+            'usize'        => $usize,  // size in user units
+            'cratio'       => $cratio, // conversion ratio
             'up'           => ($data['up'] * $cratio),
             'ut'           => ($data['ut'] * $cratio),
             'dw'           => ($data['dw'] * $cratio * $font['stretching']),
