@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Buffer.php
  *
@@ -15,8 +16,8 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\Font;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Pdf\Font\Font;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Buffer
@@ -37,7 +38,7 @@ abstract class Buffer
      * @var array
      */
     protected $font = array();
-    
+
     /**
      * Font counter
      *
@@ -51,7 +52,7 @@ abstract class Buffer
      * @var array
      */
     protected $encdiff = array();
-    
+
     /**
      * Index for Encoding differences
      *
@@ -176,7 +177,7 @@ abstract class Buffer
     public function getFont($key)
     {
         if (!isset($this->font[$key])) {
-            throw new FontException('The font '.$key.' has not been loaded');
+            throw new FontException('The font ' . $key . ' has not been loaded');
         }
         return $this->font[$key];
     }
@@ -285,7 +286,7 @@ abstract class Buffer
         $this->file[$file]['dir'] = $this->font[$key]['dir'];
         $this->file[$file]['length1'] = $this->font[$key]['length1'];
         $this->file[$file]['length2'] = $this->font[$key]['length2'];
-        
+
         if (!isset($this->file[$file]['subset'])) {
             $this->file[$file]['subset'] = true;
         }

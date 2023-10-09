@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Output.php
  *
@@ -15,9 +16,9 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\Subset;
-use \Com\Tecnick\Pdf\Encrypt\Encrypt;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Pdf\Font\Subset;
+use Com\Tecnick\Pdf\Encrypt\Encrypt;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Output
@@ -117,9 +118,10 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             if (!empty($font['diff'])) {
                 $dkey = md5($font['diff']);
                 if (!isset($done[$dkey])) {
-                    $out .= (++$this->pon).' 0 obj'."\n"
-                        .'<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences ['.$font['diff'].'] >>'."\n"
-                        .'endobj'."\n";
+                    $out .= (++$this->pon) . ' 0 obj' . "\n"
+                        . '<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences ['
+                        . $font['diff'] . '] >>' . "\n"
+                        . 'endobj' . "\n";
                     $done[$dkey] = $this->pon;
                 }
                 $this->fonts[$fkey]['diff_n'] = $done[$dkey];
@@ -162,20 +164,20 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     }
                     ++$this->pon;
                     $stream = $this->enc->encryptString($font_data, $this->pon);
-                    $out .= $this->pon.' 0 obj'."\n"
-                        .'<<'
-                        .' /Filter /FlateDecode'
-                        .' /Length '.strlen($stream)
-                        .' /Length1 '.$font['length1'];
+                    $out .= $this->pon . ' 0 obj' . "\n"
+                        . '<<'
+                        . ' /Filter /FlateDecode'
+                        . ' /Length ' . strlen($stream)
+                        . ' /Length1 ' . $font['length1'];
                     if (isset($font['length2'])) {
-                        $out .= ' /Length2 '.$font['length2']
-                            .' /Length3 0';
+                        $out .= ' /Length2 ' . $font['length2']
+                            . ' /Length3 0';
                     }
                     $out .= ' >>'
-                        .' stream'."\n"
-                        .$stream."\n"
-                        .'endstream'."\n"
-                        .'endobj'."\n";
+                        . ' stream' . "\n"
+                        . $stream . "\n"
+                        . 'endstream' . "\n"
+                        . 'endobj' . "\n";
                     $done[$dkey] = $this->pon;
                 }
                 $this->fonts[$fkey]['file_n'] = $done[$dkey];
@@ -194,7 +196,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         $out = '';
         foreach ($this->fonts as $font) {
             if (!isset(self::$map[strtolower($font['type'])])) {
-                throw new FontException('Unsupported font type: '.$font['type']);
+                throw new FontException('Unsupported font type: ' . $font['type']);
             }
             $method = self::$map[strtolower($font['type'])];
             $out .= $this->$method($font);

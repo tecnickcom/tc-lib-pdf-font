@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Stack.php
  *
@@ -15,8 +16,8 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\Font;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Pdf\Font\Font;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Stack
@@ -372,7 +373,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         // add this font in the stack wit metrics in internal units
         $this->metric[$mkey] = array(
             'outraw'       => $outfont,
-            'out'          => sprintf('BT '.$outfont.' ET'."\r"), // PDF output string
+            'out'          => sprintf('BT ' . $outfont . ' ET' . "\r"), // PDF output string
             'key'          => $font['key'],
             'type'         => $data['type'],
             'size'         => $size,   // size in points

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * TypeOne.php
  *
@@ -15,9 +16,9 @@
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
-use \Com\Tecnick\File\File;
-use \Com\Tecnick\Unicode\Data\Encoding;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\File\File;
+use Com\Tecnick\Unicode\Data\Encoding;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Import\TypeOne
@@ -53,9 +54,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $this->fdt['encrypted'] = substr($this->font, (12 + $this->fdt['size1']), $this->fdt['size2']);
         $data .= $this->fdt['encrypted'];
         // store compressed font
-        $this->fdt['file'] = $this->fdt['file_name'].'.z';
+        $this->fdt['file'] = $this->fdt['file_name'] . '.z';
         $file = new File();
-        $fpt = $file->fopenLocal($this->fdt['dir'].$this->fdt['file'], 'wb');
+        $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
         fwrite($fpt, gzcompress($data));
         fclose($fpt);
     }
@@ -253,7 +254,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     protected function decodeNumber($idx, &$cck, &$cid, &$ccom, &$cdec, &$cwidths)
     {
         if ($ccom[$idx] == 255) {
-            $sval = chr($ccom[($idx + 1)]).chr($ccom[($idx + 2)]).chr($ccom[($idx + 3)]).chr($ccom[($idx + 4)]);
+            $sval = chr($ccom[($idx + 1)]) . chr($ccom[($idx + 2)]) . chr($ccom[($idx + 3)]) . chr($ccom[($idx + 4)]);
             $vsval = unpack('li', $sval);
             $cdec[$cck] = $vsval['i'];
             return ($idx + 5);

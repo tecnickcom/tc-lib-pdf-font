@@ -1,4 +1,5 @@
 <?php
+
 /**
  * TrueType.php
  *
@@ -15,9 +16,9 @@
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
-use \Com\Tecnick\File\File;
-use \Com\Tecnick\Unicode\Data\Encoding;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\File\File;
+use Com\Tecnick\Unicode\Data\Encoding;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
@@ -76,14 +77,15 @@ abstract class TrueTypeFormat
         $this->fdt['ctgdata'] = array();
         foreach ($this->fdt['encodingTables'] as $enctable) {
             // get only specified Platform ID and Encoding ID
-            if (($enctable['platformID'] == $this->fdt['platform_id'])
+            if (
+                ($enctable['platformID'] == $this->fdt['platform_id'])
                 && ($enctable['encodingID'] == $this->fdt['encoding_id'])
             ) {
                 $this->offset = ($this->fdt['table']['cmap']['offset'] + $enctable['offset']);
                 $format = $this->fbyte->getUShort($this->offset);
                 $this->offset += 2;
                 if (in_array($format, $valid_format)) {
-                    $method = 'processFormat'.$format;
+                    $method = 'processFormat' . $format;
                     $this->$method();
                 }
             }

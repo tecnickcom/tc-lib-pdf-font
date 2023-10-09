@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Font.php
  *
@@ -15,7 +16,7 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Font
@@ -127,7 +128,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         $this->data['compress'] = (bool) $compress;
         $this->data['subset'] = $subset;
         $this->data['subsetchars'] = array_fill(0, 255, true);
-        
+
         // generate the font key and set styles
         $this->setStyle($style);
     }
@@ -178,7 +179,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         }
         if ($this->data['pdfa'] && (isset(Core::$font[$this->data['family']]))) {
             // core fonts must be embedded in PDF/A
-            $this->data['family'] = 'pdfa'.$this->data['family'];
+            $this->data['family'] = 'pdfa' . $this->data['family'];
         }
         $this->setStyleMode($style);
     }
@@ -214,6 +215,6 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
             $this->data['mode']['overline'] = true;
             $this->data['style'] .= 'O';
         }
-        $this->data['key'] = $this->data['family'].$suffix;
+        $this->data['key'] = $this->data['family'] . $suffix;
     }
 }

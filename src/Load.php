@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Load.php
  *
@@ -15,9 +16,9 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\File\Dir;
-use \Com\Tecnick\Pdf\Font\Core;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\File\Dir;
+use Com\Tecnick\Pdf\Font\Core;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Load
@@ -63,17 +64,17 @@ abstract class Load
 
         // read the font definition file
         if (!@is_readable($this->data['ifile'])) {
-            throw new FontException('unable to read file: '.$this->data['ifile']);
+            throw new FontException('unable to read file: ' . $this->data['ifile']);
         }
 
         $fdt = @file_get_contents($this->data['ifile']);
         $fdt = @json_decode($fdt, true);
         if ($fdt === null) {
-            throw new FontException('JSON decoding error ['.json_last_error().']');
+            throw new FontException('JSON decoding error [' . json_last_error() . ']');
         }
 
         if (empty($fdt['type']) || empty($fdt['cw'])) {
-            throw new FontException('fhe font definition file has a bad format: '.$this->data['ifile']);
+            throw new FontException('fhe font definition file has a bad format: ' . $this->data['ifile']);
         }
 
         return $fdt;
@@ -90,12 +91,12 @@ abstract class Load
         $dirs =  array('');
         if (defined('K_PATH_FONTS')) {
             $dirs[] = K_PATH_FONTS;
-            $dirs = array_merge($dirs, glob(K_PATH_FONTS.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR));
+            $dirs = array_merge($dirs, glob(K_PATH_FONTS . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR));
         }
         $parent_font_dir = $dirobj->findParentDir('fonts', __DIR__);
         if (!empty($parent_font_dir)) {
             $dirs[] = $parent_font_dir;
-            $dirs = array_merge($dirs, glob($parent_font_dir.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR));
+            $dirs = array_merge($dirs, glob($parent_font_dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR));
         }
         return array_unique($dirs);
     }
@@ -113,23 +114,23 @@ abstract class Load
             return;
         }
 
-        $this->data['ifile'] = strtolower($this->data['key']).'.json';
- 
+        $this->data['ifile'] = strtolower($this->data['key']) . '.json';
+
         // directories where to search for the font definition file
         $dirs = $this->findFontDirectories();
 
         // find font definition file names
         $files = array_unique(
             array(
-                strtolower($this->data['key']).'.json',
-                strtolower($this->data['family']).'.json'
+                strtolower($this->data['key']) . '.json',
+                strtolower($this->data['family']) . '.json'
             )
         );
 
         foreach ($files as $file) {
             foreach ($dirs as $dir) {
-                if (@is_readable($dir.DIRECTORY_SEPARATOR.$file)) {
-                    $this->data['ifile'] = $dir.DIRECTORY_SEPARATOR.$file;
+                if (@is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
+                    $this->data['ifile'] = $dir . DIRECTORY_SEPARATOR . $file;
                     $this->data['dir'] = $dir;
                     break 2;
                 }
@@ -164,7 +165,7 @@ abstract class Load
         if (in_array($this->data['type'], array('Core', 'Type1', 'TrueType', 'TrueTypeUnicode', 'cidfont0'))) {
             return;
         }
-        throw new FontException('Unknow font type: '.$this->data['type']);
+        throw new FontException('Unknow font type: ' . $this->data['type']);
     }
 
     /**

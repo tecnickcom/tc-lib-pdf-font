@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ImportTest.php
  *
@@ -32,9 +33,6 @@ use PHPUnit\Framework\TestCase;
  */
 class ImportTest extends TestUtil
 {
-    protected $preserveGlobalState = false;
-    protected $runTestInSeparateProcess = true;
-
     public function testImportEmptyName()
     {
         $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
@@ -44,9 +42,9 @@ class ImportTest extends TestUtil
     public function testImportExist()
     {
         $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
-        $fin = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
-        $outdir = dirname(__DIR__).'/target/tmptest/';
-        system('rm -rf '.$outdir.' && mkdir -p '.$outdir);
+        $fin = dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
+        $outdir = dirname(__DIR__) . '/target/tmptest/';
+        system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir);
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir);
     }
@@ -54,32 +52,31 @@ class ImportTest extends TestUtil
     public function testImportWrongFile()
     {
         $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
-        new \Com\Tecnick\Pdf\Font\Import(dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/core/Missing.afm');
+        new \Com\Tecnick\Pdf\Font\Import(dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Missing.afm');
     }
 
     public function testImportDefaultOutput()
     {
         $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
-        define('K_PATH_FONTS', dirname(__DIR__).'/target/tmptest/');
-        new \Com\Tecnick\Pdf\Font\Import(dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/core/Missing.afm');
+        new \Com\Tecnick\Pdf\Font\Import(dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Missing.afm');
     }
 
     public function testImportUnsupportedType()
     {
         $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
-        $fin = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
-        $outdir = dirname(__DIR__).'/target/tmptest/core/';
-        system('rm -rf '.$outdir.' && mkdir -p '.$outdir);
+        $fin = dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
+        $outdir = dirname(__DIR__) . '/target/tmptest/core/';
+        system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir, 'ERROR');
     }
 
     public function testImportUnsupportedOpenType()
     {
         $this->bcExpectException('\Com\Tecnick\Pdf\Font\Exception');
-        $outdir = dirname(__DIR__).'/target/tmptest/core/';
-        system('rm -rf '.$outdir.' && mkdir -p '.$outdir);
-        file_put_contents($outdir.'test.ttf', 'OTTO 1234');
-        new \Com\Tecnick\Pdf\Font\Import($outdir.'test.ttf', $outdir);
+        $outdir = dirname(__DIR__) . '/target/tmptest/core/';
+        system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
+        file_put_contents($outdir . 'test.ttf', 'OTTO 1234');
+        new \Com\Tecnick\Pdf\Font\Import($outdir . 'test.ttf', $outdir);
     }
 
     /**
@@ -87,14 +84,14 @@ class ImportTest extends TestUtil
      */
     public function testImport($fontdir, $font, $outname, $type = null, $encoding = null)
     {
-        $indir = dirname(__DIR__).'/util/vendor/tecnickcom/tc-font-mirror/'.$fontdir.'/';
-        $outdir = dirname(__DIR__).'/target/tmptest/'.$fontdir.'/';
-        system('rm -rf '.dirname(__DIR__).'/target/tmptest/ && mkdir -p '.$outdir);
-        
-        $imp = new \Com\Tecnick\Pdf\Font\Import($indir.$font, $outdir, $type, $encoding);
+        $indir = dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/' . $fontdir . '/';
+        $outdir = dirname(__DIR__) . '/target/tmptest/' . $fontdir . '/';
+        system('rm -rf ' . dirname(__DIR__) . '/target/tmptest/ && mkdir -p ' . $outdir);
+
+        $imp = new \Com\Tecnick\Pdf\Font\Import($indir . $font, $outdir, $type, $encoding);
         $this->assertEquals($outname, $imp->getFontName());
 
-        $json = json_decode(file_get_contents($outdir.$outname.'.json'), true);
+        $json = json_decode(file_get_contents($outdir . $outname . '.json'), true);
         $this->assertNotNull($json);
 
         $this->assertArrayHasKey('type', $json);
@@ -107,8 +104,8 @@ class ImportTest extends TestUtil
         $this->assertArrayHasKey('Flags', $json['desc']);
 
         $metric = $imp->getFontMetrics();
-        
-        $this->assertEquals('['.$metric['bbox'].']', $json['desc']['FontBBox']);
+
+        $this->assertEquals('[' . $metric['bbox'] . ']', $json['desc']['FontBBox']);
         $this->assertEquals($metric['italicAngle'], $json['desc']['ItalicAngle']);
         $this->assertEquals($metric['Ascent'], $json['desc']['Ascent']);
         $this->assertEquals($metric['Descent'], $json['desc']['Descent']);

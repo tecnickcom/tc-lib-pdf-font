@@ -1,4 +1,5 @@
 <?php
+
 /**
  * TrueType.php
  *
@@ -15,9 +16,9 @@
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
-use \Com\Tecnick\File\File;
-use \Com\Tecnick\Unicode\Data\Encoding;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\File\File;
+use Com\Tecnick\Unicode\Data\Encoding;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Import\TrueType
@@ -143,12 +144,12 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         if ($this->fdt['type'] != 'cidfont0') {
             if ($this->fdt['linked']) {
                 // creates a symbolic link to the existing font
-                symlink($this->fdt['input_file'], $this->fdt['dir'].$this->fdt['file_name']);
+                symlink($this->fdt['input_file'], $this->fdt['dir'] . $this->fdt['file_name']);
             } else {
                 // store compressed font
-                $this->fdt['file'] = $this->fdt['file_name'].'.z';
+                $this->fdt['file'] = $this->fdt['file_name'] . '.z';
                 $file = new File();
-                $fpt = $file->fopenLocal($this->fdt['dir'].$this->fdt['file'], 'wb');
+                $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
                 fwrite($fpt, gzcompress($this->font));
                 fclose($fpt);
             }
@@ -217,7 +218,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         $this->offset += 2;
         $yMax = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
-        $this->fdt['bbox'] = $xMin.' '.$yMin.' '.$xMax.' '.$yMax;
+        $this->fdt['bbox'] = $xMin . ' ' . $yMin . ' ' . $xMax . ' ' . $yMax;
         $macStyle = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         // PDF font flags
@@ -244,7 +245,8 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
             $this->fdt['tot_num_glyphs'] = floor($this->fdt['table']['loca']['length'] / 2); // numGlyphs + 1
             for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getUShort($this->offset) * 2;
-                if (isset($this->fdt['indexToLoc'][($idx - 1)])
+                if (
+                    isset($this->fdt['indexToLoc'][($idx - 1)])
                     && ($this->fdt['indexToLoc'][$idx] == $this->fdt['indexToLoc'][($idx - 1)])
                 ) {
                     // the last glyph didn't have an outline
@@ -257,7 +259,8 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
             $this->fdt['tot_num_glyphs'] = floor($this->fdt['table']['loca']['length'] / 4); // numGlyphs + 1
             for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getULong($this->offset);
-                if (isset($this->fdt['indexToLoc'][($idx - 1)])
+                if (
+                    isset($this->fdt['indexToLoc'][($idx - 1)])
                     && ($this->fdt['indexToLoc'][$idx] == $this->fdt['indexToLoc'][($idx - 1)])
                 ) {
                     // the last glyph didn't have an outline
@@ -310,7 +313,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         if ($fsType == 2) {
             throw new FontException(
                 'This Font cannot be modified, embedded or exchanged in any manner'
-                .' without first obtaining permission of the legal owner.'
+                . ' without first obtaining permission of the legal owner.'
             );
         }
     }
@@ -425,7 +428,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
             $this->offset += 2;
             $this->fdt['XHeight'] = round(($yMax - $yMin) * $this->fdt['urk']);
         }
-    
+
         // get CapHeight (height of H)
         $this->fdt['CapHeight'] = $this->fdt['Ascent'];
         if (!empty($this->fdt['ctgdata'][72])) {
@@ -463,7 +466,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         for ($cid = 0; $cid <= 65535; ++$cid) {
             if (isset($this->fdt['ctgdata'][$cid])) {
                 if (($cid >= 0) && isset($chw[$this->fdt['ctgdata'][$cid]])) {
-                    $this->fdt['cw'] .= ',"'.$cid.'":'.$chw[$this->fdt['ctgdata'][$cid]];
+                    $this->fdt['cw'] .= ',"' . $cid . '":' . $chw[$this->fdt['ctgdata'][$cid]];
                 }
                 if (isset($this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]])) {
                     $this->offset = ($this->fdt['table']['glyf']['offset']
@@ -473,7 +476,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
                     $yMin = round($this->fbyte->getFWord($this->offset + 4) * $this->fdt['urk']);
                     $xMax = round($this->fbyte->getFWord($this->offset + 6) * $this->fdt['urk']);
                     $yMax = round($this->fbyte->getFWord($this->offset + 8) * $this->fdt['urk']);
-                    $this->fdt['cbbox'] .= ',"'.$cid.'":['.$xMin.','.$yMin.','.$xMax.','.$yMax.']';
+                    $this->fdt['cbbox'] .= ',"' . $cid . '":[' . $xMin . ',' . $yMin . ',' . $xMax . ',' . $yMax . ']';
                 }
             }
         }

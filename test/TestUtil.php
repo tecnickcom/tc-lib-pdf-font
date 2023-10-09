@@ -1,4 +1,5 @@
 <?php
+
 /**
  * TestUtil.php
  *
@@ -30,6 +31,17 @@ use PHPUnit\Framework\TestCase;
  */
 class TestUtil extends TestCase
 {
+    protected $preserveGlobalState = false;
+    protected $runTestSepProcess = true;
+
+    protected function setupTest()
+    {
+        if (!defined('K_PATH_FONTS')) {
+            define('K_PATH_FONTS', dirname(__DIR__) . '/target/tmptest/');
+        }
+        system('rm -rf ' . K_PATH_FONTS . ' && mkdir -p ' . K_PATH_FONTS);
+    }
+
     public function bcAssertEqualsWithDelta($expected, $actual, $delta = 0.01, $message = '')
     {
         if (\is_callable([self::class, 'assertEqualsWithDelta'])) {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * OutUtil.php
  *
@@ -15,8 +16,8 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use \Com\Tecnick\File\Dir;
-use \Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\File\Dir;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\OutUtil
@@ -52,11 +53,11 @@ abstract class OutUtil
             )
         );
         foreach ($dirs as $dir) {
-            if (@is_readable($dir.DIRECTORY_SEPARATOR.$file)) {
-                return $dir.DIRECTORY_SEPARATOR.$file;
+            if (@is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
+                return $dir . DIRECTORY_SEPARATOR . $file;
             }
         }
-        throw new FontException('Unable to locate the file: '.$file);
+        throw new FontException('Unable to locate the file: ' . $file);
     }
 
     /**
@@ -76,13 +77,13 @@ abstract class OutUtil
         foreach ($range as $kdx => $wds) {
             if (count(array_count_values($wds)) == 1) {
                 // interval mode is more compact
-                $wdt .= ' '.$kdx.' '.($kdx + count($wds) - 1).' '.$wds[0];
+                $wdt .= ' ' . $kdx . ' ' . ($kdx + count($wds) - 1) . ' ' . $wds[0];
             } else {
                 // range mode
-                $wdt .= ' '.$kdx.' [ '.implode(' ', $wds).' ]';
+                $wdt .= ' ' . $kdx . ' [ ' . implode(' ', $wds) . ' ]';
             }
         }
-        return '/W ['.$wdt.' ]';
+        return '/W [' . $wdt . ' ]';
     }
 
     /**
