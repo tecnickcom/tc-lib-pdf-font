@@ -115,8 +115,6 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * @param array $font      Font to process
      * @param int   $cidoffset Offset for CID values
-     *
-     * @return array Processed font
      */
     protected function uniToCid(array &$font, $cidoffset)
     {

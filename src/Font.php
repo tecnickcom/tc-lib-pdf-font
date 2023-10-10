@@ -32,52 +32,6 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 class Font extends \Com\Tecnick\Pdf\Font\Load
 {
     /**
-     * Font data
-     *
-     * @var array
-     */
-    protected $data = array(
-        'n'           => 0,              // PDF object number
-        'i'           => 0,              // font number
-        'key'         => '',             // font key
-        'ifile'       => '',             // JSON font file
-        'family'      => '',             // font family name
-        'unicode'     => true,           // unicode mode
-        'pdfa'        => false,          // PDF/A mode
-        'style'       => '',             // font style string
-        'fakestyle'   => false,          // emulated style
-        'mode'        => array(
-            'bold'        => false,
-            'italic'      => false,
-            'underline'   => false,
-            'linethrough' => false,
-            'overline'    => false
-        ),
-        'type'        => '',
-        'name'        => '',
-        'desc'        => array(),
-        'up'          => -100,
-        'ut'          => 50,
-        'cw'          => array(),
-        'cbbox'       => array(),
-        'dw'          => 0,
-        'enc'         => '',
-        'cidinfo'     => array(
-            'Registry'    => 'Adobe',
-            'Ordering'    => 'Identity',
-            'Supplement'  => 0,
-            'uni2cid'     => array()
-        ),
-        'file'        => '',             // original font file
-        'dir'         => '',             // font directory
-        'ctg'         => '',             // font CTG file
-        'diff'        => '',             // encoding differences
-        'diff_n'      => 0,              // object ID of the difference object
-        'subset'      => false,          // True if the font is subset
-        'subsetchars' => array(),        // subset characters
-    );
-
-    /**
      * Load an imported font
      *
      * The definition file (and the font file itself when embedding) must be present either in the current directory
@@ -188,8 +142,6 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      * Set style mode properties
      *
      * @param string $style Style
-     *
-     * @return string Style
      */
     protected function setStyleMode($style)
     {

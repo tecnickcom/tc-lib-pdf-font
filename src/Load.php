@@ -34,6 +34,52 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 abstract class Load
 {
     /**
+     * Font data
+     *
+     * @var array
+     */
+    protected $data = array(
+        'n'           => 0,              // PDF object number
+        'i'           => 0,              // font number
+        'key'         => '',             // font key
+        'ifile'       => '',             // JSON font file
+        'family'      => '',             // font family name
+        'unicode'     => true,           // unicode mode
+        'pdfa'        => false,          // PDF/A mode
+        'style'       => '',             // font style string
+        'fakestyle'   => false,          // emulated style
+        'mode'        => array(
+            'bold'        => false,
+            'italic'      => false,
+            'underline'   => false,
+            'linethrough' => false,
+            'overline'    => false
+        ),
+        'type'        => '',
+        'name'        => '',
+        'desc'        => array(),
+        'up'          => -100,
+        'ut'          => 50,
+        'cw'          => array(),
+        'cbbox'       => array(),
+        'dw'          => 0,
+        'enc'         => '',
+        'cidinfo'     => array(
+            'Registry'    => 'Adobe',
+            'Ordering'    => 'Identity',
+            'Supplement'  => 0,
+            'uni2cid'     => array()
+        ),
+        'file'        => '',             // original font file
+        'dir'         => '',             // font directory
+        'ctg'         => '',             // font CTG file
+        'diff'        => '',             // encoding differences
+        'diff_n'      => 0,              // object ID of the difference object
+        'subset'      => false,          // True if the font is subset
+        'subsetchars' => array(),        // subset characters
+    );
+
+    /**
      * Load the font data
      *
      * @throws FontException in case of error
@@ -103,8 +149,6 @@ abstract class Load
 
     /**
      * Load the font data
-     *
-     * @return array Font data
      *
      * @throws FontException in case of error
      */

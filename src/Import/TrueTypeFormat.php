@@ -55,6 +55,27 @@ abstract class TrueTypeFormat
     protected $offset = 0;
 
     /**
+     * Content of the input font file
+     *
+     * @var string
+     */
+    protected $font = '';
+
+    /**
+     * Extracted font metrics
+     *
+     * @var array
+     */
+    protected $fdt = array();
+
+    /**
+     * Object used to read font bytes
+     *
+     * @var \Com\Tecnick\File\Byte
+     */
+    protected $fbyte;
+
+    /**
      * Add CTG entry
      *
      * @param int $cid

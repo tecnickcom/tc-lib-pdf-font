@@ -163,8 +163,6 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      * Extract eexec info
      *
      * @param string $eplain Decoded eexec encrypted part
-     *
-     * @return array
      */
     protected function extractStem($eplain)
     {
