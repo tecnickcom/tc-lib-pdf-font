@@ -74,8 +74,8 @@ class BufferTest extends TestUtil
         $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
-        file_put_contents(K_PATH_FONTS . 'badformat.json', '{"bad":"format"}');
-        $stack->add($objnum, 'something', '', K_PATH_FONTS . 'badformat.json');
+        file_put_contents($this->getFontPath() . 'badformat.json', '{"bad":"format"}');
+        $stack->add($objnum, 'something', '', $this->getFontPath() . 'badformat.json');
     }
 
     public function testLoadDeafultWidthA()
@@ -83,8 +83,8 @@ class BufferTest extends TestUtil
         $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
-        file_put_contents(K_PATH_FONTS . 'test.json', '{"type":"Type1","cw":{"0":100}}');
-        $stack->add($objnum, 'test', '', K_PATH_FONTS . 'test.json');
+        file_put_contents($this->getFontPath() . 'test.json', '{"type":"Type1","cw":{"0":100}}');
+        $stack->add($objnum, 'test', '', $this->getFontPath() . 'test.json');
         $font = $stack->getFont('test');
         $this->assertEquals(600, $font['dw']);
     }
@@ -94,8 +94,8 @@ class BufferTest extends TestUtil
         $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
-        file_put_contents(K_PATH_FONTS . 'test.json', '{"type":"Type1","cw":{"32":123}}');
-        $stack->add($objnum, 'test', '', K_PATH_FONTS . 'test.json');
+        file_put_contents($this->getFontPath() . 'test.json', '{"type":"Type1","cw":{"32":123}}');
+        $stack->add($objnum, 'test', '', $this->getFontPath() . 'test.json');
         $font = $stack->getFont('test');
         $this->assertEquals(123, $font['dw']);
     }
@@ -105,8 +105,11 @@ class BufferTest extends TestUtil
         $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
-        file_put_contents(K_PATH_FONTS . 'test.json', '{"type":"Type1","desc":{"MissingWidth":234},"cw":{"0":600}}');
-        $stack->add($objnum, 'test', '', K_PATH_FONTS . 'test.json');
+        file_put_contents(
+            $this->getFontPath() . 'test.json',
+            '{"type":"Type1","desc":{"MissingWidth":234},"cw":{"0":600}}'
+        );
+        $stack->add($objnum, 'test', '', $this->getFontPath() . 'test.json');
         $font = $stack->getFont('test');
         $this->assertEquals(234, $font['dw']);
     }
@@ -117,8 +120,8 @@ class BufferTest extends TestUtil
         $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
-        file_put_contents(K_PATH_FONTS . 'test.json', '{"type":"WRONG","cw":{"0":600}}');
-        $stack->add($objnum, 'test', '', K_PATH_FONTS . 'test.json');
+        file_put_contents($this->getFontPath() . 'test.json', '{"type":"WRONG","cw":{"0":600}}');
+        $stack->add($objnum, 'test', '', $this->getFontPath() . 'test.json');
     }
 
     public function testLoadCidOnPdfa()
@@ -127,8 +130,8 @@ class BufferTest extends TestUtil
         $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, false, true, true);
         $objnum = 1;
-        file_put_contents(K_PATH_FONTS . 'test.json', '{"type":"cidfont0","cw":{"0":600}}');
-        $stack->add($objnum, 'test', '', K_PATH_FONTS . 'test.json', false);
+        file_put_contents($this->getFontPath() . 'test.json', '{"type":"cidfont0","cw":{"0":600}}');
+        $stack->add($objnum, 'test', '', $this->getFontPath() . 'test.json', false);
     }
 
     public function testLoadArtificialStyles()
@@ -137,10 +140,10 @@ class BufferTest extends TestUtil
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $objnum = 1;
         file_put_contents(
-            K_PATH_FONTS . 'test.json',
+            $this->getFontPath() . 'test.json',
             '{"type":"Core","cw":{"0":600},"mode":{"bold":true,"italic":true}}'
         );
-        $key = $stack->add($objnum, 'symbol', '', K_PATH_FONTS . 'test.json');
+        $key = $stack->add($objnum, 'symbol', '', $this->getFontPath() . 'test.json');
         $this->assertNotEmpty($key);
     }
 

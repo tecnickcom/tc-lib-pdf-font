@@ -247,7 +247,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      * @param array $cdec
      * @param array $cwidths
      *
-     * @return $int
+     * @return int
      */
     protected function decodeNumber($idx, &$cck, &$cid, &$ccom, &$cdec, &$cwidths)
     {

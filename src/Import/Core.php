@@ -64,7 +64,7 @@ class Core
     /**
      * Get all the extracted font metrics
      *
-     * @return string
+     * @return array
      */
     public function getFontMetrics()
     {

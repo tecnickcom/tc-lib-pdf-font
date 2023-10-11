@@ -42,13 +42,22 @@ class TestUtil extends TestCase
         system('rm -rf ' . K_PATH_FONTS . ' && mkdir -p ' . K_PATH_FONTS);
     }
 
+    protected function getFontPath()
+    {
+        if (defined('K_PATH_FONTS')) {
+            return K_PATH_FONTS;
+        }
+        return '';
+    }
+
     public function bcAssertEqualsWithDelta($expected, $actual, $delta = 0.01, $message = '')
     {
         if (\is_callable([self::class, 'assertEqualsWithDelta'])) {
             parent::assertEqualsWithDelta($expected, $actual, $delta, $message);
             return;
         }
-        return $this->assertEquals($expected, $actual, $message, $delta);
+        /* @phpstan-ignore-next-line */
+        $this->assertEquals($expected, $actual, $message, $delta);
     }
 
     public function bcExpectException($exception)
@@ -57,6 +66,7 @@ class TestUtil extends TestCase
             parent::expectException($exception);
             return;
         }
-        return parent::setExpectedException($exception);
+        /* @phpstan-ignore-next-line */
+        parent::setExpectedException($exception);
     }
 }

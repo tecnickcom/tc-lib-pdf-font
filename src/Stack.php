@@ -396,10 +396,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         );
         $tbox = explode(' ', substr($data['desc']['FontBBox'], 1, -1));
         $this->metric[$mkey]['fbbox'] = array(
-            ($tbox[0] * $wratio), // left
-            ($tbox[1] * $cratio), // bottom
-            ($tbox[2] * $wratio), // right
-            ($tbox[3] * $cratio), // top
+            ((float)$tbox[0] * $wratio), // left
+            ((float)$tbox[1] * $cratio), // bottom
+            ((float)$tbox[2] * $wratio), // right
+            ((float)$tbox[3] * $cratio), // top
         );
         //left, bottom, right, and top edges
         foreach ($data['cw'] as $chr => $width) {

@@ -328,8 +328,8 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
     /**
      * Returns the formatted key/value PDF string
      *
-     * @param string $key   Key name
-     * @param mixed  $value Value
+     * @param string $key Key name
+     * @param mixed  $val Value
      *
      * @return string
      */

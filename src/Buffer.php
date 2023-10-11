@@ -185,9 +185,9 @@ abstract class Buffer
     /**
      * Set font sub-key value
      *
-     * @param int   $key    The font key
-     * @param int   $subkey Font sub-key
-     * @param mixed $data   The data to set
+     * @param string $key    The font key
+     * @param string $subkey Font sub-key
+     * @param mixed  $data   The data to set
      */
     public function setFontSubKey($key, $subkey, $data)
     {

@@ -138,7 +138,7 @@ class Import extends ImportUtil
     /**
      * Get all the extracted font metrics
      *
-     * @return string
+     * @return array
      */
     public function getFontMetrics()
     {
@@ -157,10 +157,6 @@ class Import extends ImportUtil
 
     /**
      * Initialize font flags from font name
-     *
-     * @param int $flags
-     *
-     * return int
      */
     protected function initFlags()
     {

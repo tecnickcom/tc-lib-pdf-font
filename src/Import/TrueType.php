@@ -16,6 +16,7 @@
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
+use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\File;
 use Com\Tecnick\Unicode\Data\Encoding;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
@@ -57,7 +58,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get all the extracted font metrics
      *
-     * @return string
+     * @return array
      */
     public function getFontMetrics()
     {
@@ -444,7 +445,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         $this->fdt['cbbox'] = '';
         for ($cid = 0; $cid <= 65535; ++$cid) {
             if (isset($this->fdt['ctgdata'][$cid])) {
-                if (($cid >= 0) && isset($chw[$this->fdt['ctgdata'][$cid]])) {
+                if (isset($chw[$this->fdt['ctgdata'][$cid]])) {
                     $this->fdt['cw'] .= ',"' . $cid . '":' . $chw[$this->fdt['ctgdata'][$cid]];
                 }
                 if (isset($this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]])) {

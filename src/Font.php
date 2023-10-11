@@ -100,7 +100,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     /**
      * Get the font data
      *
-     * @return string
+     * @return array
      */
     public function getFontData()
     {

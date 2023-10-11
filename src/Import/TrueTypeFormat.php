@@ -164,6 +164,7 @@ abstract class TrueTypeFormat
             $subHeaders[$ish]['idRangeOffset'] /= 2;
             $numGlyphIndexArray += $subHeaders[$ish]['entryCount'];
         }
+        $glyphIndexArray = array(0 => 0);
         for ($gid = 0; $gid < $numGlyphIndexArray; ++$gid) {
             $glyphIndexArray[$gid] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;

@@ -70,9 +70,9 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Initialize font data
      *
-     * @param array   $font Array of imported fonts data
-     * @param int     $pon  Current PDF Object Number
-     * @param Encrypt $enc  Encrypt object
+     * @param array   $fonts Array of imported fonts data
+     * @param int     $pon   Current PDF Object Number
+     * @param Encrypt $enc   Encrypt object
      */
     public function __construct(array $fonts, $pon, Encrypt $enc)
     {
