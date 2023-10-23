@@ -148,7 +148,7 @@ foreach ($fontdir as $dir) {
 
     foreach ($fonts as $font) {
         if (substr($font, -4) == '.otf') {
-            // OTF fonts are not supported but we can try to convert them to TTF using FontForge
+            // OTF fonts are not yet supported but we can try to convert them to TTF using FontForge
             system('fontforge -script otf2ttf.ff '.escapeshellcmd($font), $err);
             if ($err != 0) {
                 fwrite(STDERR, "\033[31m".'Unable to convert: '.$font."\033[m");

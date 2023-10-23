@@ -134,6 +134,7 @@ bz2:
 .PHONY: clean
 clean:
 	rm -rf ./vendor $(TARGETDIR)
+	cd util	&& make clean
 
 # Fix code style violations
 .PHONY: codefix
