@@ -68,6 +68,8 @@ class StackTest extends TestUtil
         $this->bcAssertEqualsWithDelta(4.6704, $bfont['dw'], 0.0001);
         $this->bcAssertEqualsWithDelta(13.342, $bfont['ascent'], 0.0001);
         $this->bcAssertEqualsWithDelta(-3.08, $bfont['descent'], 0.0001);
+        $this->bcAssertEqualsWithDelta(16.422, $bfont['height'], 0.0001);
+        $this->bcAssertEqualsWithDelta(5.131, $bfont['midpoint'], 0.0001);
         $this->bcAssertEqualsWithDelta(10.136, $bfont['capheight'], 0.0001);
         $this->bcAssertEqualsWithDelta(7.56, $bfont['xheight'], 0.0001);
         $this->bcAssertEqualsWithDelta(9.492, $bfont['avgwidth'], 0.0001);

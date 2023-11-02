@@ -386,6 +386,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'dw'           => ($data['dw'] * $cratio * $font['stretching']),
             'ascent'       => ($data['desc']['Ascent'] * $cratio),
             'descent'      => ($data['desc']['Descent'] * $cratio),
+            'height'       => (($data['desc']['Ascent'] - $data['desc']['Descent']) * $cratio),
+            'midpoint'     => (($data['desc']['Ascent'] + $data['desc']['Descent']) * $cratio / 2),
             'capheight'    => ($data['desc']['CapHeight'] * $cratio),
             'xheight'      => ($data['desc']['XHeight'] * $cratio),
             'avgwidth'     => ($data['desc']['AvgWidth'] * $cratio * $font['stretching']),
