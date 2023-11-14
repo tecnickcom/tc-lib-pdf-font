@@ -33,6 +33,24 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  */
 class Core
 {
+
+    /**
+     * Map property names to the correct key name.
+     * 
+     * @var array<string, string>
+     */
+    protected const PROPERTYMAP = [
+        'FullName'           => 'name',
+        'UnderlinePosition'  => 'underlinePosition',
+        'UnderlineThickness' => 'underlineThickness',
+        'ItalicAngle'        => 'italicAngle',
+        'Ascender'           => 'Ascent',
+        'Descender'          => 'Descent',
+        'StdVW'              => 'StemV',
+        'StdHW'              => 'StemH',
+
+    ];
+
     /**
      * Content of the input font file
      *
@@ -196,19 +214,7 @@ class Core
      */
     protected function remapValues(): void
     {
-        $map = array(
-            'FullName'           => 'name',
-            'UnderlinePosition'  => 'underlinePosition',
-            'UnderlineThickness' => 'underlineThickness',
-            'ItalicAngle'        => 'italicAngle',
-            'Ascender'           => 'Ascent',
-            'Descender'          => 'Descent',
-            'StdVW'              => 'StemV',
-            'StdHW'              => 'StemH',
-
-        );
-
-        foreach ($map as $old => $new) {
+        foreach (self::PROPERTYMAP as $old => $new) {
             $this->fdt[$new] = $this->fdt[$old];
         }
 

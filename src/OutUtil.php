@@ -63,7 +63,68 @@ abstract class OutUtil
     /**
      * Outputs font widths
      *
-     * @param array $font      Font to process
+     * @param array{
+*        'n': int,
+*        'i': int,
+*        'key': string,
+*        'ifile': string,
+*        'family': string,
+*        'unicode': bool,
+*        'pdfa': bool,
+*        'style': string,
+*        'fakestyle': bool,
+*        'mode': array{
+*            'bold': bool,
+*            'italic': bool,
+*            'underline': bool,
+*            'linethrough': bool,
+*            'overline': bool,
+*        },
+*        'type': string,
+*        'name': string,
+*        'desc':  array{
+*            'Flags': int,
+*            'FontBBox': string,
+*            'ItalicAngle': int,
+*            'Ascent': int,
+*            'Descent': int,
+*            'Leading': int,
+*            'CapHeight': int,
+*            'XHeight': int,
+*            'StemV': int,
+*            'StemH': int,
+*            'AvgWidth': int,
+*            'MaxWidth': int,
+*            'MissingWidth': int,
+*        },
+*        'up': int,
+*        'ut': int,
+*        'cw':  array<int, int>,
+*        'cbbox': array<int, array<int, int>>,
+*        'dw': int,
+*        'enc': string,
+*        'cidinfo': array{
+*            'Registry': string,
+*            'Ordering': string,
+*            'Supplement': int,
+*            'uni2cid': array<int, int>,
+*        },
+*        'file': string,
+*        'dir': string,
+*        'ctg': string,
+*        'diff': string,
+*        'diff_n': int,
+*        'subset': bool,
+*        'subsetchars': array<int, bool>,
+*        'compress': bool,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'originalsize': int,
+*        'isUnicode': bool,
+*        'length1': int,
+*        'length2': bool,
+*        'file_n': int,
+*    } $font      Font to process
      * @param int   $cidoffset Offset for CID values
      *
      * @return string PDF command string for font widths
@@ -89,10 +150,71 @@ abstract class OutUtil
     /**
      * get width ranges of characters
      *
-     * @param array $font      Font to process
+     * @param array{
+*        'n': int,
+*        'i': int,
+*        'key': string,
+*        'ifile': string,
+*        'family': string,
+*        'unicode': bool,
+*        'pdfa': bool,
+*        'style': string,
+*        'fakestyle': bool,
+*        'mode': array{
+*            'bold': bool,
+*            'italic': bool,
+*            'underline': bool,
+*            'linethrough': bool,
+*            'overline': bool,
+*        },
+*        'type': string,
+*        'name': string,
+*        'desc':  array{
+*            'Flags': int,
+*            'FontBBox': string,
+*            'ItalicAngle': int,
+*            'Ascent': int,
+*            'Descent': int,
+*            'Leading': int,
+*            'CapHeight': int,
+*            'XHeight': int,
+*            'StemV': int,
+*            'StemH': int,
+*            'AvgWidth': int,
+*            'MaxWidth': int,
+*            'MissingWidth': int,
+*        },
+*        'up': int,
+*        'ut': int,
+*        'cw':  array<int, int>,
+*        'cbbox': array<int, array<int, int>>,
+*        'dw': int,
+*        'enc': string,
+*        'cidinfo': array{
+*            'Registry': string,
+*            'Ordering': string,
+*            'Supplement': int,
+*            'uni2cid': array<int, int>,
+*        },
+*        'file': string,
+*        'dir': string,
+*        'ctg': string,
+*        'diff': string,
+*        'diff_n': int,
+*        'subset': bool,
+*        'subsetchars': array<int, bool>,
+*        'compress': bool,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'originalsize': int,
+*        'isUnicode': bool,
+*        'length1': int,
+*        'length2': bool,
+*        'file_n': int,
+*    } $font      Font to process
      * @param int   $cidoffset Offset for CID values
      *
-     * @return array
+     * @return array<int, array<int, int>>
      */
     protected function getWidthRanges(array $font, int $cidoffset = 0): array
     {
