@@ -17,8 +17,8 @@
 namespace Com\Tecnick\Pdf\Font\Import;
 
 use Com\Tecnick\File\File;
-use Com\Tecnick\Unicode\Data\Encoding;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Unicode\Data\Encoding;
 
 /**
  * Com\Tecnick\Pdf\Font\Import\Core
@@ -33,128 +33,76 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  */
 class Core
 {
-
     /**
      * Map property names to the correct key name.
-     * 
+     *
      * @var array<string, string>
      */
     protected const PROPERTYMAP = [
-        'FullName'           => 'name',
-        'UnderlinePosition'  => 'underlinePosition',
+        'FullName' => 'name',
+        'UnderlinePosition' => 'underlinePosition',
         'UnderlineThickness' => 'underlineThickness',
-        'ItalicAngle'        => 'italicAngle',
-        'Ascender'           => 'Ascent',
-        'Descender'          => 'Descent',
-        'StdVW'              => 'StemV',
-        'StdHW'              => 'StemH',
-
+        'ItalicAngle' => 'italicAngle',
+        'Ascender' => 'Ascent',
+        'Descender' => 'Descent',
+        'StdVW' => 'StemV',
+        'StdHW' => 'StemH',
     ];
 
     /**
-     * Content of the input font file
-     *
-     * @var string
-     */
-    protected string $font = '';
-
-    /**
-     * Extracted font metrics
-     *
-     * @var array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }
-
-     */
-    protected array $fdt = array();
-
-    /**
-     *
      * @param string $font    Content of the input font file
      * @param array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }  $fdt Extracted font metrics
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }  $fdt Extracted font metrics
      *
      * @throws FontException in case of error
      */
-    public function __construct(string $font, array $fdt)
-    {
-        $this->font = $font;
-        $this->fdt = $fdt;
+    public function __construct(
+        /**
+         * Content of the input font file
+         */
+        protected string $font, /**
+         * Extracted font metrics
+         */
+        protected array $fdt
+    ) {
         $this->process();
     }
 
@@ -162,55 +110,51 @@ class Core
      * Get all the extracted font metrics
      *
      * @return array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }
-
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }
      */
     public function getFontMetrics(): array
     {
         return $this->fdt;
     }
 
-    /**
-     * Set Flags
-     */
     protected function setFlags(): void
     {
         if (($this->fdt['FontName'] == 'Symbol') || ($this->fdt['FontName'] == 'ZapfDingbats')) {
@@ -218,9 +162,11 @@ class Core
         } else {
             $this->fdt['Flags'] |= 32;
         }
+
         if ($this->fdt['IsFixedPitch']) {
             $this->fdt['Flags'] |= 1;
         }
+
         if ($this->fdt['ItalicAngle'] != 0) {
             $this->fdt['Flags'] |= 64;
         }
@@ -234,9 +180,10 @@ class Core
     protected function setCharWidths(array $cwidths): void
     {
         $this->fdt['MissingWidth'] = 600;
-        if (!empty($cwidths[32])) {
+        if (! empty($cwidths[32])) {
             $this->fdt['MissingWidth'] = $cwidths[32];
         }
+
         $this->fdt['MaxWidth'] = $this->fdt['MissingWidth'];
         $this->fdt['AvgWidth'] = 0;
         $this->fdt['cw'] = '';
@@ -245,12 +192,14 @@ class Core
                 if ($cwidths[$cid] > $this->fdt['MaxWidth']) {
                     $this->fdt['MaxWidth'] = $cwidths[$cid];
                 }
+
                 $this->fdt['AvgWidth'] += $cwidths[$cid];
                 $this->fdt['cw'] .= ',"' . $cid . '":' . $cwidths[$cid];
             } else {
                 $this->fdt['cw'] .= ',"' . $cid . '":' . $this->fdt['MissingWidth'];
             }
         }
+
         $this->fdt['AvgWidth'] = round($this->fdt['AvgWidth'] / count($cwidths));
     }
 
@@ -259,16 +208,17 @@ class Core
      */
     protected function extractMetrics(): void
     {
-        $cwd = array();
+        $cwd = [];
         $this->fdt['cbbox'] = '';
         $lines = explode("\n", str_replace("\r", '', $this->font));
         // process each row
-        foreach ($lines as $row) {
-            $col = explode(' ', rtrim($row));
+        foreach ($lines as $line) {
+            $col = explode(' ', rtrim($line));
             if (count($col) > 1) {
                 $this->processMetricRow($col, $cwd);
             }
         }
+
         $this->fdt['Leading'] = 0;
         $this->setCharWidths($cwd);
     }
@@ -281,10 +231,10 @@ class Core
      */
     protected function processMetricRow(array $col, array &$cwd): void
     {
-        if (($col[0] == 'C') && (($cid = (int)$col[1]) >= 0)) {
+        if (($col[0] == 'C') && (($cid = (int) $col[1]) >= 0)) {
             // character metrics
-            $cwd[$cid] = (int)$col[4];
-            if (!empty($col[14])) {
+            $cwd[$cid] = (int) $col[4];
+            if (! empty($col[14])) {
                 //cbbox
                 $this->fdt['cbbox'] .= ',"' . $cid
                 . '":[' . $col[10] . ',' . $col[11] . ',' . $col[12] . ',' . $col[13] . ']';
@@ -292,39 +242,39 @@ class Core
         } elseif (
             in_array(
                 $col[0],
-                array(
-                'FontName',
-                'FullName',
-                'FamilyName',
-                'Weight',
-                'CharacterSet',
-                'Version',
-                'EncodingScheme'
-                )
+                [
+                    'FontName',
+                    'FullName',
+                    'FamilyName',
+                    'Weight',
+                    'CharacterSet',
+                    'Version',
+                    'EncodingScheme',
+                ]
             )
         ) {
-            $this->fdt[$col[0]] = (string)$col[1];
+            $this->fdt[$col[0]] = $col[1];
         } elseif (
             in_array(
                 $col[0],
-                array(
-                'ItalicAngle',
-                'UnderlinePosition',
-                'UnderlineThickness',
-                'CapHeight',
-                'XHeight',
-                'Ascender',
-                'Descender',
-                'StdHW',
-                'StdVW'
-                )
+                [
+                    'ItalicAngle',
+                    'UnderlinePosition',
+                    'UnderlineThickness',
+                    'CapHeight',
+                    'XHeight',
+                    'Ascender',
+                    'Descender',
+                    'StdHW',
+                    'StdVW',
+                ]
             )
         ) {
-            $this->fdt[$col[0]] = (int)$col[1];
+            $this->fdt[$col[0]] = (int) $col[1];
         } elseif ($col[0] == 'IsFixedPitch') {
             $this->fdt[$col[0]] = ($col[1] == 'true');
         } elseif ($col[0] == 'FontBBox') {
-            $this->fdt[$col[0]] = array((int)$col[1], (int)$col[2], (int)$col[3], (int)$col[4]);
+            $this->fdt[$col[0]] = [(int) $col[1], (int) $col[2], (int) $col[3], (int) $col[4]];
         }
     }
 
@@ -345,18 +295,13 @@ class Core
         }
     }
 
-    /**
-     * Set Missing values
-     */
     protected function setMissingValues(): void
     {
-        if (!isset($this->fdt['Descender'])) {
-            $this->fdt['Descender'] = $this->fdt['FontBBox'][1];
-        }
-        if (!isset($this->fdt['Ascender'])) {
-            $this->fdt['Ascender'] = $this->fdt['FontBBox'][3];
-        }
-        if (!isset($this->fdt['CapHeight'])) {
+        $this->fdt['Descender'] = $this->fdt['FontBBox'][1];
+
+        $this->fdt['Ascender'] = $this->fdt['FontBBox'][3];
+
+        if (! isset($this->fdt['CapHeight'])) {
             $this->fdt['CapHeight'] = $this->fdt['Ascender'];
         }
     }

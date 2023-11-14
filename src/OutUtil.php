@@ -45,18 +45,14 @@ abstract class OutUtil
         $dirobj = new Dir();
         // directories where to search for the font definition file
         $dirs = array_unique(
-            array(
-                '',
-                $fontdir,
-                (defined('K_PATH_FONTS') ? K_PATH_FONTS : ''),
-                $dirobj->findParentDir('fonts', __DIR__),
-            )
+            ['', $fontdir, (defined('K_PATH_FONTS') ? K_PATH_FONTS : ''), $dirobj->findParentDir('fonts', __DIR__)]
         );
         foreach ($dirs as $dir) {
             if (@is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
                 return $dir . DIRECTORY_SEPARATOR . $file;
             }
         }
+
         throw new FontException('Unable to locate the file: ' . $file);
     }
 
@@ -64,67 +60,67 @@ abstract class OutUtil
      * Outputs font widths
      *
      * @param array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    } $font      Font to process
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    } $font      Font to process
      * @param int   $cidoffset Offset for CID values
      *
      * @return string PDF command string for font widths
@@ -144,6 +140,7 @@ abstract class OutUtil
                 $wdt .= ' ' . $kdx . ' [ ' . implode(' ', $wds) . ' ]';
             }
         }
+
         return '/W [' . $wdt . ' ]';
     }
 
@@ -151,74 +148,74 @@ abstract class OutUtil
      * get width ranges of characters
      *
      * @param array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    } $font      Font to process
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    } $font      Font to process
      * @param int   $cidoffset Offset for CID values
      *
      * @return array<int, array<int, int>>
      */
     protected function getWidthRanges(array $font, int $cidoffset = 0): array
     {
-        $range = array();
+        $range = [];
         $rangeid = 0;
         $prevcid = -2;
         $prevwidth = -1;
@@ -226,10 +223,11 @@ abstract class OutUtil
         // for each character
         foreach ($font['cw'] as $cid => $width) {
             $cid -= $cidoffset;
-            if ($font['subset'] && (!isset($font['subsetchars'][$cid]))) {
+            if ($font['subset'] && (! isset($font['subsetchars'][$cid]))) {
                 // ignore the unused characters (font subsetting)
                 continue;
             }
+
             if ($width != $font['dw']) {
                 if ($cid == ($prevcid + 1)) {
                     // consecutive CID
@@ -240,34 +238,38 @@ abstract class OutUtil
                             array_pop($range[$rangeid]);
                             // new range
                             $rangeid = $prevcid;
-                            $range[$rangeid] = array();
+                            $range[$rangeid] = [];
                             $range[$rangeid][] = $prevwidth;
                             $range[$rangeid][] = $width;
                         }
+
                         $interval = true;
                         $range[$rangeid]['interval'] = true;
                     } else {
                         if ($interval) {
                             // new range
                             $rangeid = $cid;
-                            $range[$rangeid] = array();
+                            $range[$rangeid] = [];
                             $range[$rangeid][] = $width;
                         } else {
                             $range[$rangeid][] = $width;
                         }
+
                         $interval = false;
                     }
                 } else {
                     // new range
                     $rangeid = $cid;
-                    $range[$rangeid] = array();
+                    $range[$rangeid] = [];
                     $range[$rangeid][] = $width;
                     $interval = false;
                 }
+
                 $prevcid = $cid;
                 $prevwidth = $width;
             }
         }
+
         return $this->optimizeWidthRanges($range);
     }
 
@@ -285,23 +287,22 @@ abstract class OutUtil
         $prevint = false;
         foreach ($range as $kdx => $wds) {
             $cws = count($wds);
-            if (($kdx == $nextk) && (!$prevint) && ((!isset($wds['interval'])) || ($cws < 4))) {
+            if (($kdx == $nextk) && (! $prevint) && ((! isset($wds['interval'])) || ($cws < 4))) {
                 unset($range[$kdx]['interval']);
                 $range[$prevk] = array_merge($range[$prevk], $range[$kdx]);
                 unset($range[$kdx]);
             } else {
                 $prevk = $kdx;
             }
+
             $nextk = $kdx + $cws;
             if (isset($wds['interval'])) {
-                if ($cws > 3) {
-                    $prevint = true;
-                } else {
-                    $prevint = false;
-                }
+                $prevint = $cws > 3;
+
                 if (isset($range[$kdx]['interval'])) {
                     unset($range[$kdx]['interval']);
                 }
+
                 --$nextk;
             } else {
                 $prevint = false;

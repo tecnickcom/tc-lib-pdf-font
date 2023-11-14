@@ -34,27 +34,27 @@ class Core
      *
      * @var array<string, string>
      */
-    public const FONT = array(
-        'courier'        => 'Courier',
-        'courierB'       => 'Courier-Bold',
-        'courierI'       => 'Courier-Oblique',
-        'courierBI'      => 'Courier-BoldOblique',
-        'helvetica'      => 'Helvetica',
-        'helveticaB'     => 'Helvetica-Bold',
-        'helveticaI'     => 'Helvetica-Oblique',
-        'helveticaBI'    => 'Helvetica-BoldOblique',
-        'timesroman'     => 'Times-Roman',
-        'times'          => 'Times-Roman',
-        'timesB'         => 'Times-Bold',
-        'timesI'         => 'Times-Italic',
-        'timesBI'        => 'Times-BoldItalic',
-        'symbol'         => 'Symbol',
-        'symbolB'        => 'Symbol',
-        'symbolI'        => 'Symbol',
-        'symbolBI'       => 'Symbol',
-        'zapfdingbats'   => 'ZapfDingbats',
-        'zapfdingbatsB'  => 'ZapfDingbats',
-        'zapfdingbatsI'  => 'ZapfDingbats',
-        'zapfdingbatsBI' => 'ZapfDingbats'
-    );
+    public const FONT = [
+        'courier' => 'Courier',
+        'courierB' => 'Courier-Bold',
+        'courierI' => 'Courier-Oblique',
+        'courierBI' => 'Courier-BoldOblique',
+        'helvetica' => 'Helvetica',
+        'helveticaB' => 'Helvetica-Bold',
+        'helveticaI' => 'Helvetica-Oblique',
+        'helveticaBI' => 'Helvetica-BoldOblique',
+        'timesroman' => 'Times-Roman',
+        'times' => 'Times-Roman',
+        'timesB' => 'Times-Bold',
+        'timesI' => 'Times-Italic',
+        'timesBI' => 'Times-BoldItalic',
+        'symbol' => 'Symbol',
+        'symbolB' => 'Symbol',
+        'symbolI' => 'Symbol',
+        'symbolBI' => 'Symbol',
+        'zapfdingbats' => 'ZapfDingbats',
+        'zapfdingbatsB' => 'ZapfDingbats',
+        'zapfdingbatsI' => 'ZapfDingbats',
+        'zapfdingbatsBI' => 'ZapfDingbats',
+    ];
 }

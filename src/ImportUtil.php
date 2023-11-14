@@ -19,11 +19,9 @@ namespace Com\Tecnick\Pdf\Font;
 use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\Dir;
 use Com\Tecnick\File\File;
-use Com\Tecnick\Unicode\Data\Encoding;
-use Com\Tecnick\Pdf\Font\Import\TypeOne;
-use Com\Tecnick\Pdf\Font\Import\TrueType;
-use Com\Tecnick\Pdf\Font\UniToCid;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Pdf\Font\Import\TrueType;
+use Com\Tecnick\Unicode\Data\Encoding;
 
 /**
  * Com\Tecnick\Pdf\Font\ImportUtil
@@ -40,15 +38,11 @@ abstract class ImportUtil
 {
     /**
      * Content of the input font file
-     *
-     * @var string
      */
     protected string $font = '';
 
     /**
      * Object used to read font bytes
-     *
-     * @var \Com\Tecnick\File\Byte
      */
     protected Byte $fbyte;
 
@@ -56,61 +50,59 @@ abstract class ImportUtil
      * Extracted font metrics
      *
      * @var array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }
      */
-    protected array $fdt = array();
+    protected array $fdt = [];
 
     /**
      * Make the output font name
      *
      * @param string $font_file Input font file
-     *
-     * @return string
      */
     protected function makeFontName(string $font_file): string
     {
         $font_path_parts = pathinfo($font_file);
         return str_replace(
-            array('bold', 'oblique', 'italic', 'regular'),
-            array('b', 'i', 'i', ''),
+            ['bold', 'oblique', 'italic', 'regular'],
+            ['b', 'i', 'i', ''],
             preg_replace('/[^a-z0-9_]/', '', strtolower($font_path_parts['filename']))
         );
     }
@@ -120,25 +112,27 @@ abstract class ImportUtil
      *
      * @param string $output_path    Output path for generated font files (must be writeable by the web server).
      *                               Leave null for default font folder (K_PATH_FONTS).
-     *
-     * @return string
      */
     protected function findOutputPath(string $output_path = ''): string
     {
-        if (!empty($output_path) && is_writable($output_path)) {
+        if ($output_path !== '' && is_writable($output_path)) {
             return $output_path;
         }
+
         if (defined('K_PATH_FONTS') && is_writable(K_PATH_FONTS)) {
             return K_PATH_FONTS;
         }
+
         $dirobj = new Dir();
         $dir = $dirobj->findParentDir('fonts', __DIR__);
         if ($dir == '/') {
             $dir = sys_get_temp_dir();
         }
-        if (substr($dir, -1) !== '/') {
+
+        if (! str_ends_with($dir, '/')) {
             $dir .= '/';
         }
+
         return $dir;
     }
 
@@ -146,31 +140,35 @@ abstract class ImportUtil
      * Get the font type
      *
      * @param string $font_type      Font type. Leave empty for autodetect mode.
-     *
-     * @return string
      */
     protected function getFontType(string $font_type): string
     {
         // autodetect font type
-        if (empty($font_type)) {
-            if (substr($this->font, 0, 16) == 'StartFontMetrics') {
+        if ($font_type === '') {
+            if (str_starts_with($this->font, 'StartFontMetrics')) {
                 // AFM type - we use this type only for the 14 Core fonts
                 return 'Core';
             }
-            if (substr($this->font, 0, 4) == 'OTTO') {
+
+            if (str_starts_with($this->font, 'OTTO')) {
                 throw new FontException('Unsupported font format: OpenType with CFF data');
             }
+
             if ($this->fbyte->getULong(0) == 0x10000) {
                 return 'TrueTypeUnicode';
             }
+
             return 'Type1';
         }
-        if (strpos($font_type, 'CID0') === 0) {
+
+        if (str_starts_with($font_type, 'CID0')) {
             return 'cidfont0';
         }
-        if (in_array($font_type, array('Core', 'Type1', 'TrueType', 'TrueTypeUnicode'))) {
+
+        if (in_array($font_type, ['Core', 'Type1', 'TrueType', 'TrueTypeUnicode'])) {
             return $font_type;
         }
+
         throw new FontException('unknown or unsupported font type: ' . $font_type);
     }
 
@@ -183,26 +181,26 @@ abstract class ImportUtil
      */
     protected function getEncodingTable(string $encoding = '')
     {
-        if (empty($encoding)) {
+        if ($encoding === '') {
             if (($this->fdt['type'] == 'Type1') && (($this->fdt['Flags'] & 4) == 0)) {
                 return 'cp1252';
             }
+
             return '';
         }
+
         return preg_replace('/[^A-Za-z0-9_\-]/', '', $encoding);
     }
 
     /**
      * If required, get differences between the reference encoding (cp1252) and the current encoding
-     *
-     * @return string
      */
     protected function getEncodingDiff(): string
     {
         $diff = '';
         if (
             (($this->fdt['type'] == 'TrueType') || ($this->fdt['type'] == 'Type1'))
-            && (!empty($this->fdt['enc'])
+            && (! empty($this->fdt['enc'])
             && ($this->fdt['enc'] != 'cp1252')
             && isset(Encoding::MAP[$this->fdt['enc']]))
         ) {
@@ -212,14 +210,16 @@ abstract class ImportUtil
             $last = 0;
             for ($idx = 32; $idx <= 255; ++$idx) {
                 if ($enc_target[$idx] != $enc_ref[$idx]) {
-                    if ($idx != ($last + 1)) {
+                    if ($idx != $last + 1) {
                         $diff .= $idx . ' ';
                     }
+
                     $last = $idx;
                     $diff .= '/' . $enc_target[$idx] . ' ';
                 }
             }
         }
+
         return $diff;
     }
 
@@ -229,8 +229,6 @@ abstract class ImportUtil
      * @param string $map CIDToGIDMap.
      * @param int    $cid CID value.
      * @param int    $gid GID value.
-     *
-     * @return string
      */
     protected function updateCIDtoGIDmap(string $map, int $cid, int $gid): string
     {
@@ -238,9 +236,11 @@ abstract class ImportUtil
             if ($gid > 0xFFFF) {
                 $gid -= 0x10000;
             }
+
             $map[($cid * 2)] = chr($gid >> 8);
             $map[(($cid * 2) + 1)] = chr($gid & 0xFF);
         }
+
         return $map;
     }
 }

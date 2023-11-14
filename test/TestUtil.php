@@ -32,21 +32,24 @@ use PHPUnit\Framework\TestCase;
 class TestUtil extends TestCase
 {
     protected bool $preserveGlobalState = false;
+
     protected bool $runTestSepProcess = true;
 
-    protected function setupTest()
+    protected function setupTest(): void
     {
-        if (!defined('K_PATH_FONTS')) {
+        if (! defined('K_PATH_FONTS')) {
             define('K_PATH_FONTS', dirname(__DIR__) . '/target/tmptest/');
         }
+
         system('rm -rf ' . K_PATH_FONTS . ' && mkdir -p ' . K_PATH_FONTS);
     }
 
-    protected function getFontPath()
+    protected function getFontPath(): string
     {
         if (defined('K_PATH_FONTS')) {
             return K_PATH_FONTS;
         }
+
         return '';
     }
 

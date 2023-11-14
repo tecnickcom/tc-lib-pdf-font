@@ -18,8 +18,8 @@ namespace Com\Tecnick\Pdf\Font\Import;
 
 use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\File;
-use Com\Tecnick\Unicode\Data\Encoding;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Unicode\Data\Encoding;
 
 /**
  * Com\Tecnick\Pdf\Font\Import\TrueType
@@ -39,58 +39,60 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      *
      * @param string $font     Content of the input font file
      * @param array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }  $fdt      Extracted font metrics
-     * @param Byte   $fbyte    Object used to read font bytes
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }  $fdt      Extracted font metrics
+     * @param Byte $byte Object used to read font bytes
      * @param array<int, bool>  $subchars Array containing subset chars
      *
      * @throws FontException in case of error
      */
-    public function __construct(string $font, array $fdt, Byte $fbyte, array $subchars = array())
+    public function __construct(string $font, array $fdt, Byte $byte, array $subchars = [])
     {
         $this->font = $font;
         $this->fdt = $fdt;
-        $this->fbyte = $fbyte;
+        $this->fbyte = $byte;
         ksort($subchars);
         $this->subchars = $subchars;
-        $this->subglyphs = array(0 => true);
+        $this->subglyphs = [
+            0 => true,
+        ];
         $this->process();
     }
 
@@ -98,45 +100,45 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      * Get all the extracted font metrics
      *
      * @return array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }
      */
     public function getFontMetrics(): array
     {
@@ -186,6 +188,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         if ($this->fbyte->getULong($this->offset) != 0x10000) {
             throw new FontException('sfnt version must be 0x00010000 for TrueType version 1.0.');
         }
+
         $this->offset += 4;
     }
 
@@ -194,11 +197,12 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      */
     protected function setFontFile(): void
     {
-        if (!empty($this->fdt['desc'])) {
+        if (! empty($this->fdt['desc'])) {
             // subsetting mode
             $this->fdt['Flags'] = $this->fdt['desc']['Flags'];
             return;
         }
+
         if ($this->fdt['type'] != 'cidfont0') {
             if ($this->fdt['linked']) {
                 // creates a symbolic link to the existing font
@@ -216,7 +220,6 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
 
     /**
      * Get the font tables
-     *
      */
     protected function getTables(): void
     {
@@ -226,13 +229,13 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         // skip searchRange, entrySelector and rangeShift
         $this->offset += 6;
         // tables array
-        $this->fdt['table'] = array();
+        $this->fdt['table'] = [];
         // ---------- get tables ----------
         for ($idx = 0; $idx < $numTables; ++$idx) {
             // get table info
             $tag = substr($this->font, $this->offset, 4);
             $this->offset += 4;
-            $this->fdt['table'][$tag] = array();
+            $this->fdt['table'][$tag] = [];
             $this->fdt['table'][$tag]['checkSum'] = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
             $this->fdt['table'][$tag]['offset'] = $this->fbyte->getULong($this->offset);
@@ -254,6 +257,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
             // magicNumber must be 0x5F0F3CF5
             throw new FontException('magicNumber must be 0x5F0F3CF5');
         }
+
         $this->offset += 4;
     }
 
@@ -262,7 +266,6 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      */
     protected function getBbox(): void
     {
-        // get FUnits
         $this->fdt['unitsPerEm'] = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         // units ratio constant
@@ -296,7 +299,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         $this->fdt['short_offset'] = ($this->fbyte->getShort($this->offset) == 0);
         $this->offset += 2;
         // get the offsets to the locations of the glyphs in the font, relative to the beginning of the glyphData table
-        $this->fdt['indexToLoc'] = array();
+        $this->fdt['indexToLoc'] = [];
         $this->offset = $this->fdt['table']['loca']['offset'];
         if ($this->fdt['short_offset']) {
             // short version
@@ -305,11 +308,12 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getUShort($this->offset) * 2;
                 if (
                     isset($this->fdt['indexToLoc'][($idx - 1)])
-                    && ($this->fdt['indexToLoc'][$idx] == $this->fdt['indexToLoc'][($idx - 1)])
+                    && ($this->fdt['indexToLoc'][$idx] === $this->fdt['indexToLoc'][($idx - 1)])
                 ) {
                     // the last glyph didn't have an outline
                     unset($this->fdt['indexToLoc'][($idx - 1)]);
                 }
+
                 $this->offset += 2;
             }
         } else {
@@ -319,26 +323,24 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getULong($this->offset);
                 if (
                     isset($this->fdt['indexToLoc'][($idx - 1)])
-                    && ($this->fdt['indexToLoc'][$idx] == $this->fdt['indexToLoc'][($idx - 1)])
+                    && ($this->fdt['indexToLoc'][$idx] === $this->fdt['indexToLoc'][($idx - 1)])
                 ) {
                     // the last glyph didn't have an outline
                     unset($this->fdt['indexToLoc'][($idx - 1)]);
                 }
+
                 $this->offset += 4;
             }
         }
     }
 
-    /**
-     * Get encoding tables
-     */
     protected function getEncodingTables(): void
     {
         // get glyphs indexes of chars from cmap table
         $this->offset = $this->fdt['table']['cmap']['offset'] + 2;
         $numEncodingTables = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
-        $this->fdt['encodingTables'] = array();
+        $this->fdt['encodingTables'] = [];
         for ($idx = 0; $idx < $numEncodingTables; ++$idx) {
             $this->fdt['encodingTables'][$idx]['platformID'] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
@@ -376,9 +378,6 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         }
     }
 
-    /**
-     * Get font name
-     */
     protected function getFontName(): void
     {
         $this->fdt['name'] = '';
@@ -412,9 +411,6 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         }
     }
 
-    /**
-     * Get post data
-     */
     protected function getPostData(): void
     {
         $this->offset = $this->fdt['table']['post']['offset'];
@@ -425,16 +421,13 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         $this->offset += 2;
         $this->fdt['underlineThickness'] = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
-        $isFixedPitch = (($this->fbyte->getULong($this->offset) == 0) ? false : true);
+        $isFixedPitch = ($this->fbyte->getULong($this->offset) != 0);
         $this->offset += 2;
         if ($isFixedPitch) {
             $this->fdt['Flags'] |= 1;
         }
     }
 
-    /**
-     * Get hhea data
-     */
     protected function getHheaData(): void
     {
         // ---------- get hhea data ----------
@@ -457,9 +450,6 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         $this->fdt['numHMetrics'] = $this->fbyte->getUShort($this->offset);
     }
 
-    /**
-     * Get maxp data
-     */
     protected function getMaxpData(): void
     {
         $this->offset = $this->fdt['table']['maxp']['offset'];
@@ -475,8 +465,9 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     {
         // get xHeight (height of x)
         $this->fdt['XHeight'] = ($this->fdt['Ascent'] + $this->fdt['Descent']);
-        if (!empty($this->fdt['ctgdata'][120])) {
-            $this->offset = ($this->fdt['table']['glyf']['offset']
+        if (! empty($this->fdt['ctgdata'][120])) {
+            $this->offset = (
+                $this->fdt['table']['glyf']['offset']
                 + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][120]]
                 + 4
             );
@@ -489,8 +480,9 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
 
         // get CapHeight (height of H)
         $this->fdt['CapHeight'] = $this->fdt['Ascent'];
-        if (!empty($this->fdt['ctgdata'][72])) {
-            $this->offset = ($this->fdt['table']['glyf']['offset']
+        if (! empty($this->fdt['ctgdata'][72])) {
+            $this->offset = (
+                $this->fdt['table']['glyf']['offset']
                 + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][72]]
                 + 4
             );
@@ -508,16 +500,18 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     protected function getWidths(): void
     {
         // create widths array
-        $chw = array();
+        $chw = [];
         $this->offset = $this->fdt['table']['hmtx']['offset'];
         for ($i = 0; $i < $this->fdt['numHMetrics']; ++$i) {
             $chw[$i] = round($this->fbyte->getUFWord($this->offset) * $this->fdt['urk']);
             $this->offset += 4; // skip lsb
         }
+
         if ($this->fdt['numHMetrics'] < $this->fdt['numGlyphs']) {
             // fill missing widths with the last value
             $chw = array_pad($chw, $this->fdt['numGlyphs'], $chw[($this->fdt['numHMetrics'] - 1)]);
         }
+
         $this->fdt['MissingWidth'] = $chw[0];
         $this->fdt['cw'] = '';
         $this->fdt['cbbox'] = '';
@@ -526,8 +520,10 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
                 if (isset($chw[$this->fdt['ctgdata'][$cid]])) {
                     $this->fdt['cw'] .= ',"' . $cid . '":' . $chw[$this->fdt['ctgdata'][$cid]];
                 }
+
                 if (isset($this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]])) {
-                    $this->offset = ($this->fdt['table']['glyf']['offset']
+                    $this->offset = (
+                        $this->fdt['table']['glyf']['offset']
                         + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]]
                     );
                     $xMin = round($this->fbyte->getFWord($this->offset + 2) * $this->fdt['urk']);

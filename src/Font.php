@@ -72,14 +72,15 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         bool $pdfa = false,
         bool $compress = true
     ) {
-        if (empty($font)) {
+        if ($font === '') {
             throw new FontException('empty font family name');
         }
+
         $this->data['ifile'] = $ifile;
         $this->data['family'] = $font;
-        $this->data['unicode'] = (bool) $unicode;
-        $this->data['pdfa'] = (bool) $pdfa;
-        $this->data['compress'] = (bool) $compress;
+        $this->data['unicode'] = $unicode;
+        $this->data['pdfa'] = $pdfa;
+        $this->data['compress'] = $compress;
         $this->data['subset'] = $subset;
         $this->data['subsetchars'] = array_fill(0, 255, true);
 
@@ -89,8 +90,6 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
 
     /**
      * Get the font key
-     *
-     * @return string
      */
     public function getFontkey(): string
     {
@@ -101,67 +100,67 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      * Get the font data
      *
      * @return array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    }
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    }
      */
     public function getFontData(): array
     {
@@ -176,26 +175,31 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     protected function setStyle(string $style): void
     {
         $style = strtoupper($style);
-        if (substr($this->data['family'], -1) == 'I') {
+        if (str_ends_with($this->data['family'], 'I')) {
             $style .= 'I';
             $this->data['family'] = substr($this->data['family'], 0, -1);
         }
-        if (substr($this->data['family'], -1) == 'B') {
+
+        if (str_ends_with($this->data['family'], 'B')) {
             $style .= 'B';
             $this->data['family'] = substr($this->data['family'], 0, -1);
         }
+
         // normalize family name
         $this->data['family'] = strtolower($this->data['family']);
-        if ((!$this->data['unicode']) && ($this->data['family'] == 'arial')) {
+        if ((! $this->data['unicode']) && ($this->data['family'] == 'arial')) {
             $this->data['family'] = 'helvetica';
         }
+
         if (($this->data['family'] == 'symbol') || ($this->data['family'] == 'zapfdingbats')) {
             $style = '';
         }
+
         if ($this->data['pdfa'] && (isset(Core::FONT[$this->data['family']]))) {
             // core fonts must be embedded in PDF/A
             $this->data['family'] = 'pdfa' . $this->data['family'];
         }
+
         $this->setStyleMode($style);
     }
 
@@ -207,27 +211,32 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     protected function setStyleMode(string $style): void
     {
         $suffix = '';
-        if (strpos($style, 'B') !== false) {
+        if (str_contains($style, 'B')) {
             $this->data['mode']['bold'] = true;
             $suffix .= 'B';
         }
-        if (strpos($style, 'I') !== false) {
+
+        if (str_contains($style, 'I')) {
             $this->data['mode']['italic'] = true;
             $suffix .= 'I';
         }
+
         $this->data['style'] = $suffix;
-        if (strpos($style, 'U') !== false) {
+        if (str_contains($style, 'U')) {
             $this->data['mode']['underline'] = true;
             $this->data['style'] .= 'U';
         }
-        if (strpos($style, 'D') !== false) {
+
+        if (str_contains($style, 'D')) {
             $this->data['mode']['linethrough'] = true;
             $this->data['style'] .= 'D';
         }
-        if (strpos($style, 'O') !== false) {
+
+        if (str_contains($style, 'O')) {
             $this->data['mode']['overline'] = true;
             $this->data['style'] .= 'O';
         }
+
         $this->data['key'] = $this->data['family'] . $suffix;
     }
 }

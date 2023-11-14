@@ -17,8 +17,8 @@
 namespace Com\Tecnick\Pdf\Font;
 
 use Com\Tecnick\File\Byte;
-use Com\Tecnick\Pdf\Font\Import\TrueType;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Pdf\Font\Import\TrueType;
 
 /**
  * Com\Tecnick\Pdf\Font\Subset
@@ -33,37 +33,32 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  */
 class Subset
 {
-
     /**
      * array of table names to preserve (loca and glyf tables will be added later)
      * the cmap table is not needed and shall not be present,
      * since the mapping from character codes to glyph descriptions is provided separately
-     * 
+     *
      * @var array<string, bool>
      */
-    protected const TABLENAMES = array (
-        'head' => true, 
-        'hhea' => true, 
-        'hmtx' => true, 
-        'maxp' => true, 
-        'cvt ' => true, 
-        'fpgm' => true, 
-        'prep' => true, 
-        'glyf' => true, 
+    protected const TABLENAMES = [
+        'head' => true,
+        'hhea' => true,
+        'hmtx' => true,
+        'maxp' => true,
+        'cvt ' => true,
+        'fpgm' => true,
+        'prep' => true,
+        'glyf' => true,
         'loca' => true,
-    );
+    ];
 
     /**
      * Content of the input font file
-     *
-     * @var string
      */
     protected string $font = '';
 
     /**
      * Object used to read font bytes
-     *
-     * @var \Com\Tecnick\File\Byte
      */
     protected Byte $fbyte;
 
@@ -71,66 +66,62 @@ class Subset
      * Extracted font metrics
      *
      * @var array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }
      */
-    protected array $fdt = array();
+    protected array $fdt = [];
 
     /**
      * Array containing subset glyphs indexes of chars from cmap table
      *
      * @var array<int, bool>
      */
-    protected array $subglyphs = array();
+    protected array $subglyphs = [];
 
     /**
      * Subset font
-     *
-     * @var string
      */
     protected string $subfont = '';
 
     /**
      * Pointer position on the original font data
-     *
-     * @var int
      */
     protected int $offset = 0;
 
@@ -139,55 +130,55 @@ class Subset
      *
      * @param string $font     Content of the input font file
      * @param array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }  $fdt      Extracted font metrics
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }  $fdt      Extracted font metrics
      * @param array<int, bool>  $subchars Array containing subset chars
      *
      * @throws FontException in case of error
      */
-    public function __construct(string $font, array $fdt, array $subchars = array())
+    public function __construct(string $font, array $fdt, array $subchars = [])
     {
         $this->fbyte = new Byte($font);
-        $processor = new TrueType($font, $fdt, $this->fbyte, $subchars);
-        $this->fdt = $processor->getFontMetrics();
-        $this->subglyphs = $processor->getSubGlyphs();
+        $trueType = new TrueType($font, $fdt, $this->fbyte, $subchars);
+        $this->fdt = $trueType->getFontMetrics();
+        $this->subglyphs = $trueType->getSubGlyphs();
         $this->addCompositeGlyphs();
         $this->addProcessedTables();
         $this->removeUnusedTables();
@@ -196,8 +187,6 @@ class Subset
 
     /**
      * Get all the extracted font metrics
-     *
-     * @return string
      */
     public function getSubsetFont(): string
     {
@@ -222,6 +211,7 @@ class Subset
             $sum += $val['i'];
             $offset += 4;
         }
+
         $sum = unpack('Ni', pack('N', $sum));
         return $sum['i'];
     }
@@ -232,14 +222,16 @@ class Subset
     protected function addCompositeGlyphs(): void
     {
         $new_sga = $this->subglyphs;
-        while (!empty($new_sga)) {
+        while ($new_sga !== []) {
             $sga = array_keys($new_sga);
-            $new_sga = array();
+            $new_sga = [];
             foreach ($sga as $key) {
                 $new_sga = $this->findCompositeGlyphs($new_sga, $key);
             }
-            $this->subglyphs = array_merge($this->subglyphs, $new_sga);
+
+            $this->subglyphs = [...$this->subglyphs, ...$new_sga];
         }
+
         // sort glyphs by key (and remove duplicates)
         ksort($this->subglyphs);
     }
@@ -248,7 +240,6 @@ class Subset
      * Add composite glyphs
      *
      * @param array<int, bool> $new_sga
-     * @param int   $key
      *
      * @return array<int, bool>
      */
@@ -265,26 +256,29 @@ class Subset
                     $this->offset += 2;
                     $glyphIndex = $this->fbyte->getUShort($this->offset);
                     $this->offset += 2;
-                    if (!isset($this->subglyphs[$glyphIndex])) {
+                    if (! isset($this->subglyphs[$glyphIndex])) {
                         // add missing glyphs
                         $new_sga[$glyphIndex] = true;
                     }
+
                     // skip some bytes by case
-                    if ($flags & 1) {
+                    if (($flags & 1) !== 0) {
                         $this->offset += 4;
                     } else {
                         $this->offset += 2;
                     }
-                    if ($flags & 8) {
+
+                    if (($flags & 8) !== 0) {
                         $this->offset += 2;
-                    } elseif ($flags & 64) {
+                    } elseif (($flags & 64) !== 0) {
                         $this->offset += 4;
-                    } elseif ($flags & 128) {
+                    } elseif (($flags & 128) !== 0) {
                         $this->offset += 8;
                     }
                 } while ($flags & 32);
             }
         }
+
         return $new_sga;
     }
 
@@ -308,12 +302,14 @@ class Subset
                     $this->fdt['table'][$tag]['data'] = substr($this->fdt['table'][$tag]['data'], 0, 8)
                         . "\x0\x0\x0\x0" . substr($this->fdt['table'][$tag]['data'], 12);
                 }
+
                 $pad = 4 - ($this->fdt['table'][$tag]['length'] % 4);
                 if ($pad != 4) {
                     // the length of a table must be a multiple of four bytes
                     $this->fdt['table'][$tag]['length'] += $pad;
                     $this->fdt['table'][$tag]['data'] .= str_repeat("\x0", $pad);
                 }
+
                 $this->fdt['table'][$tag]['offset'] = $this->offset;
                 $this->offset += $this->fdt['table'][$tag]['length'];
                 // check sum is not changed
@@ -345,13 +341,16 @@ class Subset
             } else {
                 $length = 0;
             }
+
             if ($this->fdt['short_offset']) {
                 $loca .= pack('n', floor($this->offset / 2));
             } else {
                 $loca .= pack('N', $this->offset);
             }
+
             $this->offset += $length;
         }
+
         // add loca
         $this->fdt['table']['loca']['data'] = $loca;
         $this->fdt['table']['loca']['length'] = strlen($loca);
@@ -361,6 +360,7 @@ class Subset
             $this->fdt['table']['loca']['length'] += $pad;
             $this->fdt['table']['loca']['data'] .= str_repeat("\x0", $pad);
         }
+
         $this->fdt['table']['loca']['offset'] = $this->offset;
         $this->fdt['table']['loca']['checkSum'] = $this->getTableChecksum(
             $this->fdt['table']['loca']['data'],
@@ -376,6 +376,7 @@ class Subset
             $this->fdt['table']['glyf']['length'] += $pad;
             $this->fdt['table']['glyf']['data'] .= str_repeat("\x0", $pad);
         }
+
         $this->fdt['table']['glyf']['offset'] = $this->offset;
         $this->fdt['table']['glyf']['checkSum'] = $this->getTableChecksum(
             $this->fdt['table']['glyf']['data'],
@@ -393,7 +394,7 @@ class Subset
         $numTables = count($this->fdt['table']);
         $this->subfont .= pack('n', $numTables); // numTables
         $entrySelector = floor(log($numTables, 2));
-        $searchRange = pow(2, $entrySelector) * 16;
+        $searchRange = 2 ** $entrySelector * 16;
         $rangeShift = ($numTables * 16) - $searchRange;
         $this->subfont .= pack('n', $searchRange); // searchRange
         $this->subfont .= pack('n', $entrySelector); // entrySelector
@@ -405,9 +406,11 @@ class Subset
             $this->subfont .= pack('N', ($data['offset'] + $this->offset)); // offset
             $this->subfont .= pack('N', $data['length']); // length
         }
+
         foreach ($this->fdt['table'] as $data) {
             $this->subfont .= $data['data'];
         }
+
         // set checkSumAdjustment on head table
         $checkSumAdjustment = (0xB1B0AFBA - $this->getTableChecksum($this->subfont, strlen($this->subfont)));
         $this->subfont = substr($this->subfont, 0, $this->fdt['table']['head']['offset'] + 8)

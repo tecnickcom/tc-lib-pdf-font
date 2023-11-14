@@ -16,7 +16,6 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use Com\Tecnick\Pdf\Font\Font;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
@@ -36,125 +35,91 @@ abstract class Buffer
      * Array containing all fonts data
      *
      * @var array<string, array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    }>
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    }>
      */
-    protected array $font = array();
+    protected array $font = [];
 
     /**
      * Font counter
-     *
-     * @var int
      */
     protected int $numfonts = 0;
 
     /**
      * Array containing encoding differences
      *
-     * @var array
+     * @var array<int, string>
      */
-    protected array $encdiff = array();
+    protected array $encdiff = [];
 
     /**
      * Index for Encoding differences
-     *
-     * @var int
      */
     protected int $numdiffs = 0;
 
     /**
      * Array containing font definitions grouped by file
-     *
-     * @var array
      */
-    protected array $file = array();
-
-    /**
-     * Default subset mode
-     *
-     * @var bool
-     */
-    protected bool $subset = false;
-
-    /**
-     * True if we are in Unicode mode, False otherwhise.
-     *
-     * @var bool
-     */
-    protected bool $unicode = true;
-
-    /**
-     * True if we are in PDF/A mode.
-     *
-     * @var bool
-     */
-    protected bool $pdfa = false;
-
-    /**
-     * Unit of measure conversion ratio
-     *
-     * @var float
-     */
-    protected float $kunit = 1.0;
+    protected array $file = [];
 
     /**
      * Initialize fonts buffer
@@ -177,22 +142,15 @@ abstract class Buffer
      * @throws FontException in case of error
      */
     public function __construct(
-        float $kunit, 
-        bool $subset = false, 
-        bool $unicode = true, 
-        bool $pdfa = false
-    )
-    {
-        $this->kunit = (float) $kunit;
-        $this->subset = (bool) $subset;
-        $this->unicode = (bool) $unicode;
-        $this->pdfa = (bool) $pdfa;
+        protected float $kunit,
+        protected bool $subset = false,
+        protected bool $unicode = true,
+        protected bool $pdfa = false
+    ) {
     }
 
     /**
      * Get the default subset mode
-     *
-     * @return bool
      */
     public function isSubsetMode(): bool
     {
@@ -203,67 +161,67 @@ abstract class Buffer
      * Returns the fonts buffer
      *
      * @return array<string, array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    }>
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    }>
      */
     public function getFonts(): array
     {
@@ -273,7 +231,7 @@ abstract class Buffer
     /**
      * Returns the fonts buffer
      *
-     * @return array
+     * @return array<int, string>
      */
     public function getEncDiffs(): array
     {
@@ -284,8 +242,6 @@ abstract class Buffer
      * Returns true if the specified font key exist on buffer
      *
      * @param string $key Font key
-     *
-     * @return bool
      */
     public function isValidKey(string $key): bool
     {
@@ -298,75 +254,76 @@ abstract class Buffer
      * @param string $key Font key
      *
      * @return array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    } Returns the fonts array.
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    } Returns the fonts array.
      *
      * @throws FontException in case of error
      */
     public function getFont(string $key): array
     {
-        if (!isset($this->font[$key])) {
+        if (! isset($this->font[$key])) {
             throw new FontException('The font ' . $key . ' has not been loaded');
         }
+
         return $this->font[$key];
     }
 
@@ -379,9 +336,10 @@ abstract class Buffer
      */
     public function setFontSubKey(string $key, string $subkey, mixed $data): void
     {
-        if (!isset($this->font[$key])) {
-            $this->font[$key] = array();
+        if (! isset($this->font[$key])) {
+            $this->font[$key] = [];
         }
+
         $this->font[$key][$subkey] = $data;
     }
 
@@ -391,7 +349,7 @@ abstract class Buffer
      * @param string   $key  The font key
      * @param int   $char The Unicode character value to add
      */
-    public function addSubsetChar(string $key, int $char)
+    public function addSubsetChar(string $key, int $char): void
     {
         $this->font[$key]['subsetchars'][$char] = true;
     }
@@ -431,16 +389,16 @@ abstract class Buffer
      * @throws FontException in case of error
      */
     public function add(
-        int &$objnum, 
-        string $font, 
-        string $style = '', 
-        string $ifile = '', 
+        int &$objnum,
+        string $font,
+        string $style = '',
+        string $ifile = '',
         ?bool $subset = null
-    )
-    {
+    ) {
         if ($subset === null) {
             $subset = $this->subset;
         }
+
         $fobj = new Font($font, $style, $ifile, $subset, $this->unicode, $this->pdfa);
         $key = $fobj->getFontkey();
 
@@ -470,20 +428,26 @@ abstract class Buffer
         if (empty($this->font[$key]['file'])) {
             return;
         }
+
         $file = $this->font[$key]['file'];
-        if (!isset($this->file[$file])) {
-            $this->file[$file] = array('keys' => array());
+        if (! isset($this->file[$file])) {
+            $this->file[$file] = [
+                'keys' => [],
+            ];
         }
-        if (!in_array($key, $this->file[$file]['keys'])) {
+
+        if (! in_array($key, $this->file[$file]['keys'])) {
             $this->file[$file]['keys'][] = $key;
         }
+
         $this->file[$file]['dir'] = $this->font[$key]['dir'];
         $this->file[$file]['length1'] = $this->font[$key]['length1'];
         $this->file[$file]['length2'] = $this->font[$key]['length2'];
 
-        if (!isset($this->file[$file]['subset'])) {
+        if (! isset($this->file[$file]['subset'])) {
             $this->file[$file]['subset'] = true;
         }
+
         $this->file[$file]['subset'] = ($this->file[$file]['subset'] && $this->font[$key]['subset']);
     }
 
@@ -497,11 +461,13 @@ abstract class Buffer
         if (empty($this->font[$key]['diff'])) {
             return;
         }
-        $diffid = array_search($this->font[$key]['diff'], $this->encdiff);
+
+        $diffid = array_search($this->font[$key]['diff'], $this->encdiff, true);
         if ($diffid === false) {
             $diffid = ++$this->numdiffs;
             $this->encdiff[$diffid] = $this->font[$key]['diff'];
         }
+
         $this->font[$key]['diffid'] = $diffid;
     }
 }

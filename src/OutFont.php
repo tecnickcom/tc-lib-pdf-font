@@ -16,9 +16,8 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use Com\Tecnick\Unicode\Data\Identity;
 use Com\Tecnick\Pdf\Encrypt\Encrypt;
-use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Unicode\Data\Identity;
 
 /**
  * Com\Tecnick\Pdf\Font\OutFont
@@ -35,15 +34,11 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
 {
     /**
      * Current PDF object number
-     *
-     * @var int
      */
     protected int $pon;
 
     /**
      * Encrypt object
-     *
-     * @var Encrypt
      */
     protected Encrypt $enc;
 
@@ -52,80 +47,81 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * A Type 0 CIDFont contains glyph descriptions based on the Adobe Type 1 font format
      *
      * @param array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    } $font Font to process
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    } $font Font to process
      *
      * return string
      */
     protected function getCid0(array $font): string
     {
         $cidoffset = 0;
-        if (!isset($font['cw'][1])) {
+        if (! isset($font['cw'][1])) {
             $cidoffset = 31;
         }
+
         $this->uniToCid($font, $cidoffset);
         $name = $font['name'];
         $longname = $name;
-        if (!empty($font['enc'])) {
+        if (! empty($font['enc'])) {
             $longname .= '-' . $font['enc'];
         }
 
@@ -135,9 +131,10 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             . ' /Subtype /Type0'
             . ' /BaseFont /' . $longname
             . ' /Name /F' . $font['i'];
-        if (!empty($font['enc'])) {
+        if (! empty($font['enc'])) {
             $out .= ' /Encoding /' . $font['enc'];
         }
+
         $out .= ' /DescendantFonts [' . ($this->pon + 1) . ' 0 R]'
             . ' >>' . "\n"
             . 'endobj' . "\n";
@@ -165,94 +162,92 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
                 $out .= $this->getKeyValOut($key, $val);
             }
         }
-        $out .= '>>' . "\n"
-            . 'endobj' . "\n";
 
-        return $out;
+        return $out . ('>>' . "\n"
+            . 'endobj' . "\n");
     }
 
     /**
      * Convert Unicode to CID
      *
      * @param array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    } $font      Font to process
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    } $font      Font to process
      * @param int   $cidoffset Offset for CID values
      */
     protected function uniToCid(array &$font, int $cidoffset): void
     {
-        if (isset($font['cidinfo']['uni2cid'])) {
-            // convert unicode to cid.
-            $uni2cid = $font['cidinfo']['uni2cid'];
-            $chw = array();
-            foreach ($font['cw'] as $uni => $width) {
-                if (isset($uni2cid[$uni])) {
-                    $chw[($uni2cid[$uni] + $cidoffset)] = $width;
-                } elseif ($uni < 256) {
-                    $chw[$uni] = $width;
-                } // else unknown character
-            }
-            $font['cw'] = array_merge($font['cw'], $chw);
+        // convert unicode to cid.
+        $uni2cid = $font['cidinfo']['uni2cid'];
+        $chw = [];
+        foreach ($font['cw'] as $uni => $width) {
+            if (isset($uni2cid[$uni])) {
+                $chw[($uni2cid[$uni] + $cidoffset)] = $width;
+            } elseif ($uni < 256) {
+                $chw[$uni] = $width;
+            } // else unknown character
         }
+
+        $font['cw'] = array_merge($font['cw'], $chw);
     }
 
     /**
@@ -260,67 +255,67 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * Based on PDF Reference 1.3 (section 5)
      *
      * @param array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    } $font Font to process
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    } $font Font to process
      *
      * return string
      *
@@ -335,6 +330,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $subtag = strtr($subtag, '0123456789', 'ABCDEFGHIJ');
             $fontname .= $subtag . '+';
         }
+
         $fontname .= $font['name'];
 
         // Type0 Font
@@ -360,6 +356,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $out .= '/Filter /FlateDecode';
             $cidhmap = gzcompress($cidhmap);
         }
+
         $stream = $this->enc->encryptString($cidhmap, $this->pon); // ToUnicode map for Identity-H
         $out .= '/Length ' . strlen($stream)
             . '>>'
@@ -382,9 +379,10 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             . ' /FontDescriptor ' . ($this->pon + 1) . ' 0 R'
             . ' /DW ' . $font['dw'] . "\n"
             . $this->getCharWidths($font, 0);
-        if (!empty($font['ctg'])) {
+        if (! empty($font['ctg'])) {
             $out .= "\n" . '/CIDToGIDMap ' . ($this->pon + 2) . ' 0 R';
         }
+
         $out .= ' >>' . "\n"
             . 'endobj' . "\n";
 
@@ -397,14 +395,15 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $out .= $this->getKeyValOut($key, $val);
         }
 
-        if (!empty($font['file_n'])) {
+        if (! empty($font['file_n'])) {
             // A stream containing a TrueType font
             $out .= ' /FontFile2 ' . $font['file_n'] . ' 0 R';
         }
+
         $out .= ' >>' . "\n"
             . 'endobj' . "\n";
 
-        if (!empty($font['ctg'])) {
+        if (! empty($font['ctg'])) {
             $out .= (++$this->pon) . ' 0 obj' . "\n";
             // Embed CIDToGIDMap
             // A specification of the mapping from CIDs to glyph indices
@@ -414,14 +413,14 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $fontfile = $this->getFontFullPath($font['dir'], $ctgfile);
             $stream = $this->enc->encryptString(file_get_contents($fontfile), $this->pon);
             $out .= '<< /Length ' . strlen($stream) . '';
-            if (substr($fontfile, -2) == '.z') { // check file extension
+            if (str_ends_with($fontfile, '.z')) { // check file extension
                 // Decompresses data encoded using the public-domain
                 // zlib/deflate compression method, reproducing the
                 // original text or binary data
                 $out .= ' /Filter /FlateDecode';
             }
-            $out .= ' >>'
-                . ' stream' . "\n"
+
+            $out .= ' >> stream' . "\n"
                 . $stream . "\n"
                 . 'endstream' . "\n"
                 . 'endobj' . "\n";
@@ -434,67 +433,67 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * Get the PDF output string for a Core font.
      *
      * @param array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    } $font Font to process
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    } $font Font to process
      *
      * return string
      */
@@ -508,76 +507,76 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
         if (($font['family'] != 'symbol') && ($font['family'] != 'zapfdingbats')) {
             $out .= ' /Encoding /WinAnsiEncoding';
         }
-        $out .= ' >>' . "\n"
-            . 'endobj' . "\n";
-        return $out;
+
+        return $out . (' >>' . "\n"
+            . 'endobj' . "\n");
     }
 
     /**
      * Get the PDF output string for a Core font.
      *
      * @param array{
-*        'n': int,
-*        'i': int,
-*        'key': string,
-*        'ifile': string,
-*        'family': string,
-*        'unicode': bool,
-*        'pdfa': bool,
-*        'style': string,
-*        'fakestyle': bool,
-*        'mode': array{
-*            'bold': bool,
-*            'italic': bool,
-*            'underline': bool,
-*            'linethrough': bool,
-*            'overline': bool,
-*        },
-*        'type': string,
-*        'name': string,
-*        'desc':  array{
-*            'Flags': int,
-*            'FontBBox': string,
-*            'ItalicAngle': int,
-*            'Ascent': int,
-*            'Descent': int,
-*            'Leading': int,
-*            'CapHeight': int,
-*            'XHeight': int,
-*            'StemV': int,
-*            'StemH': int,
-*            'AvgWidth': int,
-*            'MaxWidth': int,
-*            'MissingWidth': int,
-*        },
-*        'up': int,
-*        'ut': int,
-*        'cw':  array<int, int>,
-*        'cbbox': array<int, array<int, int>>,
-*        'dw': int,
-*        'enc': string,
-*        'cidinfo': array{
-*            'Registry': string,
-*            'Ordering': string,
-*            'Supplement': int,
-*            'uni2cid': array<int, int>,
-*        },
-*        'file': string,
-*        'dir': string,
-*        'ctg': string,
-*        'diff': string,
-*        'diff_n': int,
-*        'subset': bool,
-*        'subsetchars': array<int, bool>,
-*        'compress': bool,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'originalsize': int,
-*        'isUnicode': bool,
-*        'length1': int,
-*        'length2': bool,
-*        'file_n': int,
-*    } $font Font to process
+     *        'n': int,
+     *        'i': int,
+     *        'key': string,
+     *        'ifile': string,
+     *        'family': string,
+     *        'unicode': bool,
+     *        'pdfa': bool,
+     *        'style': string,
+     *        'fakestyle': bool,
+     *        'mode': array{
+     *            'bold': bool,
+     *            'italic': bool,
+     *            'underline': bool,
+     *            'linethrough': bool,
+     *            'overline': bool,
+     *        },
+     *        'type': string,
+     *        'name': string,
+     *        'desc':  array{
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Ascent': int,
+     *            'Descent': int,
+     *            'Leading': int,
+     *            'CapHeight': int,
+     *            'XHeight': int,
+     *            'StemV': int,
+     *            'StemH': int,
+     *            'AvgWidth': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *        },
+     *        'up': int,
+     *        'ut': int,
+     *        'cw':  array<int, int>,
+     *        'cbbox': array<int, array<int, int>>,
+     *        'dw': int,
+     *        'enc': string,
+     *        'cidinfo': array{
+     *            'Registry': string,
+     *            'Ordering': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'file': string,
+     *        'dir': string,
+     *        'ctg': string,
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'compress': bool,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'originalsize': int,
+     *        'isUnicode': bool,
+     *        'length1': int,
+     *        'length2': bool,
+     *        'file_n': int,
+     *    } $font Font to process
      *
      * return string
      */
@@ -592,13 +591,14 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             . ' /FirstChar 32 /LastChar 255'
             . ' /Widths ' . ($this->pon + 1) . ' 0 R'
             . ' /FontDescriptor ' . ($this->pon + 2) . ' 0 R';
-        if (!empty($font['enc'])) {
+        if (! empty($font['enc'])) {
             if (isset($font['diff_n'])) {
                 $out .= ' /Encoding ' . $font['diff_n'] . ' 0 R';
             } else {
                 $out .= ' /Encoding /WinAnsiEncoding';
             }
         }
+
         $out .= ' >>' . "\n"
             . 'endobj' . "\n";
 
@@ -612,6 +612,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
                 $out .= $font['dw'] . ' ';
             }
         }
+
         $out .= ']' . "\n"
             . 'endobj' . "\n";
 
@@ -621,13 +622,13 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
         foreach ($font['desc'] as $fdk => $fdv) {
             $out .= $this->getKeyValOut($fdk, $fdv);
         }
-        if (!empty($font['file'])) {
+
+        if (! empty($font['file'])) {
             $out .= ' /FontFile' . ($font['type'] == 'Type1' ? '' : '2') . ' ' . $font['file_n'] . ' 0 R';
         }
-        $out .= '>>' . "\n"
-            . 'endobj' . "\n";
 
-        return $out;
+        return $out . ('>>' . "\n"
+            . 'endobj' . "\n");
     }
 
     /**
@@ -635,14 +636,13 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * @param string $key Key name
      * @param mixed  $val Value
-     *
-     * @return string
      */
     protected function getKeyValOut(string $key, mixed $val): string
     {
         if (is_float($val)) {
             $val = sprintf('%F', $val);
         }
+
         return ' /' . $key . ' ' . $val . '';
     }
 }

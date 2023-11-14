@@ -16,13 +16,11 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use Com\Tecnick\Pdf\Font\ImportUtil;
 use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\Dir;
 use Com\Tecnick\File\File;
-use Com\Tecnick\Unicode\Data\Encoding;
-use Com\Tecnick\Pdf\Font\UniToCid;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Unicode\Data\Encoding;
 
 /**
  * Com\Tecnick\Pdf\Font\Import
@@ -99,6 +97,7 @@ class Import extends ImportUtil
         if (empty($this->fdt['file_name'])) {
             throw new FontException('the font name is empty');
         }
+
         $this->fdt['dir'] = $this->findOutputPath($output_path);
         $this->fdt['datafile'] = $this->fdt['dir'] . $this->fdt['file_name'] . '.json';
         if (@file_exists($this->fdt['datafile'])) {
@@ -106,23 +105,24 @@ class Import extends ImportUtil
         }
 
         // get font data
-        if (!is_file($file) || ($this->font = @file_get_contents($file)) === false) {
+        if (! is_file($file) || ($this->font = @file_get_contents($file)) === false) {
             throw new FontException('unable to read the input font file: ' . $file);
         }
+
         $this->fbyte = new Byte($this->font);
 
         $this->fdt['settype'] = $type;
         $this->fdt['type'] = $this->getFontType($type);
         $this->fdt['isUnicode'] = (($this->fdt['type'] == 'TrueTypeUnicode') || ($this->fdt['type'] == 'cidfont0'));
-        $this->fdt['Flags'] = intval($flags);
+        $this->fdt['Flags'] = $flags;
         $this->initFlags();
         $this->fdt['enc'] = $this->getEncodingTable($encoding);
         $this->fdt['diff'] = $this->getEncodingDiff();
         $this->fdt['originalsize'] = strlen($this->font);
         $this->fdt['ctg'] = $this->fdt['file_name'] . '.ctg.z';
-        $this->fdt['platform_id'] = intval($platform_id);
-        $this->fdt['encoding_id'] = intval($encoding_id);
-        $this->fdt['linked'] = (bool)$linked;
+        $this->fdt['platform_id'] = $platform_id;
+        $this->fdt['encoding_id'] = $encoding_id;
+        $this->fdt['linked'] = $linked;
 
         if ($this->fdt['type'] == 'Core') {
             $processor = new \Com\Tecnick\Pdf\Font\Import\Core($this->font, $this->fdt);
@@ -131,6 +131,7 @@ class Import extends ImportUtil
         } else {
             $processor = new \Com\Tecnick\Pdf\Font\Import\TrueType($this->font, $this->fdt, $this->fbyte);
         }
+
         $this->fdt = $processor->getFontMetrics();
         $this->saveFontData();
     }
@@ -139,45 +140,45 @@ class Import extends ImportUtil
      * Get all the extracted font metrics
      *
      * @return array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }
      */
     public function getFontMetrics(): array
     {
@@ -186,8 +187,6 @@ class Import extends ImportUtil
 
     /**
      * Get the output font name
-     *
-     * @return string
      */
     public function getFontName(): string
     {
@@ -202,23 +201,23 @@ class Import extends ImportUtil
         $filename = strtolower(basename($this->fdt['input_file']));
 
         if (
-            (strpos($filename, 'mono') !== false)
-            || (strpos($filename, 'courier') !== false)
-            || (strpos($filename, 'fixed') !== false)
+            (str_contains($filename, 'mono'))
+            || (str_contains($filename, 'courier'))
+            || (str_contains($filename, 'fixed'))
         ) {
             $this->fdt['Flags'] |= 1;
         }
 
         if (
-            (strpos($filename, 'symbol') !== false)
-            || (strpos($filename, 'zapfdingbats') !== false)
+            (str_contains($filename, 'symbol'))
+            || (str_contains($filename, 'zapfdingbats'))
         ) {
             $this->fdt['Flags'] |= 4;
         }
 
         if (
-            (strpos($filename, 'italic') !== false)
-            || (strpos($filename, 'oblique') !== false)
+            (str_contains($filename, 'italic'))
+            || (str_contains($filename, 'oblique'))
         ) {
             $this->fdt['Flags'] |= 64;
         }
@@ -229,8 +228,7 @@ class Import extends ImportUtil
      */
     protected function saveFontData(): void
     {
-        $pfile = '{'
-            . '"type":"' . $this->fdt['type'] . '"'
+        $pfile = '{"type":"' . $this->fdt['type'] . '"'
             . ',"name":"' . $this->fdt['name'] . '"'
             . ',"up":' . $this->fdt['underlinePosition']
             . ',"ut":' . $this->fdt['underlineThickness']
@@ -262,6 +260,7 @@ class Import extends ImportUtil
                 foreach ($this->fdt['ctgdata'] as $cid => $gid) {
                     $cidtogidmap = $this->updateCIDtoGIDmap($cidtogidmap, $cid, $gid);
                 }
+
                 // store compressed CIDToGIDMap
                 $file = new File();
                 $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['ctg'], 'wb');
@@ -269,14 +268,14 @@ class Import extends ImportUtil
                 fclose($fpt);
             }
         }
+
         if ($this->fdt['isUnicode']) {
             $pfile .= ',"isUnicode":true';
         } else {
             $pfile .= ',"isUnicode":false';
         }
 
-        $pfile .= ',"desc":{'
-            . '"Flags":' . $this->fdt['Flags']
+        $pfile .= ',"desc":{"Flags":' . $this->fdt['Flags']
             . ',"FontBBox":"[' . $this->fdt['bbox'] . ']"'
             . ',"ItalicAngle":' . $this->fdt['italicAngle']
             . ',"Ascent":' . $this->fdt['Ascent']
@@ -290,9 +289,10 @@ class Import extends ImportUtil
             . ',"MaxWidth":' . $this->fdt['MaxWidth']
             . ',"MissingWidth":' . $this->fdt['MissingWidth']
             . '}';
-        if (!empty($this->fdt['cbbox'])) {
+        if (! empty($this->fdt['cbbox'])) {
             $pfile .= ',"cbbox":{' . substr($this->fdt['cbbox'], 1) . '}';
         }
+
         $pfile .= ',"cw":{' . substr($this->fdt['cw'], 1) . '}';
         $pfile .= '}' . "\n";
 

@@ -19,7 +19,6 @@ namespace Com\Tecnick\Pdf\Font\Import;
 use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\File;
 use Com\Tecnick\Unicode\Data\Encoding;
-use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
@@ -39,26 +38,22 @@ abstract class TrueTypeFormat
      *
      * @var array<int, bool>
      */
-    protected array $subchars = array();
+    protected array $subchars = [];
 
     /**
      * Array containing subset glyphs indexes of chars from cmap table
      *
      * @var array<int, bool>
      */
-    protected array $subglyphs = array();
+    protected array $subglyphs = [];
 
     /**
      * Pointer position on the original font data
-     *
-     * @var int
      */
     protected int $offset = 0;
 
     /**
      * Content of the input font file
-     *
-     * @var string
      */
     protected string $font = '';
 
@@ -66,60 +61,55 @@ abstract class TrueTypeFormat
      * Extracted font metrics
      *
      * @var array{
-*        'input_file': string,
-*        'file_name': string,
-*        'dir': string,
-*        'datafile': string,
-*        'settype': string,
-*        'type': string,
-*        'isUnicode': bool,
-*        'Flags': int,
-*        'enc': string,
-*        'diff': string,
-*        'originalsize': int,
-*        'ctg': string,
-*        'platform_id': int,
-*        'encoding_id': int,
-*        'linked': bool,
-*        'size1': int,
-*        'size2': int,
-*        'encrypted': string,
-*        'file': string,
-*        'name': string,
-*        'bbox': string,
-*        'Ascent': int,
-*        'Descent': int,
-*        'italicAngle': int,
-*        'underlinePosition': int,
-*        'underlineThickness': int,
-*        'weight': string,
-*        'Leading': int,
-*        'StemV': int,
-*        'StemH': int,
-*        'CapHeight': int,
-*        'XHeight': int,
-*        'lenIV': int,
-*        'enc_map': array< int, string>,
-*        'MissingWidth': int,
-*        'MaxWidth': int,
-*        'AvgWidth': float,
-*        'cw': string,
-*    }
+     *        'input_file': string,
+     *        'file_name': string,
+     *        'dir': string,
+     *        'datafile': string,
+     *        'settype': string,
+     *        'type': string,
+     *        'isUnicode': bool,
+     *        'Flags': int,
+     *        'enc': string,
+     *        'diff': string,
+     *        'originalsize': int,
+     *        'ctg': string,
+     *        'platform_id': int,
+     *        'encoding_id': int,
+     *        'linked': bool,
+     *        'size1': int,
+     *        'size2': int,
+     *        'encrypted': string,
+     *        'file': string,
+     *        'name': string,
+     *        'bbox': string,
+     *        'Ascent': int,
+     *        'Descent': int,
+     *        'italicAngle': int,
+     *        'underlinePosition': int,
+     *        'underlineThickness': int,
+     *        'weight': string,
+     *        'Leading': int,
+     *        'StemV': int,
+     *        'StemH': int,
+     *        'CapHeight': int,
+     *        'XHeight': int,
+     *        'lenIV': int,
+     *        'enc_map': array< int, string>,
+     *        'MissingWidth': int,
+     *        'MaxWidth': int,
+     *        'AvgWidth': float,
+     *        'cw': string,
+     *    }
      */
-    protected array $fdt = array();
+    protected array $fdt = [];
 
     /**
      * Object used to read font bytes
-     *
-     * @var \Com\Tecnick\File\Byte
      */
     protected Byte $fbyte;
 
     /**
      * Add CTG entry
-     *
-     * @param int $cid
-     * @param int $gid
      */
     protected function addCtgItem(int $cid, int $gid): void
     {
@@ -129,13 +119,10 @@ abstract class TrueTypeFormat
         }
     }
 
-    /**
-     * Get CIDToGIDMap
-     */
     protected function getCIDToGIDMap(): void
     {
-        $valid_format = array(0,2,4,6,8,10,12,13,14);
-        $this->fdt['ctgdata'] = array();
+        $valid_format = [0, 2, 4, 6, 8, 10, 12, 13, 14];
+        $this->fdt['ctgdata'] = [];
         foreach ($this->fdt['encodingTables'] as $enctable) {
             // get only specified Platform ID and Encoding ID
             if (
@@ -151,7 +138,8 @@ abstract class TrueTypeFormat
                 }
             }
         }
-        if (!isset($this->fdt['ctgdata'][0])) {
+
+        if (! isset($this->fdt['ctgdata'][0])) {
             $this->fdt['ctgdata'][0] = 0;
         } elseif (($this->fdt['type'] == 'TrueTypeUnicode') && (count($this->fdt['ctgdata']) == 256)) {
             $this->fdt['type'] = 'TrueType';
@@ -186,10 +174,11 @@ abstract class TrueTypeFormat
                 $numSubHeaders = $subHeaderKeys[$chr];
             }
         }
+
         // the number of subHeaders is equal to the max of subHeaderKeys + 1
         ++$numSubHeaders;
         // read subHeader structures
-        $subHeaders = array();
+        $subHeaders = [];
         $numGlyphIndexArray = 0;
         for ($ish = 0; $ish < $numSubHeaders; ++$ish) {
             $subHeaders[$ish]['firstCode'] = $this->fbyte->getUShort($this->offset);
@@ -204,11 +193,15 @@ abstract class TrueTypeFormat
             $subHeaders[$ish]['idRangeOffset'] /= 2;
             $numGlyphIndexArray += $subHeaders[$ish]['entryCount'];
         }
-        $glyphIndexArray = array(0 => 0);
+
+        $glyphIndexArray = [
+            0 => 0,
+        ];
         for ($gid = 0; $gid < $numGlyphIndexArray; ++$gid) {
             $glyphIndexArray[$gid] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
         }
+
         for ($chr = 0; $chr < 256; ++$chr) {
             $shk = $subHeaderKeys[$chr];
             if ($shk == 0) {
@@ -242,33 +235,38 @@ abstract class TrueTypeFormat
         $segCount = floor($this->fbyte->getUShort($this->offset) / 2);
         $this->offset += 2;
         $this->offset += 6; // skip searchRange, entrySelector, rangeShift
-        $endCount = array(); // array of end character codes for each segment
+        $endCount = []; // array of end character codes for each segment
         for ($kdx = 0; $kdx < $segCount; ++$kdx) {
             $endCount[$kdx] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
         }
+
         $this->offset += 2; // skip reservedPad
-        $startCount = array(); // array of start character codes for each segment
+        $startCount = []; // array of start character codes for each segment
         for ($kdx = 0; $kdx < $segCount; ++$kdx) {
             $startCount[$kdx] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
         }
-        $idDelta = array(); // delta for all character codes in segment
+
+        $idDelta = []; // delta for all character codes in segment
         for ($kdx = 0; $kdx < $segCount; ++$kdx) {
             $idDelta[$kdx] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
         }
-        $idRangeOffset = array(); // Offsets into glyphIdArray or 0
+
+        $idRangeOffset = []; // Offsets into glyphIdArray or 0
         for ($kdx = 0; $kdx < $segCount; ++$kdx) {
             $idRangeOffset[$kdx] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
         }
+
         $gidlen = (floor($length / 2) - 8 - (4 * $segCount));
-        $glyphIdArray = array(); // glyph index array
+        $glyphIdArray = []; // glyph index array
         for ($kdx = 0; $kdx < $gidlen; ++$kdx) {
             $glyphIdArray[$kdx] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
         }
+
         for ($kdx = 0; $kdx < $segCount; ++$kdx) {
             for ($chr = $startCount[$kdx]; $chr <= $endCount[$kdx]; ++$chr) {
                 if ($idRangeOffset[$kdx] == 0) {
@@ -277,6 +275,7 @@ abstract class TrueTypeFormat
                     $gid = (floor($idRangeOffset[$kdx] / 2) + ($chr - $startCount[$kdx]) - ($segCount - $kdx));
                     $gid = max(0, (($glyphIdArray[$gid] + $idDelta[$kdx]) % 65536));
                 }
+
                 $this->addCtgItem($chr, $gid);
             }
         }
@@ -310,6 +309,7 @@ abstract class TrueTypeFormat
             $is32[$kdx] = $this->fbyte->getByte($this->offset);
             ++$this->offset;
         }
+
         $nGroups = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
         for ($idx = 0; $idx < $nGroups; ++$idx) {
@@ -328,8 +328,9 @@ abstract class TrueTypeFormat
                     // convert to decimal (http://www.unicode.org/faq//utf_bom.html#utf16-4)
                     //LEAD_OFFSET = (0xD800 - (0x10000 >> 10)) = 55232
                     //SURROGATE_OFFSET = (0x10000 - (0xD800 << 10) - 0xDC00) = -56613888
-                    $chr = (((55232 + ($cpw >> 10)) << 10) + (0xDC00 + ($cpw & 0x3FF)) - 56613888);
+                    $chr = (((55232 + ($cpw >> 10)) << 10) + (0xDC00 + ($cpw & 0x3FF)) - 56_613_888);
                 }
+
                 $this->addCtgItem($chr, $startGlyphID);
                 $this->fdt['ctgdata'][$chr] = 0; // overwrite
                 ++$startGlyphID;
@@ -383,7 +384,6 @@ abstract class TrueTypeFormat
      */
     protected function processFormat13(): void
     {
-        return;
     }
 
     /**
@@ -392,6 +392,5 @@ abstract class TrueTypeFormat
      */
     protected function processFormat14(): void
     {
-        return;
     }
 }
