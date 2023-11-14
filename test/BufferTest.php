@@ -155,7 +155,7 @@ class BufferTest extends TestUtil
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1, false, true, false);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir . 'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'pdfa/pfb/PDFASymbol.pfb', '', 'Type1', 'symbol');
         $stack->add($objnum, 'pdfasymbol');
 
         new \Com\Tecnick\Pdf\Font\Import($indir . 'core/Helvetica.afm');

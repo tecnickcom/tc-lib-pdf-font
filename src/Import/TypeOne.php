@@ -36,7 +36,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * Store font data
      */
-    protected function storeFontData()
+    protected function storeFontData(): void
     {
         // read first segment
         $dat = unpack('Cmarker/Ctype/Vsize', substr($this->font, 0, 6));
@@ -64,7 +64,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * Extract Font information
      */
-    protected function extractFontInfo()
+    protected function extractFontInfo(): void
     {
         if (preg_match('#/FontName[\s]*\/([^\s]*)#', $this->font, $matches) !== 1) {
             preg_match('#/FullName[\s]*\(([^\)]*)#', $this->font, $matches);
@@ -101,7 +101,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      *
      * @return array
      */
-    protected function getInternalMap()
+    protected function getInternalMap(): array
     {
         $imap = array();
         if (preg_match_all('#dup[\s]([0-9]+)[\s]*/([^\s]*)[\s]put#sU', $this->font, $fmap, PREG_SET_ORDER) > 0) {
@@ -117,7 +117,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      *
      * @return string
      */
-    protected function getEplain()
+    protected function getEplain(): string
     {
         $csr = 55665; // eexec encryption constant
         $cc1 = 52845;
@@ -137,7 +137,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      *
      * @return array
      */
-    protected function extractEplainInfo()
+    protected function extractEplainInfo(): array
     {
         $eplain = $this->getEplain();
         if (preg_match('#/ForceBold[\s]*([^\s]*)#', $eplain, $matches) > 0) {
@@ -164,7 +164,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      *
      * @param string $eplain Decoded eexec encrypted part
      */
-    protected function extractStem($eplain)
+    protected function extractStem(string $eplain): void
     {
         if (preg_match('#/StdVW[\s]*\[([^\]]*)#', $eplain, $matches) > 0) {
             $this->fdt['StemV'] = intval($matches[1]);
@@ -189,7 +189,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * Get the number of random bytes at the beginning of charstrings
      */
-    protected function getRandomBytes($eplain)
+    protected function getRandomBytes(string $eplain): void
     {
         $this->fdt['lenIV'] = 4;
         if (preg_match('#/lenIV[\s]*([0-9]*)#', $eplain, $matches) > 0) {
@@ -200,13 +200,13 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * Get charstring data
      */
-    protected function getCharstringData($eplain)
+    protected function getCharstringData(string $eplain): array
     {
         $this->fdt['enc_map'] = false;
         $eplain = substr($eplain, (strpos($eplain, '/CharStrings') + 1));
         preg_match_all('#/([A-Za-z0-9\.]*)[\s][0-9]+[\s]RD[\s](.*)[\s]ND#sU', $eplain, $matches, PREG_SET_ORDER);
-        if (!empty($this->fdt['enc']) && isset(Encoding::$map[$this->fdt['enc']])) {
-            $this->fdt['enc_map'] = Encoding::$map[$this->fdt['enc']];
+        if (!empty($this->fdt['enc']) && isset(Encoding::MAP[$this->fdt['enc']])) {
+            $this->fdt['enc_map'] = Encoding::MAP[$this->fdt['enc']];
         }
         return $matches;
     }
@@ -219,7 +219,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      *
      * @return int
      */
-    protected function getCid($imap, $val)
+    protected function getCid(array $imap, array $val): int
     {
         if (isset($imap[$val[1]])) {
             return $imap[$val[1]];
@@ -249,8 +249,14 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      *
      * @return int
      */
-    protected function decodeNumber($idx, &$cck, &$cid, &$ccom, &$cdec, &$cwidths)
-    {
+    protected function decodeNumber(
+        int $idx,
+        int &$cck,
+        int &$cid,
+        array &$ccom,
+        array &$cdec,
+        array &$cwidths
+    ): int {
         if ($ccom[$idx] == 255) {
             $sval = chr($ccom[($idx + 1)]) . chr($ccom[($idx + 2)]) . chr($ccom[($idx + 3)]) . chr($ccom[($idx + 4)]);
             $vsval = unpack('li', $sval);
@@ -280,7 +286,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * Process Type1 font
      */
-    protected function process()
+    protected function process(): void
     {
         $this->storeFontData();
         $this->extractFontInfo();

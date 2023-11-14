@@ -40,7 +40,7 @@ abstract class OutUtil
      *
      * @return string Font full path or empty string
      */
-    protected function getFontFullPath($fontdir, $file)
+    protected function getFontFullPath(string $fontdir, string $file): string
     {
         $dirobj = new Dir();
         // directories where to search for the font definition file
@@ -68,7 +68,7 @@ abstract class OutUtil
      *
      * @return string PDF command string for font widths
      */
-    protected function getCharWidths(array $font, $cidoffset = 0)
+    protected function getCharWidths(array $font, int $cidoffset = 0): string
     {
         ksort($font['cw']);
         $range = $this->getWidthRanges($font, $cidoffset);
@@ -94,7 +94,7 @@ abstract class OutUtil
      *
      * @return array
      */
-    protected function getWidthRanges(array $font, $cidoffset = 0)
+    protected function getWidthRanges(array $font, int $cidoffset = 0): array
     {
         $range = array();
         $rangeid = 0;
@@ -156,7 +156,7 @@ abstract class OutUtil
      *
      * @return array
      */
-    protected function optimizeWidthRanges($range)
+    protected function optimizeWidthRanges(array $range): array
     {
         $prevk = -1;
         $nextk = -1;

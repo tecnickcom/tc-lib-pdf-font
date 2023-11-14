@@ -43,21 +43,21 @@ abstract class ImportUtil
      *
      * @var string
      */
-    protected $font = '';
+    protected string $font = '';
 
     /**
      * Object used to read font bytes
      *
      * @var \Com\Tecnick\File\Byte
      */
-    protected $fbyte;
+    protected Byte $fbyte;
 
     /**
      * Extracted font metrics
      *
      * @var array
      */
-    protected $fdt = array();
+    protected array $fdt = array();
 
     /**
      * Make the output font name
@@ -66,7 +66,7 @@ abstract class ImportUtil
      *
      * @return string
      */
-    protected function makeFontName($font_file)
+    protected function makeFontName(string $font_file): string
     {
         $font_path_parts = pathinfo($font_file);
         return str_replace(
@@ -84,7 +84,7 @@ abstract class ImportUtil
      *
      * @return string
      */
-    protected function findOutputPath($output_path = null)
+    protected function findOutputPath(string $output_path = ''): string
     {
         if (!empty($output_path) && is_writable($output_path)) {
             return $output_path;
@@ -110,7 +110,7 @@ abstract class ImportUtil
      *
      * @return string
      */
-    protected function getFontType($font_type)
+    protected function getFontType(string $font_type): string
     {
         // autodetect font type
         if (empty($font_type)) {
@@ -138,13 +138,13 @@ abstract class ImportUtil
     /**
      * Get the encoding table
      *
-     * @param string|null $encoding  Name of the encoding table to use. Leave empty for default mode.
+     * @param string $encoding  Name of the encoding table to use. Leave empty for default mode.
      *                          Omit this parameter for TrueType Unicode and symbolic fonts
      *                          like Symbol or ZapfDingBats.
      */
-    protected function getEncodingTable($encoding)
+    protected function getEncodingTable(string $encoding = '')
     {
-        if (is_null($encoding) || empty($encoding)) {
+        if (empty($encoding)) {
             if (($this->fdt['type'] == 'Type1') && (($this->fdt['Flags'] & 4) == 0)) {
                 return 'cp1252';
             }
@@ -158,18 +158,18 @@ abstract class ImportUtil
      *
      * @return string
      */
-    protected function getEncodingDiff()
+    protected function getEncodingDiff(): string
     {
         $diff = '';
         if (
             (($this->fdt['type'] == 'TrueType') || ($this->fdt['type'] == 'Type1'))
             && (!empty($this->fdt['enc'])
             && ($this->fdt['enc'] != 'cp1252')
-            && isset(Encoding::$map[$this->fdt['enc']]))
+            && isset(Encoding::MAP[$this->fdt['enc']]))
         ) {
             // build differences from reference encoding
-            $enc_ref = Encoding::$map['cp1252'];
-            $enc_target = Encoding::$map[$this->fdt['enc']];
+            $enc_ref = Encoding::MAP['cp1252'];
+            $enc_target = Encoding::MAP[$this->fdt['enc']];
             $last = 0;
             for ($idx = 32; $idx <= 255; ++$idx) {
                 if ($enc_target[$idx] != $enc_ref[$idx]) {
@@ -193,7 +193,7 @@ abstract class ImportUtil
      *
      * @return string
      */
-    protected function updateCIDtoGIDmap($map, $cid, $gid)
+    protected function updateCIDtoGIDmap(string $map, int $cid, int $gid): string
     {
         if (($cid >= 0) && ($cid <= 0xFFFF) && ($gid >= 0)) {
             if ($gid > 0xFFFF) {

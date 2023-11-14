@@ -34,11 +34,24 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 abstract class Load
 {
     /**
+     * Valid Font types
+     * 
+     * @var array<string, bool> Font types
+     */
+    protected const FONTTYPES = [
+        'Core' => true,
+        'TrueType' => true,
+        'TrueTypeUnicode' => true,
+        'Type1' => true,
+        'cidfont0' => true,
+    ];
+
+    /**
      * Font data
      *
      * @var array
      */
-    protected $data = array(
+    protected array $data = array(
         'n'           => 0,              // PDF object number
         'i'           => 0,              // font number
         'key'         => '',             // font key
@@ -84,7 +97,7 @@ abstract class Load
      *
      * @throws FontException in case of error
      */
-    public function load()
+    public function load(): void
     {
         $fontInfo = $this->getFontInfo();
         $this->data = array_merge($this->data, $fontInfo);
@@ -104,7 +117,7 @@ abstract class Load
      *
      * @throws FontException in case of error
      */
-    protected function getFontInfo()
+    protected function getFontInfo(): array
     {
         $this->findFontFile();
 
@@ -131,7 +144,7 @@ abstract class Load
      *
      * @return array Font directories
      */
-    protected function findFontDirectories()
+    protected function findFontDirectories(): array
     {
         $dirobj = new Dir();
         $dirs =  array('');
@@ -152,7 +165,7 @@ abstract class Load
      *
      * @throws FontException in case of error
      */
-    protected function findFontFile()
+    protected function findFontFile(): void
     {
         if (!empty($this->data['ifile'])) {
             return;
@@ -187,7 +200,7 @@ abstract class Load
     /**
      * Set default width
      */
-    protected function setDefaultWidth()
+    protected function setDefaultWidth(): void
     {
         if (!empty($this->data['dw'])) {
             return;
@@ -204,9 +217,9 @@ abstract class Load
     /**
      * Check Font Type
      */
-    protected function checkType()
+    protected function checkType(): void
     {
-        if (in_array($this->data['type'], array('Core', 'Type1', 'TrueType', 'TrueTypeUnicode', 'cidfont0'))) {
+        if (isset(self::FONTTYPES[$this->data['type']])) {
             return;
         }
         throw new FontException('Unknow font type: ' . $this->data['type']);
@@ -215,10 +228,10 @@ abstract class Load
     /**
      * Set name
      */
-    protected function setName()
+    protected function setName(): void
     {
         if ($this->data['type'] == 'Core') {
-            $this->data['name'] = Core::$font[$this->data['key']];
+            $this->data['name'] = Core::FONT[$this->data['key']];
             $this->data['subset'] = false;
         } elseif (($this->data['type'] == 'Type1') || ($this->data['type'] == 'TrueType')) {
             $this->data['subset'] = false;
@@ -235,7 +248,7 @@ abstract class Load
     /**
      * Set artificial styles if the font variation file is missing
      */
-    protected function setArtificialStyles()
+    protected function setArtificialStyles(): void
     {
         // artificial bold
         if ($this->data['mode']['bold']) {
@@ -265,7 +278,7 @@ abstract class Load
     /**
      * Set File data
      */
-    public function setFileData()
+    public function setFileData(): void
     {
         if (empty($this->data['file'])) {
             return;

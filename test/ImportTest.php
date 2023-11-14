@@ -82,7 +82,7 @@ class ImportTest extends TestUtil
     /**
      * @dataProvider importDataProvider
      */
-    public function testImport($fontdir, $font, $outname, $type = null, $encoding = null)
+    public function testImport($fontdir, $font, $outname, $type = '', $encoding = '')
     {
         $indir = dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/' . $fontdir . '/';
         $outdir = dirname(__DIR__) . '/target/tmptest/' . $fontdir . '/';
@@ -137,7 +137,7 @@ class ImportTest extends TestUtil
             array('core', 'Times-Italic.afm', 'timesi'),
             array('core', 'ZapfDingbats.afm', 'zapfdingbats'),
 
-            array('pdfa/pfb', 'PDFACourierBoldOblique.pfb', 'pdfacourierbi', null, null),
+            array('pdfa/pfb', 'PDFACourierBoldOblique.pfb', 'pdfacourierbi', '', ''),
             array('pdfa/pfb', 'PDFACourierBold.pfb', 'pdfacourierb', 'Type1', 'cp1252'),
             array('pdfa/pfb', 'PDFACourierOblique.pfb', 'pdfacourieri', 'Type1', 'cp1252'),
             array('pdfa/pfb', 'PDFACourier.pfb', 'pdfacourier', 'Type1', 'cp1252'),

@@ -32,9 +32,9 @@ class Core
     /**
      * Core fonts
      *
-     * @var array
+     * @var array<string, string>
      */
-    public static $font = array(
+    public const FONT = array(
         'courier'        => 'Courier',
         'courierB'       => 'Courier-Bold',
         'courierI'       => 'Courier-Oblique',

@@ -38,42 +38,42 @@ class Subset
      *
      * @var string
      */
-    protected $font = '';
+    protected string $font = '';
 
     /**
      * Object used to read font bytes
      *
      * @var \Com\Tecnick\File\Byte
      */
-    protected $fbyte;
+    protected Byte $fbyte;
 
     /**
      * Extracted font metrics
      *
      * @var array
      */
-    protected $fdt = array();
+    protected array $fdt = array();
 
     /**
      * Array containing subset glyphs indexes of chars from cmap table
      *
      * @var array
      */
-    protected $subglyphs = array();
+    protected array $subglyphs = array();
 
     /**
      * Subset font
      *
      * @var string
      */
-    protected $subfont = '';
+    protected string $subfont = '';
 
     /**
      * Pointer position on the original font data
      *
      * @var int
      */
-    protected $offset = 0;
+    protected int $offset = 0;
 
     /**
      * Process TrueType font
@@ -84,7 +84,7 @@ class Subset
      *
      * @throws FontException in case of error
      */
-    public function __construct($font, $fdt, $subchars = array())
+    public function __construct(string $font, array $fdt, array $subchars = array())
     {
         $this->fbyte = new Byte($font);
         $processor = new TrueType($font, $fdt, $this->fbyte, $subchars);
@@ -101,7 +101,7 @@ class Subset
      *
      * @return string
      */
-    public function getSubsetFont()
+    public function getSubsetFont(): string
     {
         return $this->subfont;
     }
@@ -114,7 +114,7 @@ class Subset
      *
      * @return int checksum
      */
-    protected function getTableChecksum($table, $length)
+    protected function getTableChecksum(string $table, int $length): int
     {
         $sum = 0;
         $tlen = ($length / 4);
@@ -131,7 +131,7 @@ class Subset
     /**
      * Add composite glyphs
      */
-    protected function addCompositeGlyphs()
+    protected function addCompositeGlyphs(): void
     {
         $new_sga = $this->subglyphs;
         while (!empty($new_sga)) {
@@ -154,7 +154,7 @@ class Subset
      *
      * @return array
      */
-    protected function findCompositeGlyphs($new_sga, $key)
+    protected function findCompositeGlyphs(array $new_sga, int $key): array
     {
         if (isset($this->fdt['indexToLoc'][$key])) {
             $this->offset = ($this->fdt['table']['glyf']['offset'] + $this->fdt['indexToLoc'][$key]);
@@ -193,7 +193,7 @@ class Subset
     /**
      * Remove unused tables
      */
-    protected function removeUnusedTables()
+    protected function removeUnusedTables(): void
     {
         // array of table names to preserve (loca and glyf tables will be added later)
         // the cmap table is not needed and shall not be present,
@@ -233,7 +233,7 @@ class Subset
     /**
      * Add glyf and loca tables
      */
-    protected function addProcessedTables()
+    protected function addProcessedTables(): void
     {
         // build new glyf and loca tables
         $glyf = '';
@@ -292,7 +292,7 @@ class Subset
     /**
      * build new subset font
      */
-    protected function buildSubsetFont()
+    protected function buildSubsetFont(): void
     {
         $this->subfont = '';
         $this->subfont .= pack('N', 0x10000); // sfnt version

@@ -38,14 +38,14 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * @var int
      */
-    protected $pon;
+    protected int $pon;
 
     /**
      * Encrypt object
      *
      * @var Encrypt
      */
-    protected $enc;
+    protected Encrypt $enc;
 
     /**
      * Get the PDF output string for a CID-0 font.
@@ -55,7 +55,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * return string
      */
-    protected function getCid0(array $font)
+    protected function getCid0(array $font): string
     {
         $cidoffset = 0;
         if (!isset($font['cw'][1])) {
@@ -116,7 +116,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * @param array $font      Font to process
      * @param int   $cidoffset Offset for CID values
      */
-    protected function uniToCid(array &$font, $cidoffset)
+    protected function uniToCid(array &$font, int $cidoffset): void
     {
         if (isset($font['cidinfo']['uni2cid'])) {
             // convert unicode to cid.
@@ -143,7 +143,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
-    protected function getTrueTypeUnicode(array $font)
+    protected function getTrueTypeUnicode(array $font): string
     {
         $fontname = '';
         if ($font['subset']) {
@@ -254,7 +254,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * return string
      */
-    protected function getCore(array $font)
+    protected function getCore(array $font): string
     {
         $out = $font['n'] . ' 0 obj' . "\n"
             . '<</Type /Font'
@@ -276,7 +276,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * return string
      */
-    protected function getTrueType(array $font)
+    protected function getTrueType(array $font): string
     {
         // obj 1
         $out = $font['n'] . ' 0 obj' . "\n"
@@ -333,7 +333,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * @return string
      */
-    protected function getKeyValOut($key, $val)
+    protected function getKeyValOut(string $key, mixed $val): string
     {
         if (is_float($val)) {
             $val = sprintf('%F', $val);

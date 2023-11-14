@@ -44,7 +44,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      *
      * @throws FontException in case of error
      */
-    public function __construct($font, $fdt, $fbyte, $subchars = array())
+    public function __construct(string $font, array $fdt, Byte $fbyte, array $subchars = array())
     {
         $this->font = $font;
         $this->fdt = $fdt;
@@ -60,7 +60,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      *
      * @return array
      */
-    public function getFontMetrics()
+    public function getFontMetrics(): array
     {
         return $this->fdt;
     }
@@ -70,7 +70,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      *
      * @return array
      */
-    public function getSubGlyphs()
+    public function getSubGlyphs(): array
     {
         return $this->subglyphs;
     }
@@ -78,7 +78,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Process TrueType font
      */
-    protected function process()
+    protected function process(): void
     {
         $this->isValidType();
         $this->setFontFile();
@@ -103,7 +103,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      *
      * @throws FontException if the font is invalid
      */
-    protected function isValidType()
+    protected function isValidType(): void
     {
         if ($this->fbyte->getULong($this->offset) != 0x10000) {
             throw new FontException('sfnt version must be 0x00010000 for TrueType version 1.0.');
@@ -114,7 +114,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Copy or link the original font file
      */
-    protected function setFontFile()
+    protected function setFontFile(): void
     {
         if (!empty($this->fdt['desc'])) {
             // subsetting mode
@@ -140,7 +140,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      * Get the font tables
      *
      */
-    protected function getTables()
+    protected function getTables(): void
     {
         // get number of tables
         $numTables = $this->fbyte->getUShort($this->offset);
@@ -169,7 +169,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      *
      * @throws FontException if the font is invalid
      */
-    protected function checkMagickNumber()
+    protected function checkMagickNumber(): void
     {
         $this->offset = ($this->fdt['table']['head']['offset'] + 12);
         if ($this->fbyte->getULong($this->offset) != 0x5F0F3CF5) {
@@ -182,7 +182,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get BBox, units and flags
      */
-    protected function getBbox()
+    protected function getBbox(): void
     {
         // get FUnits
         $this->fdt['unitsPerEm'] = $this->fbyte->getUShort($this->offset);
@@ -211,7 +211,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get index to loc map
      */
-    protected function getIndexToLoc()
+    protected function getIndexToLoc(): void
     {
         // get offset mode (indexToLocFormat : 0 = short, 1 = long)
         $this->offset = ($this->fdt['table']['head']['offset'] + 50);
@@ -254,7 +254,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get encoding tables
      */
-    protected function getEncodingTables()
+    protected function getEncodingTables(): void
     {
         // get glyphs indexes of chars from cmap table
         $this->offset = $this->fdt['table']['cmap']['offset'] + 2;
@@ -274,7 +274,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get encoding tables
      */
-    protected function getOS2Metrics()
+    protected function getOS2Metrics(): void
     {
         $this->offset = $this->fdt['table']['OS/2']['offset'];
         $this->offset += 2; // skip version
@@ -301,7 +301,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get font name
      */
-    protected function getFontName()
+    protected function getFontName(): void
     {
         $this->fdt['name'] = '';
         $this->offset = $this->fdt['table']['name']['offset'];
@@ -337,7 +337,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get post data
      */
-    protected function getPostData()
+    protected function getPostData(): void
     {
         $this->offset = $this->fdt['table']['post']['offset'];
         $this->offset += 4; // skip Format Type
@@ -357,7 +357,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get hhea data
      */
-    protected function getHheaData()
+    protected function getHheaData(): void
     {
         // ---------- get hhea data ----------
         $this->offset = $this->fdt['table']['hhea']['offset'];
@@ -382,7 +382,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get maxp data
      */
-    protected function getMaxpData()
+    protected function getMaxpData(): void
     {
         $this->offset = $this->fdt['table']['maxp']['offset'];
         $this->offset += 4; // skip Table version number
@@ -393,7 +393,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get font heights
      */
-    protected function getHeights()
+    protected function getHeights(): void
     {
         // get xHeight (height of x)
         $this->fdt['XHeight'] = ($this->fdt['Ascent'] + $this->fdt['Descent']);
@@ -427,7 +427,7 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
     /**
      * Get font widths
      */
-    protected function getWidths()
+    protected function getWidths(): void
     {
         // create widths array
         $chw = array();

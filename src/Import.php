@@ -85,14 +85,14 @@ class Import extends ImportUtil
      * @throws FontException in case of error
      */
     public function __construct(
-        $file,
-        $output_path = null,
-        $type = null,
-        $encoding = '',
-        $flags = 32,
-        $platform_id = 3,
-        $encoding_id = 1,
-        $linked = false
+        string $file,
+        string $output_path = '',
+        string $type = '',
+        string $encoding = '',
+        int $flags = 32,
+        int $platform_id = 3,
+        int $encoding_id = 1,
+        bool $linked = false
     ) {
         $this->fdt['input_file'] = $file;
         $this->fdt['file_name'] = $this->makeFontName($file);
@@ -140,7 +140,7 @@ class Import extends ImportUtil
      *
      * @return array
      */
-    public function getFontMetrics()
+    public function getFontMetrics(): array
     {
         return $this->fdt;
     }
@@ -150,7 +150,7 @@ class Import extends ImportUtil
      *
      * @return string
      */
-    public function getFontName()
+    public function getFontName(): string
     {
         return $this->fdt['file_name'];
     }
@@ -158,7 +158,7 @@ class Import extends ImportUtil
     /**
      * Initialize font flags from font name
      */
-    protected function initFlags()
+    protected function initFlags(): void
     {
         $filename = strtolower(basename($this->fdt['input_file']));
 
@@ -188,7 +188,7 @@ class Import extends ImportUtil
     /**
      * Save the eported metadata font file
      */
-    protected function saveFontData()
+    protected function saveFontData(): void
     {
         $pfile = '{'
             . '"type":"' . $this->fdt['type'] . '"'
@@ -212,7 +212,7 @@ class Import extends ImportUtil
         } else {
             $pfile .= ',"originalsize":' . $this->fdt['originalsize'];
             if ($this->fdt['type'] == 'cidfont0') {
-                $pfile .= ',' . UniToCid::$type[$this->fdt['settype']];
+                $pfile .= ',' . UniToCid::TYPE[$this->fdt['settype']];
             } else {
                 // TrueType
                 $pfile .= ',"enc":"' . $this->fdt['enc'] . '"'

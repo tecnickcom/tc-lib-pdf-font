@@ -43,21 +43,21 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @var array
      */
-    protected $stack = array();
+    protected array $stack = array();
 
     /**
      * Current font index
      *
      * @var int
      */
-    protected $index = -1;
+    protected int $index = -1;
 
     /**
      * Array containing font metrics for each fontkey-size combination.
      *
      * @var array
      */
-    protected $metric = array();
+    protected array $metric = array();
 
     /**
      * Insert a font into the stack
@@ -76,12 +76,12 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *                             U: underline
      *                             D: strikeout (linethrough)
      *                             O: overline
-     * @param int    $size       Font size in points (set to null to inherit the last font size).
-     * @param float  $spacing    Extra spacing between characters.
-     * @param float  $stretching Horizontal character stretching ratio.
+     * @param ?int     $size       Font size in points (set to null to inherit the last font size).
+     * @param ?float  $spacing    Extra spacing between characters.
+     * @param ?float  $stretching Horizontal character stretching ratio.
      * @param string $ifile      The font definition file (or empty for autodetect).
      *                           By default, the name is built from the family and style, in lower case with no spaces.
-     * @param bool   $subset     If true embedd only a subset of the font
+     * @param ?bool   $subset     If true embedd only a subset of the font
      *                           (stores only the information related to the used characters);
      *                           If false embedd full font;
      *                           This option is valid only for TrueTypeUnicode fonts and it is disabled for PDF/A.
@@ -97,14 +97,14 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * @throws FontException in case of error
      */
     public function insert(
-        &$objnum,
-        $font,
-        $style = '',
-        $size = null,
-        $spacing = null,
-        $stretching = null,
-        $ifile = '',
-        $subset = null
+        int &$objnum,
+        string $font,
+        string $style = '',
+        ?int $size = null,
+        ?float $spacing = null,
+        ?float $stretching = null,
+        string $ifile = '',
+        ?bool $subset = null
     ) {
         if ($subset === null) {
             $subset = $this->subset;
@@ -149,7 +149,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return array
      */
-    public function getCurrentFont()
+    public function getCurrentFont(): array
     {
         return $this->getFontMetric($this->stack[$this->index]);
     }
@@ -159,7 +159,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return string
      */
-    public function getCurrentFontType()
+    public function getCurrentFontType(): string
     {
         return $this->getFont($this->stack[$this->index]['key'])['type'];
     }
@@ -169,7 +169,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return string
      */
-    public function getOutCurrentFont()
+    public function getOutCurrentFont(): string
     {
         return $this->getFontMetric($this->stack[$this->index])['out'];
     }
@@ -179,7 +179,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return bool
      */
-    public function isCurrentByteFont()
+    public function isCurrentByteFont(): bool
     {
         $type = $this->getCurrentFontType();
         return !(($type == 'Core') || ($type == 'TrueType') || ($type == 'Type1'));
@@ -190,7 +190,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return bool
      */
-    public function isCurrentUnicodeFont()
+    public function isCurrentUnicodeFont(): bool
     {
         $type = $this->getCurrentFontType();
         return !(($type == 'TrueTypeUnicode') || ($type == 'cidfont0'));
@@ -201,7 +201,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return array
      */
-    public function popLastFont()
+    public function popLastFont(): array
     {
         if ($this->index < 0) {
             throw new FontException('The font stack is empty');
@@ -221,7 +221,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return array
      */
-    public function replaceMissingChars(array $uniarr, array $subs = array())
+    public function replaceMissingChars(array $uniarr, array $subs = array()): array
     {
         $font = $this->getFontMetric($this->stack[$this->index]);
         foreach ($uniarr as $pos => $uni) {
@@ -245,7 +245,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return bool
      */
-    public function isCharDefined($ord)
+    public function isCharDefined(int $ord): bool
     {
         $font = $this->getFontMetric($this->stack[$this->index]);
         return isset($font['cw'][$ord]);
@@ -256,9 +256,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @param int   $ord    Unicode character value.
      *
-     * @return int
+     * @return float
      */
-    public function getCharWidth($ord)
+    public function getCharWidth(int $ord): float
     {
         if ($ord == 173) {
             // SHY character is not printed, as it is used for text hyphenation
@@ -278,7 +278,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return float
      */
-    public function getOrdArrWidth($uniarr)
+    public function getOrdArrWidth(array $uniarr): float
     {
         return $this->getOrdArrDims($uniarr)['totwidth'];
     }
@@ -290,7 +290,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return array  ('chars', 'spaces', 'totwidth', 'totspacewidth')
      */
-    public function getOrdArrDims($uniarr)
+    public function getOrdArrDims(array $uniarr): array
     {
         $chars = count($uniarr); // total number of chars
         $spaces = 0; // total number of spaces
@@ -322,7 +322,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return array (xMin, yMin, xMax, yMax)
      */
-    public function getCharBBox($ord)
+    public function getCharBBox(int $ord): array
     {
         $font = $this->getFontMetric($this->stack[$this->index]);
         if (isset($font['cbbox'][$ord])) {
@@ -339,7 +339,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return int the replaced char or the old char in case the new char i not defined
      */
-    public function replaceChar($oldchar, $newchar)
+    public function replaceChar(int $oldchar, int $newchar): int
     {
         if ($this->isCharDefined($newchar)) {
             // add the new char on the subset list
@@ -358,7 +358,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return array
      */
-    protected function getFontMetric($font)
+    protected function getFontMetric(array $font): array
     {
         $mkey = md5(serialize($font));
         if (!empty($this->metric[$mkey])) {
@@ -421,12 +421,14 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Normalize the input size
+     * 
+     * @param ?int $size Font size in points (set to null to inherit the last font size).
      *
      * return float
      */
-    protected function getInputSize($size = null)
+    protected function getInputSize(?int $size = null): float
     {
-        if ($size === null) {
+        if (($size === null) || ($size < 0)) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
                 return $this->stack[$this->index]['size'];
@@ -440,11 +442,11 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Normalize the input spacing
      *
-     * @param float  $spacing  Extra spacing between characters.
+     * @param ?float  $spacing  Extra spacing between characters.
      *
      * return float
      */
-    protected function getInputSpacing($spacing = null)
+    protected function getInputSpacing(?float $spacing = null): float
     {
         if ($spacing === null) {
             if ($this->index >= 0) {
@@ -460,11 +462,11 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Normalize the input stretching
      *
-     * @param float  $stretching Horizontal character stretching ratio.
+     * @param ?float  $stretching Horizontal character stretching ratio.
      *
      * return float
      */
-    protected function getInputStretching($stretching = null)
+    protected function getInputStretching(?float $stretching = null): float
     {
         if ($stretching === null) {
             if ($this->index >= 0) {
@@ -484,7 +486,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @return array
      */
-    protected function getNormalizedFontKeys($fontfamily)
+    protected function getNormalizedFontKeys(string $fontfamily): array
     {
         $keys = array();
         // remove spaces and symbols

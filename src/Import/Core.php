@@ -38,14 +38,14 @@ class Core
      *
      * @var string
      */
-    protected $font = '';
+    protected string $font = '';
 
     /**
      * Extracted font metrics
      *
      * @var array
      */
-    protected $fdt = array();
+    protected array $fdt = array();
 
     /**
      *
@@ -54,7 +54,7 @@ class Core
      *
      * @throws FontException in case of error
      */
-    public function __construct($font, $fdt)
+    public function __construct(string $font, array $fdt)
     {
         $this->font = $font;
         $this->fdt = $fdt;
@@ -66,7 +66,7 @@ class Core
      *
      * @return array
      */
-    public function getFontMetrics()
+    public function getFontMetrics(): array
     {
         return $this->fdt;
     }
@@ -74,7 +74,7 @@ class Core
     /**
      * Set Flags
      */
-    protected function setFlags()
+    protected function setFlags(): void
     {
         if (($this->fdt['FontName'] == 'Symbol') || ($this->fdt['FontName'] == 'ZapfDingbats')) {
             $this->fdt['Flags'] |= 4;
@@ -94,7 +94,7 @@ class Core
      *
      * @param array $cwidths Extracted widths
      */
-    protected function setCharWidths($cwidths)
+    protected function setCharWidths(array $cwidths): void
     {
         $this->fdt['MissingWidth'] = 600;
         if (!empty($cwidths[32])) {
@@ -120,7 +120,7 @@ class Core
     /**
      * Extract Metrics
      */
-    protected function extractMetrics()
+    protected function extractMetrics(): void
     {
         $cwd = array();
         $this->fdt['cbbox'] = '';
@@ -142,7 +142,7 @@ class Core
      * @param array $col Array containing row elements to process
      * @param array $cwd Array contianing cid widths
      */
-    protected function processMetricRow($col, &$cwd)
+    protected function processMetricRow(array $col, array &$cwd): void
     {
         if (($col[0] == 'C') && (($cid = (int)$col[1]) >= 0)) {
             // character metrics
@@ -194,7 +194,7 @@ class Core
     /**
      * Map values to the correct key name
      */
-    protected function remapValues()
+    protected function remapValues(): void
     {
         $map = array(
             'FullName'           => 'name',
@@ -223,7 +223,7 @@ class Core
     /**
      * Set Missing values
      */
-    protected function setMissingValues()
+    protected function setMissingValues(): void
     {
         if (!isset($this->fdt['Descender'])) {
             $this->fdt['Descender'] = $this->fdt['FontBBox'][1];
@@ -239,7 +239,7 @@ class Core
     /**
      * Process Core font
      */
-    protected function process()
+    protected function process(): void
     {
         $this->extractMetrics();
         $this->setFlags();

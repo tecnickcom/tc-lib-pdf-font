@@ -38,28 +38,28 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      *
      * @var array
      */
-    protected $fonts;
+    protected array $fonts;
 
     /**
      * Array of character subsets for each font file
      *
      * @var array
      */
-    protected $subchars = array();
+    protected array $subchars = array();
 
     /**
      * PDF string block to return containinf the fonts definitions
      *
      * @var string
      */
-    protected $out = '';
+    protected string $out = '';
 
     /**
      * Map methods used to process each font type
      *
-     * @var array
+     * @var array<string, string>
      */
-    protected static $map = array(
+    protected const OUTFONTMAP = array(
         'core'            => 'getCore',
         'cidfont0'        => 'getCid0',
         'type1'           => 'getTrueType',
@@ -74,7 +74,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * @param int     $pon   Current PDF Object Number
      * @param Encrypt $enc   Encrypt object
      */
-    public function __construct(array $fonts, $pon, Encrypt $enc)
+    public function __construct(array $fonts, int $pon, Encrypt $enc)
     {
         $this->fonts = $fonts;
         $this->pon = $pon;
@@ -90,7 +90,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      *
      * @return int
      */
-    public function getObjectNumber()
+    public function getObjectNumber(): int
     {
         return $this->pon;
     }
@@ -100,7 +100,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      *
      * @return string
      */
-    public function getFontsBlock()
+    public function getFontsBlock(): string
     {
         return $this->out;
     }
@@ -110,7 +110,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      *
      * return string
      */
-    protected function getEncodingDiffs()
+    protected function getEncodingDiffs(): string
     {
         $out = '';
         $done = array(); // store processed items to avoid duplication
@@ -145,7 +145,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      *
      * return string
      */
-    protected function getFontFiles()
+    protected function getFontFiles(): string
     {
         $out = '';
         $done = array(); // store processed items to avoid duplication
@@ -191,14 +191,14 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      *
      * return string
      */
-    protected function getFontDefinitions()
+    protected function getFontDefinitions(): string
     {
         $out = '';
         foreach ($this->fonts as $font) {
-            if (!isset(self::$map[strtolower($font['type'])])) {
+            if (!isset(self::OUTFONTMAP[strtolower($font['type'])])) {
                 throw new FontException('Unsupported font type: ' . $font['type']);
             }
-            $method = self::$map[strtolower($font['type'])];
+            $method = self::OUTFONTMAP[strtolower($font['type'])];
             $out .= $this->$method($font);
         }
         return $out;

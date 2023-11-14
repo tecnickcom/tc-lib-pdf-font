@@ -41,7 +41,7 @@ class OutputTest extends TestUtil
         $objnum = 1;
         $buffer = new \Com\Tecnick\Pdf\Font\Stack(1);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir . 'pdfa/pfb/PDFASymbol.pfb', null, 'Type1', 'symbol');
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'pdfa/pfb/PDFASymbol.pfb', '', 'Type1', 'symbol');
         $buffer->add($objnum, 'pdfasymbol');
 
         new \Com\Tecnick\Pdf\Font\Import($indir . 'core/Helvetica.afm');
@@ -68,7 +68,7 @@ class OutputTest extends TestUtil
         new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSansBoldOblique.ttf');
         $buffer->add($objnum, 'freesans', 'BIUDO', '', true);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir . 'cid0/cid0jp.ttf', null, 'CID0JP');
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'cid0/cid0jp.ttf', '', 'CID0JP');
         $buffer->add($objnum, 'cid0jp');
 
         $fonts = $buffer->getFonts();

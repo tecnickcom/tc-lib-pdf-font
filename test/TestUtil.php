@@ -31,8 +31,8 @@ use PHPUnit\Framework\TestCase;
  */
 class TestUtil extends TestCase
 {
-    protected $preserveGlobalState = false;
-    protected $runTestSepProcess = true;
+    protected bool $preserveGlobalState = false;
+    protected bool $runTestSepProcess = true;
 
     protected function setupTest()
     {
@@ -50,23 +50,20 @@ class TestUtil extends TestCase
         return '';
     }
 
-    public function bcAssertEqualsWithDelta($expected, $actual, $delta = 0.01, $message = '')
-    {
-        if (\is_callable([self::class, 'assertEqualsWithDelta'])) {
-            parent::assertEqualsWithDelta($expected, $actual, $delta, $message);
-            return;
-        }
-        /* @phpstan-ignore-next-line */
-        $this->assertEquals($expected, $actual, $message, $delta);
+    public function bcAssertEqualsWithDelta(
+        mixed $expected,
+        mixed $actual,
+        float $delta = 0.01,
+        string $message = ''
+    ): void {
+        parent::assertEqualsWithDelta($expected, $actual, $delta, $message);
     }
 
-    public function bcExpectException($exception)
+    /**
+     * @param class-string<\Throwable> $exception
+     */
+    public function bcExpectException($exception): void
     {
-        if (\is_callable([self::class, 'expectException'])) {
-            parent::expectException($exception);
-            return;
-        }
-        /* @phpstan-ignore-next-line */
-        parent::setExpectedException($exception);
+        parent::expectException($exception);
     }
 }

@@ -64,13 +64,13 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      * @throws FontException in case of error
      */
     public function __construct(
-        $font,
-        $style = '',
-        $ifile = '',
-        $subset = false,
-        $unicode = true,
-        $pdfa = false,
-        $compress = true
+        string $font,
+        string $style = '',
+        string $ifile = '',
+        bool $subset = false,
+        bool $unicode = true,
+        bool $pdfa = false,
+        bool $compress = true
     ) {
         if (empty($font)) {
             throw new FontException('empty font family name');
@@ -92,7 +92,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *
      * @return string
      */
-    public function getFontkey()
+    public function getFontkey(): string
     {
         return $this->data['key'];
     }
@@ -102,7 +102,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *
      * @return array
      */
-    public function getFontData()
+    public function getFontData(): array
     {
         return $this->data;
     }
@@ -112,7 +112,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *
      * @param string $style Style
      */
-    protected function setStyle($style)
+    protected function setStyle(string $style): void
     {
         $style = strtoupper($style);
         if (substr($this->data['family'], -1) == 'I') {
@@ -131,7 +131,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         if (($this->data['family'] == 'symbol') || ($this->data['family'] == 'zapfdingbats')) {
             $style = '';
         }
-        if ($this->data['pdfa'] && (isset(Core::$font[$this->data['family']]))) {
+        if ($this->data['pdfa'] && (isset(Core::FONT[$this->data['family']]))) {
             // core fonts must be embedded in PDF/A
             $this->data['family'] = 'pdfa' . $this->data['family'];
         }
@@ -143,7 +143,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *
      * @param string $style Style
      */
-    protected function setStyleMode($style)
+    protected function setStyleMode(string $style): void
     {
         $suffix = '';
         if (strpos($style, 'B') !== false) {

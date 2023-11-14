@@ -37,63 +37,63 @@ abstract class Buffer
      *
      * @var array
      */
-    protected $font = array();
+    protected array $font = array();
 
     /**
      * Font counter
      *
      * @var int
      */
-    protected $numfonts = 0;
+    protected int $numfonts = 0;
 
     /**
      * Array containing encoding differences
      *
      * @var array
      */
-    protected $encdiff = array();
+    protected array $encdiff = array();
 
     /**
      * Index for Encoding differences
      *
      * @var int
      */
-    protected $numdiffs = 0;
+    protected int $numdiffs = 0;
 
     /**
      * Array containing font definitions grouped by file
      *
      * @var array
      */
-    protected $file = array();
+    protected array $file = array();
 
     /**
      * Default subset mode
      *
      * @var bool
      */
-    protected $subset = false;
+    protected bool $subset = false;
 
     /**
      * True if we are in Unicode mode, False otherwhise.
      *
      * @var bool
      */
-    protected $unicode = true;
+    protected bool $unicode = true;
 
     /**
      * True if we are in PDF/A mode.
      *
      * @var bool
      */
-    protected $pdfa = false;
+    protected bool $pdfa = false;
 
     /**
      * Unit of measure conversion ratio
      *
      * @var float
      */
-    protected $kunit = 1.0;
+    protected float $kunit = 1.0;
 
     /**
      * Initialize fonts buffer
@@ -115,7 +115,12 @@ abstract class Buffer
      *
      * @throws FontException in case of error
      */
-    public function __construct($kunit, $subset = false, $unicode = true, $pdfa = false)
+    public function __construct(
+        float $kunit, 
+        bool $subset = false, 
+        bool $unicode = true, 
+        bool $pdfa = false
+    )
     {
         $this->kunit = (float) $kunit;
         $this->subset = (bool) $subset;
@@ -128,7 +133,7 @@ abstract class Buffer
      *
      * @return bool
      */
-    public function isSubsetMode()
+    public function isSubsetMode(): bool
     {
         return $this->subset;
     }
@@ -138,7 +143,7 @@ abstract class Buffer
      *
      * @return array
      */
-    public function getFonts()
+    public function getFonts(): array
     {
         return $this->font;
     }
@@ -148,7 +153,7 @@ abstract class Buffer
      *
      * @return array
      */
-    public function getEncDiffs()
+    public function getEncDiffs(): array
     {
         return $this->encdiff;
     }
@@ -160,7 +165,7 @@ abstract class Buffer
      *
      * @return bool
      */
-    public function isValidKey($key)
+    public function isValidKey(string $key): bool
     {
         return isset($this->font[$key]);
     }
@@ -170,11 +175,11 @@ abstract class Buffer
      *
      * @param string $key Font key
      *
-     * @return array|bool Returns the fonts array or false in case of missing font.
+     * @return array Returns the fonts array.
      *
      * @throws FontException in case of error
      */
-    public function getFont($key)
+    public function getFont(string $key): array
     {
         if (!isset($this->font[$key])) {
             throw new FontException('The font ' . $key . ' has not been loaded');
@@ -189,7 +194,7 @@ abstract class Buffer
      * @param string $subkey Font sub-key
      * @param mixed  $data   The data to set
      */
-    public function setFontSubKey($key, $subkey, $data)
+    public function setFontSubKey(string $key, string $subkey, mixed $data): void
     {
         if (!isset($this->font[$key])) {
             $this->font[$key] = array();
@@ -200,10 +205,10 @@ abstract class Buffer
     /**
      * Add a character to the subset list
      *
-     * @param int   $key  The font key
+     * @param string   $key  The font key
      * @param int   $char The Unicode character value to add
      */
-    public function addSubsetChar($key, $char)
+    public function addSubsetChar(string $key, int $char)
     {
         $this->font[$key]['subsetchars'][$char] = true;
     }
@@ -227,9 +232,9 @@ abstract class Buffer
      *                          O: overline
      * @param string $ifile  The font definition file (or empty for autodetect).
      *                       By default, the name is built from the family and style, in lower case with no spaces.
-     * @param bool   $subset If true embedd only a subset of the font
+     * @param ?bool   $subset If true embed only a subset of the font
      *                       (stores only the information related to the used characters);
-     *                       If false embedd full font;
+     *                       If false embed full font;
      *                       This option is valid only for TrueTypeUnicode fonts and it is disabled for PDF/A.
      *                       If you want to enable users to modify the document, set this parameter to false.
      *                       If you subset the font, the person who receives your PDF would need to have
@@ -242,7 +247,13 @@ abstract class Buffer
      *
      * @throws FontException in case of error
      */
-    public function add(&$objnum, $font, $style = '', $ifile = '', $subset = null)
+    public function add(
+        int &$objnum, 
+        string $font, 
+        string $style = '', 
+        string $ifile = '', 
+        ?bool $subset = null
+    )
     {
         if ($subset === null) {
             $subset = $this->subset;
@@ -271,7 +282,7 @@ abstract class Buffer
      *
      * @param string $key Font key
      */
-    protected function setFontFile($key)
+    protected function setFontFile(string $key): void
     {
         if (empty($this->font[$key]['file'])) {
             return;
@@ -298,7 +309,7 @@ abstract class Buffer
      *
      * @param string $key Font key
      */
-    protected function setFontDiff($key)
+    protected function setFontDiff(string $key): void
     {
         if (empty($this->font[$key]['diff'])) {
             return;

@@ -16,6 +16,7 @@
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
+use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\File;
 use Com\Tecnick\Unicode\Data\Encoding;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
@@ -38,42 +39,42 @@ abstract class TrueTypeFormat
      *
      * @var array
      */
-    protected $subchars = array();
+    protected array $subchars = array();
 
     /**
      * Array containing subset glyphs indexes of chars from cmap table
      *
      * @var array
      */
-    protected $subglyphs = array();
+    protected array $subglyphs = array();
 
     /**
      * Pointer position on the original font data
      *
      * @var int
      */
-    protected $offset = 0;
+    protected int $offset = 0;
 
     /**
      * Content of the input font file
      *
      * @var string
      */
-    protected $font = '';
+    protected string $font = '';
 
     /**
      * Extracted font metrics
      *
      * @var array
      */
-    protected $fdt = array();
+    protected array $fdt = array();
 
     /**
      * Object used to read font bytes
      *
      * @var \Com\Tecnick\File\Byte
      */
-    protected $fbyte;
+    protected Byte $fbyte;
 
     /**
      * Add CTG entry
@@ -81,7 +82,7 @@ abstract class TrueTypeFormat
      * @param int $cid
      * @param int $gid
      */
-    protected function addCtgItem($cid, $gid)
+    protected function addCtgItem(int $cid, int $gid): void
     {
         $this->fdt['ctgdata'][$cid] = $gid;
         if (isset($this->subchars[$cid])) {
@@ -92,7 +93,7 @@ abstract class TrueTypeFormat
     /**
      * Get CIDToGIDMap
      */
-    protected function getCIDToGIDMap()
+    protected function getCIDToGIDMap(): void
     {
         $valid_format = array(0,2,4,6,8,10,12,13,14);
         $this->fdt['ctgdata'] = array();
@@ -121,7 +122,7 @@ abstract class TrueTypeFormat
     /**
      * Process Format 0: Byte encoding table
      */
-    protected function processFormat0()
+    protected function processFormat0(): void
     {
         $this->offset += 4; // skip length and version/language
         for ($chr = 0; $chr < 256; ++$chr) {
@@ -134,7 +135,7 @@ abstract class TrueTypeFormat
     /**
      * Process Format 2: High-byte mapping through table
      */
-    protected function processFormat2()
+    protected function processFormat2(): void
     {
         $this->offset += 4; // skip length and version/language
         $numSubHeaders = 0;
@@ -194,7 +195,7 @@ abstract class TrueTypeFormat
     /**
      * Process Format 4: Segment mapping to delta values
      */
-    protected function processFormat4()
+    protected function processFormat4(): void
     {
         $length = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
@@ -245,7 +246,7 @@ abstract class TrueTypeFormat
     /**
      * Process Format 6: Trimmed table mapping
      */
-    protected function processFormat6()
+    protected function processFormat6(): void
     {
         $this->offset += 4; // skip length and version/language
         $firstCode = $this->fbyte->getUShort($this->offset);
@@ -263,7 +264,7 @@ abstract class TrueTypeFormat
     /**
      * Process Format 8: Mixed 16-bit and 32-bit coverage
      */
-    protected function processFormat8()
+    protected function processFormat8(): void
     {
         $this->offset += 10; // skip reserved, length and version/language
         for ($kdx = 0; $kdx < 8192; ++$kdx) {
@@ -300,7 +301,7 @@ abstract class TrueTypeFormat
     /**
      * Process Format 10: Trimmed array
      */
-    protected function processFormat10()
+    protected function processFormat10(): void
     {
         $this->offset += 10; // skip reserved, length and version/language
         $startCharCode = $this->fbyte->getULong($this->offset);
@@ -318,7 +319,7 @@ abstract class TrueTypeFormat
     /**
      * Process Format 12: Segmented coverage
      */
-    protected function processFormat12()
+    protected function processFormat12(): void
     {
         $this->offset += 10; // skip length and version/language
         $nGroups = $this->fbyte->getULong($this->offset);
@@ -341,7 +342,7 @@ abstract class TrueTypeFormat
      * Process Format 13: Many-to-one range mappings
      * @TODO: TO BE IMPLEMENTED
      */
-    protected function processFormat13()
+    protected function processFormat13(): void
     {
         return;
     }
@@ -350,7 +351,7 @@ abstract class TrueTypeFormat
      * Process Format 14: Unicode Variation Sequences
      * @TODO: TO BE IMPLEMENTED
      */
-    protected function processFormat14()
+    protected function processFormat14(): void
     {
         return;
     }
