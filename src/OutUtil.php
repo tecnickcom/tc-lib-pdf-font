@@ -274,9 +274,9 @@ abstract class OutUtil
     /**
      * Optimize width ranges
      *
-     * @param array $range Widht Ranges
+     * @param array<int, array<int|string, int|bool>> $range Widht Ranges
      *
-     * @return array
+     * @return array<int, array<int, int>>
      */
     protected function optimizeWidthRanges(array $range): array
     {
@@ -307,6 +307,7 @@ abstract class OutUtil
                 $prevint = false;
             }
         }
+
         return $range;
     }
 }

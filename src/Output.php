@@ -104,7 +104,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Array of character subsets for each font file
      *
-     * @var array
+     * @var array<int, bool>
      */
     protected array $subchars = array();
 

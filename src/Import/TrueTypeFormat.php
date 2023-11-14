@@ -37,14 +37,14 @@ abstract class TrueTypeFormat
     /**
      * Array containing subset chars
      *
-     * @var array
+     * @var array<int, bool>
      */
     protected array $subchars = array();
 
     /**
      * Array containing subset glyphs indexes of chars from cmap table
      *
-     * @var array
+     * @var array<int, bool>
      */
     protected array $subglyphs = array();
 
@@ -105,7 +105,6 @@ abstract class TrueTypeFormat
 *        'AvgWidth': float,
 *        'cw': string,
 *    }
-
      */
     protected array $fdt = array();
 

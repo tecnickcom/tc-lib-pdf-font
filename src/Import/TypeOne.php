@@ -214,8 +214,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * get CID
      *
-     * @param array $imap
-     * @param array $val
+     * @param array<string, string> $imap
+     * @param array<int, string> $val
      *
      * @return int
      */
@@ -243,9 +243,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      * @param int   $idx
      * @param int   $cck
      * @param int   $cid
-     * @param array $ccom
-     * @param array $cdec
-     * @param array $cwidths
+     * @param array<int, int> $ccom
+     * @param array<int, int> $cdec
+     * @param array<int, int> $cwidths
      *
      * @return int
      */

@@ -35,7 +35,7 @@ abstract class Buffer
     /**
      * Array containing all fonts data
      *
-     * @var array{
+     * @var array<string, array{
 *        'n': int,
 *        'i': int,
 *        'key': string,
@@ -96,7 +96,7 @@ abstract class Buffer
 *        'length1': int,
 *        'length2': bool,
 *        'file_n': int,
-*    }
+*    }>
      */
     protected array $font = array();
 
@@ -202,7 +202,68 @@ abstract class Buffer
     /**
      * Returns the fonts buffer
      *
-     * @return array
+     * @return array<string, array{
+*        'n': int,
+*        'i': int,
+*        'key': string,
+*        'ifile': string,
+*        'family': string,
+*        'unicode': bool,
+*        'pdfa': bool,
+*        'style': string,
+*        'fakestyle': bool,
+*        'mode': array{
+*            'bold': bool,
+*            'italic': bool,
+*            'underline': bool,
+*            'linethrough': bool,
+*            'overline': bool,
+*        },
+*        'type': string,
+*        'name': string,
+*        'desc':  array{
+*            'Flags': int,
+*            'FontBBox': string,
+*            'ItalicAngle': int,
+*            'Ascent': int,
+*            'Descent': int,
+*            'Leading': int,
+*            'CapHeight': int,
+*            'XHeight': int,
+*            'StemV': int,
+*            'StemH': int,
+*            'AvgWidth': int,
+*            'MaxWidth': int,
+*            'MissingWidth': int,
+*        },
+*        'up': int,
+*        'ut': int,
+*        'cw':  array<int, int>,
+*        'cbbox': array<int, array<int, int>>,
+*        'dw': int,
+*        'enc': string,
+*        'cidinfo': array{
+*            'Registry': string,
+*            'Ordering': string,
+*            'Supplement': int,
+*            'uni2cid': array<int, int>,
+*        },
+*        'file': string,
+*        'dir': string,
+*        'ctg': string,
+*        'diff': string,
+*        'diff_n': int,
+*        'subset': bool,
+*        'subsetchars': array<int, bool>,
+*        'compress': bool,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'originalsize': int,
+*        'isUnicode': bool,
+*        'length1': int,
+*        'length2': bool,
+*        'file_n': int,
+*    }>
      */
     public function getFonts(): array
     {
@@ -236,7 +297,68 @@ abstract class Buffer
      *
      * @param string $key Font key
      *
-     * @return array Returns the fonts array.
+     * @return array{
+*        'n': int,
+*        'i': int,
+*        'key': string,
+*        'ifile': string,
+*        'family': string,
+*        'unicode': bool,
+*        'pdfa': bool,
+*        'style': string,
+*        'fakestyle': bool,
+*        'mode': array{
+*            'bold': bool,
+*            'italic': bool,
+*            'underline': bool,
+*            'linethrough': bool,
+*            'overline': bool,
+*        },
+*        'type': string,
+*        'name': string,
+*        'desc':  array{
+*            'Flags': int,
+*            'FontBBox': string,
+*            'ItalicAngle': int,
+*            'Ascent': int,
+*            'Descent': int,
+*            'Leading': int,
+*            'CapHeight': int,
+*            'XHeight': int,
+*            'StemV': int,
+*            'StemH': int,
+*            'AvgWidth': int,
+*            'MaxWidth': int,
+*            'MissingWidth': int,
+*        },
+*        'up': int,
+*        'ut': int,
+*        'cw':  array<int, int>,
+*        'cbbox': array<int, array<int, int>>,
+*        'dw': int,
+*        'enc': string,
+*        'cidinfo': array{
+*            'Registry': string,
+*            'Ordering': string,
+*            'Supplement': int,
+*            'uni2cid': array<int, int>,
+*        },
+*        'file': string,
+*        'dir': string,
+*        'ctg': string,
+*        'diff': string,
+*        'diff_n': int,
+*        'subset': bool,
+*        'subsetchars': array<int, bool>,
+*        'compress': bool,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'originalsize': int,
+*        'isUnicode': bool,
+*        'length1': int,
+*        'length2': bool,
+*        'file_n': int,
+*    } Returns the fonts array.
      *
      * @throws FontException in case of error
      */

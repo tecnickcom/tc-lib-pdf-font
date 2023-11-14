@@ -33,6 +33,26 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  */
 class Subset
 {
+
+    /**
+     * array of table names to preserve (loca and glyf tables will be added later)
+     * the cmap table is not needed and shall not be present,
+     * since the mapping from character codes to glyph descriptions is provided separately
+     * 
+     * @var array<string, bool>
+     */
+    protected const TABLENAMES = array (
+        'head' => true, 
+        'hhea' => true, 
+        'hmtx' => true, 
+        'maxp' => true, 
+        'cvt ' => true, 
+        'fpgm' => true, 
+        'prep' => true, 
+        'glyf' => true, 
+        'loca' => true,
+    );
+
     /**
      * Content of the input font file
      *
@@ -96,7 +116,7 @@ class Subset
     /**
      * Array containing subset glyphs indexes of chars from cmap table
      *
-     * @var array
+     * @var array<int, bool>
      */
     protected array $subglyphs = array();
 
@@ -158,7 +178,7 @@ class Subset
 *        'AvgWidth': float,
 *        'cw': string,
 *    }  $fdt      Extracted font metrics
-     * @param array  $subchars Array containing subset chars
+     * @param array<int, bool>  $subchars Array containing subset chars
      *
      * @throws FontException in case of error
      */
@@ -227,10 +247,10 @@ class Subset
     /**
      * Add composite glyphs
      *
-     * @param array $new_sga
+     * @param array<int, bool> $new_sga
      * @param int   $key
      *
-     * @return array
+     * @return array<int, bool>
      */
     protected function findCompositeGlyphs(array $new_sga, int $key): array
     {
@@ -273,15 +293,11 @@ class Subset
      */
     protected function removeUnusedTables(): void
     {
-        // array of table names to preserve (loca and glyf tables will be added later)
-        // the cmap table is not needed and shall not be present,
-        // since the mapping from character codes to glyph descriptions is provided separately
-        $table_names = array ('head', 'hhea', 'hmtx', 'maxp', 'cvt ', 'fpgm', 'prep', 'glyf', 'loca');
         // get the tables to preserve
         $this->offset = 12;
         $tabname = array_keys($this->fdt['table']);
         foreach ($tabname as $tag) {
-            if (in_array($tag, $table_names)) {
+            if (isset(self::TABLENAMES[$tag])) {
                 $this->fdt['table'][$tag]['data'] = substr(
                     $this->font,
                     $this->fdt['table'][$tag]['offset'],

@@ -196,7 +196,68 @@ abstract class Load
     /**
      * Load the font data
      *
-     * @return array Font data
+     * @return array{
+*        'n': int,
+*        'i': int,
+*        'key': string,
+*        'ifile': string,
+*        'family': string,
+*        'unicode': bool,
+*        'pdfa': bool,
+*        'style': string,
+*        'fakestyle': bool,
+*        'mode': array{
+*            'bold': bool,
+*            'italic': bool,
+*            'underline': bool,
+*            'linethrough': bool,
+*            'overline': bool,
+*        },
+*        'type': string,
+*        'name': string,
+*        'desc':  array{
+*            'Flags': int,
+*            'FontBBox': string,
+*            'ItalicAngle': int,
+*            'Ascent': int,
+*            'Descent': int,
+*            'Leading': int,
+*            'CapHeight': int,
+*            'XHeight': int,
+*            'StemV': int,
+*            'StemH': int,
+*            'AvgWidth': int,
+*            'MaxWidth': int,
+*            'MissingWidth': int,
+*        },
+*        'up': int,
+*        'ut': int,
+*        'cw':  array<int, int>,
+*        'cbbox': array<int, array<int, int>>,
+*        'dw': int,
+*        'enc': string,
+*        'cidinfo': array{
+*            'Registry': string,
+*            'Ordering': string,
+*            'Supplement': int,
+*            'uni2cid': array<int, int>,
+*        },
+*        'file': string,
+*        'dir': string,
+*        'ctg': string,
+*        'diff': string,
+*        'diff_n': int,
+*        'subset': bool,
+*        'subsetchars': array<int, bool>,
+*        'compress': bool,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'originalsize': int,
+*        'isUnicode': bool,
+*        'length1': int,
+*        'length2': bool,
+*        'file_n': int,
+*    } Font data
      *
      * @throws FontException in case of error
      */
@@ -218,14 +279,13 @@ abstract class Load
         if (empty($fdt['type']) || empty($fdt['cw'])) {
             throw new FontException('fhe font definition file has a bad format: ' . $this->data['ifile']);
         }
-
         return $fdt;
     }
 
     /**
      * Returns a list of font directories
      *
-     * @return array Font directories
+     * @return array<string> Font directories
      */
     protected function findFontDirectories(): array
     {

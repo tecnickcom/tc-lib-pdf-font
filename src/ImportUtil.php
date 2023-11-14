@@ -55,7 +55,46 @@ abstract class ImportUtil
     /**
      * Extracted font metrics
      *
-     * @var array
+     * @var array{
+*        'input_file': string,
+*        'file_name': string,
+*        'dir': string,
+*        'datafile': string,
+*        'settype': string,
+*        'type': string,
+*        'isUnicode': bool,
+*        'Flags': int,
+*        'enc': string,
+*        'diff': string,
+*        'originalsize': int,
+*        'ctg': string,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'linked': bool,
+*        'size1': int,
+*        'size2': int,
+*        'encrypted': string,
+*        'file': string,
+*        'name': string,
+*        'bbox': string,
+*        'Ascent': int,
+*        'Descent': int,
+*        'italicAngle': int,
+*        'underlinePosition': int,
+*        'underlineThickness': int,
+*        'weight': string,
+*        'Leading': int,
+*        'StemV': int,
+*        'StemH': int,
+*        'CapHeight': int,
+*        'XHeight': int,
+*        'lenIV': int,
+*        'enc_map': array< int, string>,
+*        'MissingWidth': int,
+*        'MaxWidth': int,
+*        'AvgWidth': float,
+*        'cw': string,
+*    }
      */
     protected array $fdt = array();
 

@@ -229,7 +229,7 @@ class Core
     /**
      * Set Char widths
      *
-     * @param array $cwidths Extracted widths
+     * @param array<int, int> $cwidths Extracted widths
      */
     protected function setCharWidths(array $cwidths): void
     {
@@ -276,8 +276,8 @@ class Core
     /**
      * Extract Metrics
      *
-     * @param array $col Array containing row elements to process
-     * @param array $cwd Array contianing cid widths
+     * @param array<int, string> $col Array containing row elements to process
+     * @param array<int, int> $cwd Array contianing cid widths
      */
     protected function processMetricRow(array $col, array &$cwd): void
     {
