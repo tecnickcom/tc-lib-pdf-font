@@ -61,14 +61,93 @@ class Core
     /**
      * Extracted font metrics
      *
-     * @var array
+     * @var array{
+*        'input_file': string,
+*        'file_name': string,
+*        'dir': string,
+*        'datafile': string,
+*        'settype': string,
+*        'type': string,
+*        'isUnicode': bool,
+*        'Flags': int,
+*        'enc': string,
+*        'diff': string,
+*        'originalsize': int,
+*        'ctg': string,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'linked': bool,
+*        'size1': int,
+*        'size2': int,
+*        'encrypted': string,
+*        'file': string,
+*        'name': string,
+*        'bbox': string,
+*        'Ascent': int,
+*        'Descent': int,
+*        'italicAngle': int,
+*        'underlinePosition': int,
+*        'underlineThickness': int,
+*        'weight': string,
+*        'Leading': int,
+*        'StemV': int,
+*        'StemH': int,
+*        'CapHeight': int,
+*        'XHeight': int,
+*        'lenIV': int,
+*        'enc_map': array< int, string>,
+*        'MissingWidth': int,
+*        'MaxWidth': int,
+*        'AvgWidth': float,
+*        'cw': string,
+*    }
+
      */
     protected array $fdt = array();
 
     /**
      *
      * @param string $font    Content of the input font file
-     * @param array  $fdt Extracted font metrics
+     * @param array{
+*        'input_file': string,
+*        'file_name': string,
+*        'dir': string,
+*        'datafile': string,
+*        'settype': string,
+*        'type': string,
+*        'isUnicode': bool,
+*        'Flags': int,
+*        'enc': string,
+*        'diff': string,
+*        'originalsize': int,
+*        'ctg': string,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'linked': bool,
+*        'size1': int,
+*        'size2': int,
+*        'encrypted': string,
+*        'file': string,
+*        'name': string,
+*        'bbox': string,
+*        'Ascent': int,
+*        'Descent': int,
+*        'italicAngle': int,
+*        'underlinePosition': int,
+*        'underlineThickness': int,
+*        'weight': string,
+*        'Leading': int,
+*        'StemV': int,
+*        'StemH': int,
+*        'CapHeight': int,
+*        'XHeight': int,
+*        'lenIV': int,
+*        'enc_map': array< int, string>,
+*        'MissingWidth': int,
+*        'MaxWidth': int,
+*        'AvgWidth': float,
+*        'cw': string,
+*    }  $fdt Extracted font metrics
      *
      * @throws FontException in case of error
      */
@@ -82,7 +161,47 @@ class Core
     /**
      * Get all the extracted font metrics
      *
-     * @return array
+     * @return array{
+*        'input_file': string,
+*        'file_name': string,
+*        'dir': string,
+*        'datafile': string,
+*        'settype': string,
+*        'type': string,
+*        'isUnicode': bool,
+*        'Flags': int,
+*        'enc': string,
+*        'diff': string,
+*        'originalsize': int,
+*        'ctg': string,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'linked': bool,
+*        'size1': int,
+*        'size2': int,
+*        'encrypted': string,
+*        'file': string,
+*        'name': string,
+*        'bbox': string,
+*        'Ascent': int,
+*        'Descent': int,
+*        'italicAngle': int,
+*        'underlinePosition': int,
+*        'underlineThickness': int,
+*        'weight': string,
+*        'Leading': int,
+*        'StemV': int,
+*        'StemH': int,
+*        'CapHeight': int,
+*        'XHeight': int,
+*        'lenIV': int,
+*        'enc_map': array< int, string>,
+*        'MissingWidth': int,
+*        'MaxWidth': int,
+*        'AvgWidth': float,
+*        'cw': string,
+*    }
+
      */
     public function getFontMetrics(): array
     {

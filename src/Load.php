@@ -49,7 +49,68 @@ abstract class Load
     /**
      * Font data
      *
-     * @var array
+     * @var array{
+*        'n': int,
+*        'i': int,
+*        'key': string,
+*        'ifile': string,
+*        'family': string,
+*        'unicode': bool,
+*        'pdfa': bool,
+*        'style': string,
+*        'fakestyle': bool,
+*        'mode': array{
+*            'bold': bool,
+*            'italic': bool,
+*            'underline': bool,
+*            'linethrough': bool,
+*            'overline': bool,
+*        },
+*        'type': string,
+*        'name': string,
+*        'desc':  array{
+*            'Flags': int,
+*            'FontBBox': string,
+*            'ItalicAngle': int,
+*            'Ascent': int,
+*            'Descent': int,
+*            'Leading': int,
+*            'CapHeight': int,
+*            'XHeight': int,
+*            'StemV': int,
+*            'StemH': int,
+*            'AvgWidth': int,
+*            'MaxWidth': int,
+*            'MissingWidth': int,
+*        },
+*        'up': int,
+*        'ut': int,
+*        'cw':  array<int, int>,
+*        'cbbox': array<int, array<int, int>>,
+*        'dw': int,
+*        'enc': string,
+*        'cidinfo': array{
+*            'Registry': string,
+*            'Ordering': string,
+*            'Supplement': int,
+*            'uni2cid': array<int, int>,
+*        },
+*        'file': string,
+*        'dir': string,
+*        'ctg': string,
+*        'diff': string,
+*        'diff_n': int,
+*        'subset': bool,
+*        'subsetchars': array<int, bool>,
+*        'compress': bool,
+*        'platform_id': int,
+*        'encoding_id': int,
+*        'originalsize': int,
+*        'isUnicode': bool,
+*        'length1': int,
+*        'length2': bool,
+*        'file_n': int,
+*    }
      */
     protected array $data = array(
         'n'           => 0,              // PDF object number
@@ -70,7 +131,21 @@ abstract class Load
         ),
         'type'        => '',
         'name'        => '',
-        'desc'        => array(),
+        'desc'        => array(
+            'Flags' => 0,
+            'FontBBox' => '',
+            'ItalicAngle' => 0,
+            'Ascent' => 0,
+            'Descent' => 0,
+            'Leading' => 0,
+            'CapHeight' => 0,
+            'XHeight' => 0,
+            'StemV' => 0,
+            'StemH' => 0,
+            'AvgWidth' => 0,
+            'MaxWidth' => 0,
+            'MissingWidth' => 0,
+        ),
         'up'          => -100,
         'ut'          => 50,
         'cw'          => array(),
@@ -90,6 +165,14 @@ abstract class Load
         'diff_n'      => 0,              // object ID of the difference object
         'subset'      => false,          // True if the font is subset
         'subsetchars' => array(),        // subset characters
+        'compress'    => false,
+        'platform_id' => 0,
+        'encoding_id' => 0,
+        'originalsize' => 0,
+        'isUnicode'   => false,
+        'length1'     => 0,
+        'length2'     => false,
+        'file_n'      => 0,
     );
 
     /**
