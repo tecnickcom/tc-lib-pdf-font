@@ -71,7 +71,7 @@ Create a composer.json in your projects root-directory:
 ```json
 {
     "require": {
-        "tecnickcom/tc-lib-pdf-font": "^1.9"
+        "tecnickcom/tc-lib-pdf-font": "^2.0"
     }
 }
 ```
@@ -79,7 +79,7 @@ Create a composer.json in your projects root-directory:
 Or add to an existing project with: 
 
 ```bash
-composer require tecnickcom/tc-lib-pdf-font ^1.9
+composer require tecnickcom/tc-lib-pdf-font ^2.0
 ```
 
 ## Font conversion
