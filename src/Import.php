@@ -105,9 +105,15 @@ class Import extends ImportUtil
         }
 
         // get font data
-        if (! is_file($file) || ($this->font = @file_get_contents($file)) === false) {
+        if (! is_file($file)) {
+            throw new FontException('invalid font file: ' . $file);
+        }
+
+        if (($font = @file_get_contents($file)) === false) {
             throw new FontException('unable to read the input font file: ' . $file);
         }
+
+        $this->font = $font;
 
         $this->fbyte = new Byte($this->font);
 
@@ -133,6 +139,7 @@ class Import extends ImportUtil
         }
 
         $this->fdt = $processor->getFontMetrics();
+
         $this->saveFontData();
     }
 
@@ -140,44 +147,45 @@ class Import extends ImportUtil
      * Get all the extracted font metrics
      *
      * @return array{
-     *        'input_file': string,
-     *        'file_name': string,
-     *        'dir': string,
-     *        'datafile': string,
-     *        'settype': string,
-     *        'type': string,
-     *        'isUnicode': bool,
+     *        'Ascent': int,
+     *        'AvgWidth': float,
+     *        'CapHeight': int,
+     *        'Descent': int,
      *        'Flags': int,
-     *        'enc': string,
-     *        'diff': string,
-     *        'originalsize': int,
+     *        'Leading': int,
+     *        'MaxWidth': int,
+     *        'MissingWidth': int,
+     *        'StemH': int,
+     *        'StemV': int,
+     *        'XHeight': int,
+     *        'bbox': string,
      *        'ctg': string,
-     *        'platform_id': int,
+     *        'ctgdata': array<int, int>,
+     *        'cw': string,
+     *        'datafile': string,
+     *        'diff': string,
+     *        'dir': string,
+     *        'enc': string,
+     *        'enc_map': array< int, string>,
      *        'encoding_id': int,
-     *        'linked': bool,
-     *        'size1': int,
-     *        'size2': int,
      *        'encrypted': string,
      *        'file': string,
-     *        'name': string,
-     *        'bbox': string,
-     *        'Ascent': int,
-     *        'Descent': int,
+     *        'file_name': string,
+     *        'input_file': string,
+     *        'isUnicode': bool,
      *        'italicAngle': int,
+     *        'lenIV': int,
+     *        'linked': bool,
+     *        'name': string,
+     *        'originalsize': int,
+     *        'platform_id': int,
+     *        'settype': string,
+     *        'size1': int,
+     *        'size2': int,
+     *        'type': string,
      *        'underlinePosition': int,
      *        'underlineThickness': int,
      *        'weight': string,
-     *        'Leading': int,
-     *        'StemV': int,
-     *        'StemH': int,
-     *        'CapHeight': int,
-     *        'XHeight': int,
-     *        'lenIV': int,
-     *        'enc_map': array< int, string>,
-     *        'MissingWidth': int,
-     *        'MaxWidth': int,
-     *        'AvgWidth': float,
-     *        'cw': string,
      *    }
      */
     public function getFontMetrics(): array
@@ -264,7 +272,13 @@ class Import extends ImportUtil
                 // store compressed CIDToGIDMap
                 $file = new File();
                 $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['ctg'], 'wb');
-                fwrite($fpt, gzcompress($cidtogidmap));
+
+                $cmpr = gzcompress($cidtogidmap);
+                if ($cmpr === false) {
+                    throw new FontException('unable to compress CIDToGIDMap');
+                }
+
+                fwrite($fpt, $cmpr);
                 fclose($fpt);
             }
         }

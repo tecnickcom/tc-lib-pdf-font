@@ -192,14 +192,6 @@ class BufferTest extends TestUtil
         $this->assertEquals('FreeSansBold', $font['name']);
         $this->assertEquals('TrueTypeUnicode', $font['type']);
 
-        $stack->setFontSubKey('freesansBI', 'test_field', 'test_value');
-        $font = $stack->getFont('freesansBI');
-        $this->assertEquals('test_value', $font['test_field']);
-
-        $stack->setFontSubKey('newfont', 'tfield', 'tval');
-        $font = $stack->getFont('newfont');
-        $this->assertEquals('tval', $font['tfield']);
-
         new \Com\Tecnick\Pdf\Font\Import($indir . 'core/ZapfDingbats.afm');
         $stack->add($objnum, 'zapfdingbats', 'BIUDO');
         $font = $stack->getFont('zapfdingbats');

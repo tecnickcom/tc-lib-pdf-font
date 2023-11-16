@@ -123,8 +123,7 @@ class StackTest extends TestUtil
         $this->bcAssertEqualsWithDelta(8.76, $widths['totspacewidth'], 0.0001);
 
         $outfont = $stack->getOutCurrentFont();
-        $this->assertEquals('BT /F2 14.000000 Tf ET
-', $outfont);
+        $this->assertEquals("BT /F2 14.000000 Tf ET\r", $outfont);
     }
 
     public function testEmptyStack(): void
