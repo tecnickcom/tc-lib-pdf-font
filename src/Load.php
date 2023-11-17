@@ -47,81 +47,48 @@ abstract class Load
 
     /**
      * Font data
-     *
-     * @var array{
-     *        'cbbox': array<int, array<int, int>>,
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
-     *        'compress': bool,
-     *        'ctg': string,
-     *        'cw':  array<int, int>,
-     *        'desc':  array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
-     *        'diff': string,
-     *        'diff_n': int,
-     *        'dir': string,
-     *        'dw': int,
-     *        'enc': string,
-     *        'encoding_id': int,
-     *        'fakestyle': bool,
-     *        'family': string,
-     *        'file': string,
-     *        'file_n': int,
-     *        'i': int,
-     *        'ifile': string,
-     *        'isUnicode': bool,
-     *        'key': string,
-     *        'length1': int,
-     *        'length2': bool|int,
-     *        'mode': array{
-     *            'bold': bool,
-     *            'italic': bool,
-     *            'linethrough': bool,
-     *            'overline': bool,
-     *            'underline': bool,
-     *        },
-     *        'n': int,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'pdfa': bool,
-     *        'platform_id': int,
-     *        'style': string,
-     *        'subset': bool,
-     *        'subsetchars': array<int, bool>,
-     *        'type': string,
-     *        'unicode': bool,
-     *        'up': int,
-     *        'ut': int,
-     *    }
      */
     protected array $data = [
+        'Ascender' => 0,
+        'Ascent' => 0,
+        'AvgWidth' => 0.0,
+        'CapHeight' => 0,
+        'CharacterSet' => '',
+        'Descender' => 0,
+        'Descent' => 0,
+        'EncodingScheme' => '',
+        'FamilyName' => '',
+        'Flags' => 0,
+        'FontBBox' => [],
+        'FontName' => '',
+        'FullName' => '',
+        'IsFixedPitch' => false,
+        'ItalicAngle' => 0,
+        'Leading' => 0,
+        'MaxWidth' => 0,
+        'MissingWidth' => 0,
+        'StdHW' => 0,
+        'StdVW' => 0,
+        'StemH' => 0,
+        'StemV' => 0,
+        'UnderlinePosition' => 0,
+        'UnderlineThickness' => 0,
+        'Version' => '',
+        'Weight' => '',
+        'XHeight' => 0,
+        'bbox' => '',
         'cbbox' => [],
         'cidinfo' => [
-            'Ordering' => 'Identity',
-            'Registry' => 'Adobe',
+            'Ordering' => '',
+            'Registry' => '',
             'Supplement' => 0,
             'uni2cid' => [],
         ],
         'compress' => false,
         'ctg' => '',
+        'ctgdata' => [],
         'cw' => [],
+        'datafile' => '',
         'desc' => [
             'Ascent' => 0,
             'AvgWidth' => 0,
@@ -142,17 +109,26 @@ abstract class Load
         'dir' => '',
         'dw' => 0,
         'enc' => '',
+        'enc_map' => [],
+        'encodingTables' => [],
         'encoding_id' => 0,
+        'encrypted' => '',
         'fakestyle' => false,
         'family' => '',
         'file' => '',
         'file_n' => 0,
+        'file_name' => '',
         'i' => 0,
         'ifile' => '',
+        'indexToLoc' => [],
+        'input_file' => '',
         'isUnicode' => false,
+        'italicAngle' => 0,
         'key' => '',
+        'lenIV' => 0,
         'length1' => 0,
-        'length2' => false,
+        'length2' => 0,
+        'linked' => false,
         'mode' => [
             'bold' => false,
             'italic' => false,
@@ -162,16 +138,29 @@ abstract class Load
         ],
         'n' => 0,
         'name' => '',
+        'numGlyphs' => 0,
+        'numHMetrics' => 0,
         'originalsize' => 0,
         'pdfa' => false,
         'platform_id' => 0,
+        'settype' => '',
+        'short_offset' => 0,
+        'size1' => 0,
+        'size2' => 0,
         'style' => '',
         'subset' => false,
         'subsetchars' => [],
+        'table' => [],
+        'tot_num_glyphs' => 0,
         'type' => '',
+        'underlinePosition' => 0,
+        'underlineThickness' => 0,
         'unicode' => false,
+        'unitsPerEm' => 0,
         'up' => 0,
+        'urk' => 0.0,
         'ut' => 0,
+        'weight' => '',
     ];
 
     /**
@@ -181,8 +170,7 @@ abstract class Load
      */
     public function load(): void
     {
-        $fontInfo = $this->getFontInfo();
-        $this->data = array_merge($this->data, $fontInfo);
+        $this->getFontInfo();
         $this->checkType();
         $this->setName();
         $this->setDefaultWidth();
@@ -196,72 +184,9 @@ abstract class Load
     /**
      * Load the font data
      *
-     * @return array{
-     *        'cbbox': array<int, array<int, int>>,
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
-     *        'compress': bool,
-     *        'ctg': string,
-     *        'cw':  array<int, int>,
-     *        'desc':  array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
-     *        'diff': string,
-     *        'diff_n': int,
-     *        'dir': string,
-     *        'dw': int,
-     *        'enc': string,
-     *        'encoding_id': int,
-     *        'fakestyle': bool,
-     *        'family': string,
-     *        'file': string,
-     *        'file_n': int,
-     *        'i': int,
-     *        'ifile': string,
-     *        'isUnicode': bool,
-     *        'key': string,
-     *        'length1': int,
-     *        'length2': bool|int,
-     *        'mode': array{
-     *            'bold': bool,
-     *            'italic': bool,
-     *            'linethrough': bool,
-     *            'overline': bool,
-     *            'underline': bool,
-     *        },
-     *        'n': int,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'pdfa': bool,
-     *        'platform_id': int,
-     *        'style': string,
-     *        'subset': bool,
-     *        'subsetchars': array<int, bool>,
-     *        'type': string,
-     *        'unicode': bool,
-     *        'up': int,
-     *        'ut': int,
-     *    } Font data
-     *
      * @throws FontException in case of error
      */
-    protected function getFontInfo(): array
+    protected function getFontInfo(): void
     {
         $this->findFontFile();
 
@@ -271,16 +196,20 @@ abstract class Load
         }
 
         $fdt = @file_get_contents($this->data['ifile']);
-        $fdt = @json_decode($fdt, true);
-        if ($fdt === null) {
+        if ($fdt === false) {
+            throw new FontException('unable to read file: ' . $this->data['ifile']);
+        }
+
+        $fdtdata = @json_decode($fdt, true, 5, JSON_OBJECT_AS_ARRAY);
+        if ($fdtdata === null) {
             throw new FontException('JSON decoding error [' . json_last_error() . ']');
         }
 
-        if (empty($fdt['type']) || empty($fdt['cw'])) {
+        if (! is_array($fdtdata)) {
             throw new FontException('fhe font definition file has a bad format: ' . $this->data['ifile']);
         }
 
-        return $fdt;
+        $this->data = array_replace_recursive($this->data, $fdtdata);
     }
 
     /**
@@ -294,13 +223,19 @@ abstract class Load
         $dirs = [''];
         if (defined('K_PATH_FONTS')) {
             $dirs[] = K_PATH_FONTS;
-            $dirs = array_merge($dirs, glob(K_PATH_FONTS . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR));
+            $glb = glob(K_PATH_FONTS . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+            if ($glb !== false) {
+                $dirs = [...$dirs, ...$glb];
+            }
         }
 
         $parent_font_dir = $dir->findParentDir('fonts', __DIR__);
         if ($parent_font_dir !== '') {
             $dirs[] = $parent_font_dir;
-            $dirs = array_merge($dirs, glob($parent_font_dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR));
+            $glb = glob($parent_font_dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+            if ($glb !== false) {
+                $dirs = array_merge($dirs, $glb);
+            }
         }
 
         return array_unique($dirs);
@@ -347,7 +282,7 @@ abstract class Load
             return;
         }
 
-        if (isset($this->data['desc']['MissingWidth']) && ($this->data['desc']['MissingWidth'] > 0)) {
+        if ($this->data['desc']['MissingWidth'] > 0) {
             $this->data['dw'] = $this->data['desc']['MissingWidth'];
         } elseif (! empty($this->data['cw'][32])) {
             $this->data['dw'] = $this->data['cw'][32];
@@ -423,7 +358,7 @@ abstract class Load
 
         if (str_contains($this->data['type'], 'TrueType')) {
             $this->data['length1'] = $this->data['originalsize'];
-            $this->data['length2'] = false;
+            $this->data['length2'] = 0;
         } elseif ($this->data['type'] != 'Core') {
             $this->data['length1'] = $this->data['size1'];
             $this->data['length2'] = $this->data['size2'];

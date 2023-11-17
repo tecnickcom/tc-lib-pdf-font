@@ -64,49 +64,121 @@ class Subset
 
     /**
      * Extracted font metrics
-     *
-     * @var array{
-     *        'input_file': string,
-     *        'file_name': string,
-     *        'dir': string,
-     *        'datafile': string,
-     *        'settype': string,
-     *        'type': string,
-     *        'isUnicode': bool,
-     *        'Flags': int,
-     *        'enc': string,
-     *        'diff': string,
-     *        'originalsize': int,
-     *        'ctg': string,
-     *        'platform_id': int,
-     *        'encoding_id': int,
-     *        'linked': bool,
-     *        'size1': int,
-     *        'size2': int,
-     *        'encrypted': string,
-     *        'file': string,
-     *        'name': string,
-     *        'bbox': string,
-     *        'Ascent': int,
-     *        'Descent': int,
-     *        'italicAngle': int,
-     *        'underlinePosition': int,
-     *        'underlineThickness': int,
-     *        'weight': string,
-     *        'Leading': int,
-     *        'StemV': int,
-     *        'StemH': int,
-     *        'CapHeight': int,
-     *        'XHeight': int,
-     *        'lenIV': int,
-     *        'enc_map': array< int, string>,
-     *        'MissingWidth': int,
-     *        'MaxWidth': int,
-     *        'AvgWidth': float,
-     *        'cw': string,
-     *    }
      */
-    protected array $fdt = [];
+    protected array $fdt = [
+        'Ascender' => 0,
+        'Ascent' => 0,
+        'AvgWidth' => 0.0,
+        'CapHeight' => 0,
+        'CharacterSet' => '',
+        'Descender' => 0,
+        'Descent' => 0,
+        'EncodingScheme' => '',
+        'FamilyName' => '',
+        'Flags' => 0,
+        'FontBBox' => [],
+        'FontName' => '',
+        'FullName' => '',
+        'IsFixedPitch' => false,
+        'ItalicAngle' => 0,
+        'Leading' => 0,
+        'MaxWidth' => 0,
+        'MissingWidth' => 0,
+        'StdHW' => 0,
+        'StdVW' => 0,
+        'StemH' => 0,
+        'StemV' => 0,
+        'UnderlinePosition' => 0,
+        'UnderlineThickness' => 0,
+        'Version' => '',
+        'Weight' => '',
+        'XHeight' => 0,
+        'bbox' => '',
+        'cbbox' => [],
+        'cidinfo' => [
+            'Ordering' => '',
+            'Registry' => '',
+            'Supplement' => 0,
+            'uni2cid' => [],
+        ],
+        'compress' => false,
+        'ctg' => '',
+        'ctgdata' => [],
+        'cw' => [],
+        'datafile' => '',
+        'desc' => [
+            'Ascent' => 0,
+            'AvgWidth' => 0,
+            'CapHeight' => 0,
+            'Descent' => 0,
+            'Flags' => 0,
+            'FontBBox' => '',
+            'ItalicAngle' => 0,
+            'Leading' => 0,
+            'MaxWidth' => 0,
+            'MissingWidth' => 0,
+            'StemH' => 0,
+            'StemV' => 0,
+            'XHeight' => 0,
+        ],
+        'diff' => '',
+        'diff_n' => 0,
+        'dir' => '',
+        'dw' => 0,
+        'enc' => '',
+        'enc_map' => [],
+        'encodingTables' => [],
+        'encoding_id' => 0,
+        'encrypted' => '',
+        'fakestyle' => false,
+        'family' => '',
+        'file' => '',
+        'file_n' => 0,
+        'file_name' => '',
+        'i' => 0,
+        'ifile' => '',
+        'indexToLoc' => [],
+        'input_file' => '',
+        'isUnicode' => false,
+        'italicAngle' => 0,
+        'key' => '',
+        'lenIV' => 0,
+        'length1' => 0,
+        'length2' => 0,
+        'linked' => false,
+        'mode' => [
+            'bold' => false,
+            'italic' => false,
+            'linethrough' => false,
+            'overline' => false,
+            'underline' => false,
+        ],
+        'n' => 0,
+        'name' => '',
+        'numGlyphs' => 0,
+        'numHMetrics' => 0,
+        'originalsize' => 0,
+        'pdfa' => false,
+        'platform_id' => 0,
+        'settype' => '',
+        'short_offset' => 0,
+        'size1' => 0,
+        'size2' => 0,
+        'style' => '',
+        'subset' => false,
+        'subsetchars' => [],
+        'table' => [],
+        'tot_num_glyphs' => 0,
+        'type' => '',
+        'underlinePosition' => 0,
+        'underlineThickness' => 0,
+        'unicode' => false,
+        'unitsPerEm' => 0,
+        'up' => 0,
+        'urk' => 0.0,
+        'ut' => 0,
+        'weight' => '',
+    ];
 
     /**
      * Array containing subset glyphs indexes of chars from cmap table
@@ -129,46 +201,7 @@ class Subset
      * Process TrueType font
      *
      * @param string $font     Content of the input font file
-     * @param array{
-     *        'input_file': string,
-     *        'file_name': string,
-     *        'dir': string,
-     *        'datafile': string,
-     *        'settype': string,
-     *        'type': string,
-     *        'isUnicode': bool,
-     *        'Flags': int,
-     *        'enc': string,
-     *        'diff': string,
-     *        'originalsize': int,
-     *        'ctg': string,
-     *        'platform_id': int,
-     *        'encoding_id': int,
-     *        'linked': bool,
-     *        'size1': int,
-     *        'size2': int,
-     *        'encrypted': string,
-     *        'file': string,
-     *        'name': string,
-     *        'bbox': string,
-     *        'Ascent': int,
-     *        'Descent': int,
-     *        'italicAngle': int,
-     *        'underlinePosition': int,
-     *        'underlineThickness': int,
-     *        'weight': string,
-     *        'Leading': int,
-     *        'StemV': int,
-     *        'StemH': int,
-     *        'CapHeight': int,
-     *        'XHeight': int,
-     *        'lenIV': int,
-     *        'enc_map': array< int, string>,
-     *        'MissingWidth': int,
-     *        'MaxWidth': int,
-     *        'AvgWidth': float,
-     *        'cw': string,
-     *    }  $fdt      Extracted font metrics
+     * @param array $fdt      Extracted font metrics
      * @param array<int, bool>  $subchars Array containing subset chars
      *
      * @throws FontException in case of error
@@ -208,11 +241,19 @@ class Subset
         $offset = 0;
         for ($idx = 0; $idx < $tlen; ++$idx) {
             $val = unpack('Ni', substr($table, $offset, 4));
+            if ($val === false) {
+                throw new FontException('Unable to unpack table data');
+            }
+
             $sum += $val['i'];
             $offset += 4;
         }
 
         $sum = unpack('Ni', pack('N', $sum));
+        if ($sum === false) {
+            throw new FontException('Unable to unpack checksum');
+        }
+
         return $sum['i'];
     }
 
@@ -292,6 +333,15 @@ class Subset
         $tabname = array_keys($this->fdt['table']);
         foreach ($tabname as $tag) {
             if (isset(self::TABLENAMES[$tag])) {
+                if (empty($this->fdt['table'][$tag])) {
+                    $this->fdt['table'][$tag] = [
+                        'checkSum' => 0,
+                        'data' => '',
+                        'length' => 0,
+                        'offset' => 0,
+                    ];
+                }
+
                 $this->fdt['table'][$tag]['data'] = substr(
                     $this->font,
                     $this->fdt['table'][$tag]['offset'],
@@ -322,6 +372,8 @@ class Subset
 
     /**
      * Add glyf and loca tables
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     protected function addProcessedTables(): void
     {
@@ -342,7 +394,7 @@ class Subset
                 $length = 0;
             }
 
-            if ($this->fdt['short_offset']) {
+            if ($this->fdt['short_offset'] !== 0) {
                 $loca .= pack('n', floor($this->offset / 2));
             } else {
                 $loca .= pack('N', $this->offset);
@@ -352,8 +404,18 @@ class Subset
         }
 
         // add loca
+        if (empty($this->fdt['table']['loca'])) {
+            $this->fdt['table']['loca'] = [
+                'checkSum' => 0,
+                'data' => '',
+                'length' => 0,
+                'offset' => 0,
+            ];
+        }
+
         $this->fdt['table']['loca']['data'] = $loca;
         $this->fdt['table']['loca']['length'] = strlen($loca);
+        $this->fdt['table']['loca']['offset'] = $this->offset;
         $pad = 4 - ($this->fdt['table']['loca']['length'] % 4);
         if ($pad != 4) {
             // the length of a table must be a multiple of four bytes
@@ -361,15 +423,26 @@ class Subset
             $this->fdt['table']['loca']['data'] .= str_repeat("\x0", $pad);
         }
 
-        $this->fdt['table']['loca']['offset'] = $this->offset;
         $this->fdt['table']['loca']['checkSum'] = $this->getTableChecksum(
             $this->fdt['table']['loca']['data'],
             $this->fdt['table']['loca']['length']
         );
+
         $this->offset += $this->fdt['table']['loca']['length'];
+
         // add glyf
+        if (empty($this->fdt['table']['glyf'])) {
+            $this->fdt['table']['glyf'] = [
+                'checkSum' => 0,
+                'data' => '',
+                'length' => 0,
+                'offset' => 0,
+            ];
+        }
+
         $this->fdt['table']['glyf']['data'] = $glyf;
         $this->fdt['table']['glyf']['length'] = strlen($glyf);
+        $this->fdt['table']['glyf']['offset'] = $this->offset;
         $pad = 4 - ($this->fdt['table']['glyf']['length'] % 4);
         if ($pad != 4) {
             // the length of a table must be a multiple of four bytes
@@ -377,7 +450,6 @@ class Subset
             $this->fdt['table']['glyf']['data'] .= str_repeat("\x0", $pad);
         }
 
-        $this->fdt['table']['glyf']['offset'] = $this->offset;
         $this->fdt['table']['glyf']['checkSum'] = $this->getTableChecksum(
             $this->fdt['table']['glyf']['data'],
             $this->fdt['table']['glyf']['length']

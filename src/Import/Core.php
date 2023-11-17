@@ -18,7 +18,6 @@ namespace Com\Tecnick\Pdf\Font\Import;
 
 use Com\Tecnick\File\File;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
-use Com\Tecnick\Unicode\Data\Encoding;
 
 /**
  * Com\Tecnick\Pdf\Font\Import\Core
@@ -51,47 +50,7 @@ class Core
 
     /**
      * @param string $font    Content of the input font file
-     * @param array{
-     *        'Ascent': int,
-     *        'AvgWidth': float,
-     *        'CapHeight': int,
-     *        'Descent': int,
-     *        'Flags': int,
-     *        'Leading': int,
-     *        'MaxWidth': int,
-     *        'MissingWidth': int,
-     *        'StemH': int,
-     *        'StemV': int,
-     *        'XHeight': int,
-     *        'bbox': string,
-     *        'ctg': string,
-     *        'ctgdata': array<int, int>,
-     *        'cw': string,
-     *        'datafile': string,
-     *        'diff': string,
-     *        'dir': string,
-     *        'enc': string,
-     *        'enc_map': array< int, string>,
-     *        'encoding_id': int,
-     *        'encrypted': string,
-     *        'file': string,
-     *        'file_name': string,
-     *        'input_file': string,
-     *        'isUnicode': bool,
-     *        'italicAngle': int,
-     *        'lenIV': int,
-     *        'linked': bool,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'platform_id': int,
-     *        'settype': string,
-     *        'size1': int,
-     *        'size2': int,
-     *        'type': string,
-     *        'underlinePosition': int,
-     *        'underlineThickness': int,
-     *        'weight': string,
-     *    }  $fdt Extracted font metrics
+     * @param array $fdt Extracted font metrics
      *
      * @throws FontException in case of error
      */
@@ -99,7 +58,8 @@ class Core
         /**
          * Content of the input font file
          */
-        protected string $font, /**
+        protected string $font,
+        /**
          * Extracted font metrics
          */
         protected array $fdt
@@ -109,48 +69,6 @@ class Core
 
     /**
      * Get all the extracted font metrics
-     *
-     * @return array{
-     *        'Ascent': int,
-     *        'AvgWidth': float,
-     *        'CapHeight': int,
-     *        'Descent': int,
-     *        'Flags': int,
-     *        'Leading': int,
-     *        'MaxWidth': int,
-     *        'MissingWidth': int,
-     *        'StemH': int,
-     *        'StemV': int,
-     *        'XHeight': int,
-     *        'bbox': string,
-     *        'ctg': string,
-     *        'ctgdata': array<int, int>,
-     *        'cw': string,
-     *        'datafile': string,
-     *        'diff': string,
-     *        'dir': string,
-     *        'enc': string,
-     *        'enc_map': array< int, string>,
-     *        'encoding_id': int,
-     *        'encrypted': string,
-     *        'file': string,
-     *        'file_name': string,
-     *        'input_file': string,
-     *        'isUnicode': bool,
-     *        'italicAngle': int,
-     *        'lenIV': int,
-     *        'linked': bool,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'platform_id': int,
-     *        'settype': string,
-     *        'size1': int,
-     *        'size2': int,
-     *        'type': string,
-     *        'underlinePosition': int,
-     *        'underlineThickness': int,
-     *        'weight': string,
-     *    }
      */
     public function getFontMetrics(): array
     {
@@ -188,7 +106,7 @@ class Core
 
         $this->fdt['MaxWidth'] = $this->fdt['MissingWidth'];
         $this->fdt['AvgWidth'] = 0;
-        $this->fdt['cw'] = '';
+        $this->fdt['cw'] = [];
         for ($cid = 0; $cid <= 255; ++$cid) {
             if (isset($cwidths[$cid])) {
                 if ($cwidths[$cid] > $this->fdt['MaxWidth']) {
@@ -196,9 +114,9 @@ class Core
                 }
 
                 $this->fdt['AvgWidth'] += $cwidths[$cid];
-                $this->fdt['cw'] .= ',"' . $cid . '":' . $cwidths[$cid];
+                $this->fdt['cw'][$cid] = $cwidths[$cid];
             } else {
-                $this->fdt['cw'] .= ',"' . $cid . '":' . $this->fdt['MissingWidth'];
+                $this->fdt['cw'][$cid] = $this->fdt['MissingWidth'];
             }
         }
 
@@ -211,7 +129,7 @@ class Core
     protected function extractMetrics(): void
     {
         $cwd = [];
-        $this->fdt['cbbox'] = '';
+        $this->fdt['cbbox'] = [];
         $lines = explode("\n", str_replace("\r", '', $this->font));
         // process each row
         foreach ($lines as $line) {
@@ -238,8 +156,7 @@ class Core
             $cwd[$cid] = (int) $col[4];
             if (! empty($col[14])) {
                 //cbbox
-                $this->fdt['cbbox'] .= ',"' . $cid
-                . '":[' . $col[10] . ',' . $col[11] . ',' . $col[12] . ',' . $col[13] . ']';
+                $this->fdt['cbbox'][$cid] = [$col[10], $col[11], $col[12], $col[13]];
             }
         } elseif (
             in_array(
@@ -303,7 +220,7 @@ class Core
 
         $this->fdt['Ascender'] = $this->fdt['FontBBox'][3];
 
-        if (! isset($this->fdt['CapHeight'])) {
+        if (empty($this->fdt['CapHeight'])) {
             $this->fdt['CapHeight'] = $this->fdt['Ascender'];
         }
     }

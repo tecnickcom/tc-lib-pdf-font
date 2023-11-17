@@ -94,8 +94,12 @@ class ImportTest extends TestUtil
         $import = new \Com\Tecnick\Pdf\Font\Import($indir . $font, $outdir, $type, $encoding);
         $this->assertEquals($outname, $import->getFontName());
 
-        $json = json_decode(file_get_contents($outdir . $outname . '.json'), true, 512, JSON_THROW_ON_ERROR);
+        $file = file_get_contents($outdir . $outname . '.json');
+        $this->assertNotFalse($file);
+
+        $json = json_decode($file, true, 512, JSON_THROW_ON_ERROR);
         $this->assertNotNull($json);
+        $this->assertIsArray($json);
 
         $this->assertArrayHasKey('type', $json);
         $this->assertArrayHasKey('name', $json);

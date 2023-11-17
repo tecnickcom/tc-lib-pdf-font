@@ -40,7 +40,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     {
         // read first segment
         $dat = unpack('Cmarker/Ctype/Vsize', substr($this->font, 0, 6));
-        if ($dat['marker'] != 128) {
+        if (($dat === false) || ($dat['marker'] != 128)) {
             throw new FontException('Font file is not a valid binary Type1');
         }
 
@@ -48,7 +48,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $data = substr($this->font, 6, $this->fdt['size1']);
         // read second segment
         $dat = unpack('Cmarker/Ctype/Vsize', substr($this->font, (6 + $this->fdt['size1']), 6));
-        if ($dat['marker'] != 128) {
+        if (($dat === false) || ($dat['marker'] != 128)) {
             throw new FontException('Font file is not a valid binary Type1');
         }
 
@@ -59,7 +59,13 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $this->fdt['file'] = $this->fdt['file_name'] . '.z';
         $file = new File();
         $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
-        fwrite($fpt, gzcompress($data));
+
+        $cmpr = gzcompress($data);
+        if ($cmpr === false) {
+            throw new FontException('Unable to compress font data');
+        }
+
+        fwrite($fpt, $cmpr);
         fclose($fpt);
     }
 
@@ -104,13 +110,15 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 
     /**
      * Extract Font information
+     *
+     * @return array<string, int>
      */
     protected function getInternalMap(): array
     {
         $imap = [];
         if (preg_match_all('#dup[\s]([0-9]+)[\s]*/([^\s]*)[\s]put#sU', $this->font, $fmap, PREG_SET_ORDER) > 0) {
             foreach ($fmap as $val) {
-                $imap[$val[2]] = $val[1];
+                $imap[$val[2]] = (int) $val[1];
             }
         }
 
@@ -203,10 +211,6 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $this->fdt['enc_map'] = false;
         $eplain = substr($eplain, (strpos($eplain, '/CharStrings') + 1));
         preg_match_all('#/([A-Za-z0-9\.]*)[\s][0-9]+[\s]RD[\s](.*)[\s]ND#sU', $eplain, $matches, PREG_SET_ORDER);
-        if (! isset($this->fdt['enc'])) {
-            return $matches;
-        }
-
         if ($this->fdt['enc'] === '') {
             return $matches;
         }
@@ -222,7 +226,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * get CID
      *
-     * @param array<string, string> $imap
+     * @param array<string, int> $imap
      * @param array<int, string> $val
      */
     protected function getCid(array $imap, array $val): int
@@ -244,7 +248,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             return 1000;
         }
 
-        return $cid;
+        return (int) $cid;
     }
 
     /**
@@ -265,6 +269,10 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         if ($ccom[$idx] == 255) {
             $sval = chr($ccom[($idx + 1)]) . chr($ccom[($idx + 2)]) . chr($ccom[($idx + 3)]) . chr($ccom[($idx + 4)]);
             $vsval = unpack('li', $sval);
+            if ($vsval === false) {
+                throw new FontException('Unable to unpack number');
+            }
+
             $cdec[$cck] = $vsval['i'];
             return ($idx + 5);
         }

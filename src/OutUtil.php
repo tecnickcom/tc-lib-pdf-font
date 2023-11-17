@@ -59,68 +59,7 @@ abstract class OutUtil
     /**
      * Outputs font widths
      *
-     * @param array{
-     *        'cbbox': array<int, array<int, int>>,
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
-     *        'compress': bool,
-     *        'ctg': string,
-     *        'cw':  array<int, int>,
-     *        'desc':  array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
-     *        'diff': string,
-     *        'diff_n': int,
-     *        'dir': string,
-     *        'dw': int,
-     *        'enc': string,
-     *        'encoding_id': int,
-     *        'fakestyle': bool,
-     *        'family': string,
-     *        'file': string,
-     *        'file_n': int,
-     *        'i': int,
-     *        'ifile': string,
-     *        'isUnicode': bool,
-     *        'key': string,
-     *        'length1': int,
-     *        'length2': bool|int,
-     *        'mode': array{
-     *            'bold': bool,
-     *            'italic': bool,
-     *            'linethrough': bool,
-     *            'overline': bool,
-     *            'underline': bool,
-     *        },
-     *        'n': int,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'pdfa': bool,
-     *        'platform_id': int,
-     *        'style': string,
-     *        'subset': bool,
-     *        'subsetchars': array<int, bool>,
-     *        'type': string,
-     *        'unicode': bool,
-     *        'up': int,
-     *        'ut': int,
-     *    } $font      Font to process
+     * @param array $font      Font to process
      * @param int   $cidoffset Offset for CID values
      *
      * @return string PDF command string for font widths
@@ -147,68 +86,7 @@ abstract class OutUtil
     /**
      * get width ranges of characters
      *
-     * @param array{
-     *        'cbbox': array<int, array<int, int>>,
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
-     *        'compress': bool,
-     *        'ctg': string,
-     *        'cw':  array<int, int>,
-     *        'desc':  array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
-     *        'diff': string,
-     *        'diff_n': int,
-     *        'dir': string,
-     *        'dw': int,
-     *        'enc': string,
-     *        'encoding_id': int,
-     *        'fakestyle': bool,
-     *        'family': string,
-     *        'file': string,
-     *        'file_n': int,
-     *        'i': int,
-     *        'ifile': string,
-     *        'isUnicode': bool,
-     *        'key': string,
-     *        'length1': int,
-     *        'length2': bool|int,
-     *        'mode': array{
-     *            'bold': bool,
-     *            'italic': bool,
-     *            'linethrough': bool,
-     *            'overline': bool,
-     *            'underline': bool,
-     *        },
-     *        'n': int,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'pdfa': bool,
-     *        'platform_id': int,
-     *        'style': string,
-     *        'subset': bool,
-     *        'subsetchars': array<int, bool>,
-     *        'type': string,
-     *        'unicode': bool,
-     *        'up': int,
-     *        'ut': int,
-     *    } $font      Font to process
+     * @param array $font      Font to process
      * @param int   $cidoffset Offset for CID values
      *
      * @return array<int, array<int, int>>
@@ -229,10 +107,10 @@ abstract class OutUtil
             }
 
             if ($width != $font['dw']) {
-                if ($cid == ($prevcid + 1)) {
+                if ($cid === $prevcid + 1) {
                     // consecutive CID
                     if ($width == $prevwidth) {
-                        if ($width == $range[$rangeid][0]) {
+                        if ($width === $range[$rangeid][0]) {
                             $range[$rangeid][] = $width;
                         } else {
                             array_pop($range[$rangeid]);
@@ -244,7 +122,7 @@ abstract class OutUtil
                         }
 
                         $interval = true;
-                        $range[$rangeid]['interval'] = true;
+                        $range[$rangeid][-1] = -1;
                     } else {
                         if ($interval) {
                             // new range
@@ -276,7 +154,7 @@ abstract class OutUtil
     /**
      * Optimize width ranges
      *
-     * @param array<int, array<int|string, int|bool>> $range Widht Ranges
+     * @param array<int, array<int, int>> $range Widht Ranges
      *
      * @return array<int, array<int, int>>
      */
@@ -287,25 +165,20 @@ abstract class OutUtil
         $prevint = false;
         foreach ($range as $kdx => $wds) {
             $cws = count($wds);
-            if (($kdx == $nextk) && (! $prevint) && ((! isset($wds['interval'])) || ($cws < 4))) {
-                unset($range[$kdx]['interval']);
-                $range[$prevk] = array_merge($range[$prevk], $range[$kdx]);
+            if (($kdx == $nextk) && (! $prevint) && ((! isset($wds[-1])) || ($cws < 4))) {
+                unset($range[$kdx][-1]);
+                $range[$prevk] = [...$range[$prevk], ...$range[$kdx]];
                 unset($range[$kdx]);
             } else {
                 $prevk = $kdx;
             }
 
+            $prevint = false;
             $nextk = $kdx + $cws;
-            if (isset($wds['interval'])) {
-                $prevint = $cws > 3;
-
-                if (isset($range[$kdx]['interval'])) {
-                    unset($range[$kdx]['interval']);
-                }
-
+            if (isset($wds[-1])) {
+                unset($range[$kdx][-1]);
+                $prevint = ($cws > 3);
                 --$nextk;
-            } else {
-                $prevint = false;
             }
         }
 

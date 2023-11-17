@@ -31,116 +31,55 @@ use Com\Tecnick\Unicode\Data\Encoding;
  * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
+class TrueType
 {
+    /**
+     * Array containing subset chars
+     *
+     * @var array<int, bool>
+     */
+    protected array $subchars = [];
+
+    /**
+     * Array containing subset glyphs indexes of chars from cmap table
+     *
+     * @var array<int, bool>
+     */
+    protected array $subglyphs = [
+        0 => true,
+    ];
+
+    /**
+     * Pointer position on the original font data
+     */
+    protected int $offset = 0;
+
     /**
      * Process TrueType font
      *
      * @param string $font     Content of the input font file
-     * @param array{
-     *        'Ascent': int,
-     *        'AvgWidth': float,
-     *        'CapHeight': int,
-     *        'Descent': int,
-     *        'Flags': int,
-     *        'Leading': int,
-     *        'MaxWidth': int,
-     *        'MissingWidth': int,
-     *        'StemH': int,
-     *        'StemV': int,
-     *        'XHeight': int,
-     *        'bbox': string,
-     *        'ctg': string,
-     *        'ctgdata': array<int, int>,
-     *        'cw': string,
-     *        'datafile': string,
-     *        'diff': string,
-     *        'dir': string,
-     *        'enc': string,
-     *        'enc_map': array< int, string>,
-     *        'encoding_id': int,
-     *        'encrypted': string,
-     *        'file': string,
-     *        'file_name': string,
-     *        'input_file': string,
-     *        'isUnicode': bool,
-     *        'italicAngle': int,
-     *        'lenIV': int,
-     *        'linked': bool,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'platform_id': int,
-     *        'settype': string,
-     *        'size1': int,
-     *        'size2': int,
-     *        'type': string,
-     *        'underlinePosition': int,
-     *        'underlineThickness': int,
-     *        'weight': string,
-     *    }  $fdt      Extracted font metrics
-     * @param Byte $byte Object used to read font bytes
+     * @param array $fdt      Extracted font metrics
+     * @param Byte $fbyte Object used to read font bytes
      * @param array<int, bool>  $subchars Array containing subset chars
      *
      * @throws FontException in case of error
      */
-    public function __construct(string $font, array $fdt, Byte $byte, array $subchars = [])
-    {
-        $this->font = $font;
-        $this->fdt = $fdt;
-        $this->fbyte = $byte;
+    public function __construct(
+        protected string $font,
+        protected array $fdt,
+        protected Byte $fbyte,
+        array $subchars = []
+    ) {
         ksort($subchars);
         $this->subchars = $subchars;
-        $this->subglyphs = [
-            0 => true,
-        ];
         $this->process();
     }
 
     /**
      * Get all the extracted font metrics
-     *
-     * @return array{
-     *        'Ascent': int,
-     *        'AvgWidth': float,
-     *        'CapHeight': int,
-     *        'Descent': int,
-     *        'Flags': int,
-     *        'Leading': int,
-     *        'MaxWidth': int,
-     *        'MissingWidth': int,
-     *        'StemH': int,
-     *        'StemV': int,
-     *        'XHeight': int,
-     *        'bbox': string,
-     *        'ctg': string,
-     *        'ctgdata': array<int, int>,
-     *        'cw': string,
-     *        'datafile': string,
-     *        'diff': string,
-     *        'dir': string,
-     *        'enc': string,
-     *        'enc_map': array< int, string>,
-     *        'encoding_id': int,
-     *        'encrypted': string,
-     *        'file': string,
-     *        'file_name': string,
-     *        'input_file': string,
-     *        'isUnicode': bool,
-     *        'italicAngle': int,
-     *        'lenIV': int,
-     *        'linked': bool,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'platform_id': int,
-     *        'settype': string,
-     *        'size1': int,
-     *        'size2': int,
-     *        'type': string,
-     *        'underlinePosition': int,
-     *        'underlineThickness': int,
-     *        'weight': string,
-     *    }
      */
     public function getFontMetrics(): array
     {
@@ -199,25 +138,34 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
      */
     protected function setFontFile(): void
     {
-        if (! empty($this->fdt['desc'])) {
+        if (! empty($this->fdt['desc']['MaxWidth'])) {
             // subsetting mode
             $this->fdt['Flags'] = $this->fdt['desc']['Flags'];
             return;
         }
 
-        if ($this->fdt['type'] != 'cidfont0') {
-            if ($this->fdt['linked']) {
-                // creates a symbolic link to the existing font
-                symlink($this->fdt['input_file'], $this->fdt['dir'] . $this->fdt['file_name']);
-            } else {
-                // store compressed font
-                $this->fdt['file'] = $this->fdt['file_name'] . '.z';
-                $file = new File();
-                $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
-                fwrite($fpt, gzcompress($this->font));
-                fclose($fpt);
-            }
+        if ($this->fdt['type'] == 'cidfont0') {
+            return;
         }
+
+        if ($this->fdt['linked']) {
+            // creates a symbolic link to the existing font
+            symlink($this->fdt['input_file'], $this->fdt['dir'] . $this->fdt['file_name']);
+            return;
+        }
+
+        // store compressed font
+        $this->fdt['file'] = $this->fdt['file_name'] . '.z';
+        $file = new File();
+        $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
+
+        $cmpr = gzcompress($this->font);
+        if ($cmpr === false) {
+            throw new FontException('Error compressing font file.');
+        }
+
+        fwrite($fpt, $cmpr);
+        fclose($fpt);
     }
 
     /**
@@ -515,12 +463,12 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
         }
 
         $this->fdt['MissingWidth'] = $chw[0];
-        $this->fdt['cw'] = '';
-        $this->fdt['cbbox'] = '';
+        $this->fdt['cw'] = [];
+        $this->fdt['cbbox'] = [];
         for ($cid = 0; $cid <= 65535; ++$cid) {
             if (isset($this->fdt['ctgdata'][$cid])) {
                 if (isset($chw[$this->fdt['ctgdata'][$cid]])) {
-                    $this->fdt['cw'] .= ',"' . $cid . '":' . $chw[$this->fdt['ctgdata'][$cid]];
+                    $this->fdt['cw'][$cid] = $chw[$this->fdt['ctgdata'][$cid]];
                 }
 
                 if (isset($this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]])) {
@@ -532,9 +480,315 @@ class TrueType extends \Com\Tecnick\Pdf\Font\Import\TrueTypeFormat
                     $yMin = round($this->fbyte->getFWord($this->offset + 4) * $this->fdt['urk']);
                     $xMax = round($this->fbyte->getFWord($this->offset + 6) * $this->fdt['urk']);
                     $yMax = round($this->fbyte->getFWord($this->offset + 8) * $this->fdt['urk']);
-                    $this->fdt['cbbox'] .= ',"' . $cid . '":[' . $xMin . ',' . $yMin . ',' . $xMax . ',' . $yMax . ']';
+                    $this->fdt['cbbox'][$cid] = [$xMin, $yMin, $xMax, $yMax];
                 }
             }
         }
+    }
+
+    /**
+     * Add CTG entry
+     */
+    protected function addCtgItem(int $cid, int $gid): void
+    {
+        $this->fdt['ctgdata'][$cid] = $gid;
+        if (isset($this->subchars[$cid])) {
+            $this->subglyphs[$gid] = true;
+        }
+    }
+
+    /**
+     * Process the  CID To GID Map.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     */
+    protected function getCIDToGIDMap(): void
+    {
+        $this->fdt['ctgdata'] = [];
+        foreach ($this->fdt['encodingTables'] as $enctable) {
+            // get only specified Platform ID and Encoding ID
+            if (
+                ($enctable['platformID'] == $this->fdt['platform_id'])
+                && ($enctable['encodingID'] == $this->fdt['encoding_id'])
+            ) {
+                $this->offset = ($this->fdt['table']['cmap']['offset'] + $enctable['offset']);
+                $format = $this->fbyte->getUShort($this->offset);
+                $this->offset += 2;
+                match ($format) {
+                    0 => $this->processFormat0(),
+                    2 => $this->processFormat2(),
+                    4 => $this->processFormat4(),
+                    6 => $this->processFormat6(),
+                    8 => $this->processFormat8(),
+                    10 => $this->processFormat10(),
+                    12 => $this->processFormat12(),
+                    13 => $this->processFormat13(),
+                    14 => $this->processFormat14(),
+                    default => throw new FontException('Unsupported cmap format: ' . $format),
+                };
+            }
+        }
+
+        if (! isset($this->fdt['ctgdata'][0])) {
+            $this->fdt['ctgdata'][0] = 0;
+        }
+
+        if ($this->fdt['type'] != 'TrueTypeUnicode') {
+            return;
+        }
+
+        if (count($this->fdt['ctgdata']) != 256) {
+            return;
+        }
+
+        $this->fdt['type'] = 'TrueType';
+    }
+
+    /**
+     * Process Format 0: Byte encoding table
+     */
+    protected function processFormat0(): void
+    {
+        $this->offset += 4; // skip length and version/language
+        for ($chr = 0; $chr < 256; ++$chr) {
+            $gid = $this->fbyte->getByte($this->offset);
+            $this->addCtgItem($chr, $gid);
+            ++$this->offset;
+        }
+    }
+
+    /**
+     * Process Format 2: High-byte mapping through table
+     */
+    protected function processFormat2(): void
+    {
+        $this->offset += 4; // skip length and version/language
+        $numSubHeaders = 0;
+        for ($chr = 0; $chr < 256; ++$chr) {
+            // Array that maps high bytes to subHeaders: value is subHeader index * 8.
+            $subHeaderKeys[$chr] = ($this->fbyte->getUShort($this->offset) / 8);
+            $this->offset += 2;
+            if ($numSubHeaders < $subHeaderKeys[$chr]) {
+                $numSubHeaders = $subHeaderKeys[$chr];
+            }
+        }
+
+        // the number of subHeaders is equal to the max of subHeaderKeys + 1
+        ++$numSubHeaders;
+        // read subHeader structures
+        $subHeaders = [];
+        $numGlyphIndexArray = 0;
+        for ($ish = 0; $ish < $numSubHeaders; ++$ish) {
+            $subHeaders[$ish]['firstCode'] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+            $subHeaders[$ish]['entryCount'] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+            $subHeaders[$ish]['idDelta'] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+            $subHeaders[$ish]['idRangeOffset'] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+            $subHeaders[$ish]['idRangeOffset'] -= (2 + (($numSubHeaders - $ish - 1) * 8));
+            $subHeaders[$ish]['idRangeOffset'] /= 2;
+            $numGlyphIndexArray += $subHeaders[$ish]['entryCount'];
+        }
+
+        $glyphIndexArray = [
+            0 => 0,
+        ];
+        for ($gid = 0; $gid < $numGlyphIndexArray; ++$gid) {
+            $glyphIndexArray[$gid] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+        }
+
+        for ($chr = 0; $chr < 256; ++$chr) {
+            $shk = $subHeaderKeys[$chr];
+            if ($shk == 0) {
+                // one byte code
+                $cdx = $chr;
+                $gid = $glyphIndexArray[0];
+                $this->addCtgItem($cdx, $gid);
+            } else {
+                // two bytes code
+                $start_byte = $subHeaders[$shk]['firstCode'];
+                $end_byte = $start_byte + $subHeaders[$shk]['entryCount'];
+                for ($jdx = $start_byte; $jdx < $end_byte; ++$jdx) {
+                    // combine high and low bytes
+                    $cdx = (($chr << 8) + $jdx);
+                    $idRangeOffset = ($subHeaders[$shk]['idRangeOffset'] + $jdx - $subHeaders[$shk]['firstCode']);
+                    $gid = max(0, (($glyphIndexArray[$idRangeOffset] + $subHeaders[$shk]['idDelta']) % 65536));
+                    $this->addCtgItem($cdx, $gid);
+                }
+            }
+        }
+    }
+
+    /**
+     * Process Format 4: Segment mapping to delta values
+     */
+    protected function processFormat4(): void
+    {
+        $length = $this->fbyte->getUShort($this->offset);
+        $this->offset += 2;
+        $this->offset += 2; // skip version/language
+        $segCount = floor($this->fbyte->getUShort($this->offset) / 2);
+        $this->offset += 2;
+        $this->offset += 6; // skip searchRange, entrySelector, rangeShift
+        $endCount = []; // array of end character codes for each segment
+        for ($kdx = 0; $kdx < $segCount; ++$kdx) {
+            $endCount[$kdx] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+        }
+
+        $this->offset += 2; // skip reservedPad
+        $startCount = []; // array of start character codes for each segment
+        for ($kdx = 0; $kdx < $segCount; ++$kdx) {
+            $startCount[$kdx] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+        }
+
+        $idDelta = []; // delta for all character codes in segment
+        for ($kdx = 0; $kdx < $segCount; ++$kdx) {
+            $idDelta[$kdx] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+        }
+
+        $idRangeOffset = []; // Offsets into glyphIdArray or 0
+        for ($kdx = 0; $kdx < $segCount; ++$kdx) {
+            $idRangeOffset[$kdx] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+        }
+
+        $gidlen = (floor($length / 2) - 8 - (4 * $segCount));
+        $glyphIdArray = []; // glyph index array
+        for ($kdx = 0; $kdx < $gidlen; ++$kdx) {
+            $glyphIdArray[$kdx] = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+        }
+
+        for ($kdx = 0; $kdx < $segCount; ++$kdx) {
+            for ($chr = $startCount[$kdx]; $chr <= $endCount[$kdx]; ++$chr) {
+                if ($idRangeOffset[$kdx] == 0) {
+                    $gid = max(0, (($idDelta[$kdx] + $chr) % 65536));
+                } else {
+                    $gid = (floor($idRangeOffset[$kdx] / 2) + ($chr - $startCount[$kdx]) - ($segCount - $kdx));
+                    $gid = max(0, (($glyphIdArray[$gid] + $idDelta[$kdx]) % 65536));
+                }
+
+                $this->addCtgItem($chr, $gid);
+            }
+        }
+    }
+
+    /**
+     * Process Format 6: Trimmed table mapping
+     */
+    protected function processFormat6(): void
+    {
+        $this->offset += 4; // skip length and version/language
+        $firstCode = $this->fbyte->getUShort($this->offset);
+        $this->offset += 2;
+        $entryCount = $this->fbyte->getUShort($this->offset);
+        $this->offset += 2;
+        for ($kdx = 0; $kdx < $entryCount; ++$kdx) {
+            $chr = ($kdx + $firstCode);
+            $gid = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+            $this->addCtgItem($chr, $gid);
+        }
+    }
+
+    /**
+     * Process Format 8: Mixed 16-bit and 32-bit coverage
+     */
+    protected function processFormat8(): void
+    {
+        $this->offset += 10; // skip reserved, length and version/language
+        for ($kdx = 0; $kdx < 8192; ++$kdx) {
+            $is32[$kdx] = $this->fbyte->getByte($this->offset);
+            ++$this->offset;
+        }
+
+        $nGroups = $this->fbyte->getULong($this->offset);
+        $this->offset += 4;
+        for ($idx = 0; $idx < $nGroups; ++$idx) {
+            $startCharCode = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            $endCharCode = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            $startGlyphID = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            for ($cpw = $startCharCode; $cpw <= $endCharCode; ++$cpw) {
+                $is32idx = floor($cpw / 8);
+                if ((isset($is32[$is32idx])) && (($is32[$is32idx] & (1 << (7 - ($cpw % 8)))) == 0)) {
+                    $chr = $cpw;
+                } else {
+                    // 32 bit format
+                    // convert to decimal (http://www.unicode.org/faq//utf_bom.html#utf16-4)
+                    //LEAD_OFFSET = (0xD800 - (0x10000 >> 10)) = 55232
+                    //SURROGATE_OFFSET = (0x10000 - (0xD800 << 10) - 0xDC00) = -56613888
+                    $chr = (((55232 + ($cpw >> 10)) << 10) + (0xDC00 + ($cpw & 0x3FF)) - 56_613_888);
+                }
+
+                $this->addCtgItem($chr, $startGlyphID);
+                $this->fdt['ctgdata'][$chr] = 0; // overwrite
+                ++$startGlyphID;
+            }
+        }
+    }
+
+    /**
+     * Process Format 10: Trimmed array
+     */
+    protected function processFormat10(): void
+    {
+        $this->offset += 10; // skip reserved, length and version/language
+        $startCharCode = $this->fbyte->getULong($this->offset);
+        $this->offset += 4;
+        $numChars = $this->fbyte->getULong($this->offset);
+        $this->offset += 4;
+        for ($kdx = 0; $kdx < $numChars; ++$kdx) {
+            $chr = ($kdx + $startCharCode);
+            $gid = $this->fbyte->getUShort($this->offset);
+            $this->addCtgItem($chr, $gid);
+            $this->offset += 2;
+        }
+    }
+
+    /**
+     * Process Format 12: Segmented coverage
+     */
+    protected function processFormat12(): void
+    {
+        $this->offset += 10; // skip length and version/language
+        $nGroups = $this->fbyte->getULong($this->offset);
+        $this->offset += 4;
+        for ($kdx = 0; $kdx < $nGroups; ++$kdx) {
+            $startCharCode = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            $endCharCode = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            $startGlyphCode = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            for ($chr = $startCharCode; $chr <= $endCharCode; ++$chr) {
+                $this->addCtgItem($chr, $startGlyphCode);
+                ++$startGlyphCode;
+            }
+        }
+    }
+
+    /**
+     * Process Format 13: Many-to-one range mappings
+     * @TODO: TO BE IMPLEMENTED
+     */
+    protected function processFormat13(): void
+    {
+    }
+
+    /**
+     * Process Format 14: Unicode Variation Sequences
+     * @TODO: TO BE IMPLEMENTED
+     */
+    protected function processFormat14(): void
+    {
     }
 }

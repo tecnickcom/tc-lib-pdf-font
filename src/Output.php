@@ -35,7 +35,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Array of character subsets for each font file
      *
-     * @var array<int, bool>
+     * @var array<string, array<int, bool>>
      */
     protected array $subchars = [];
 
@@ -45,83 +45,9 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     protected string $out = '';
 
     /**
-     * Map methods used to process each font type
-     *
-     * @var array<string, string>
-     */
-    protected const OUTFONTMAP = [
-        'core' => 'getCore',
-        'cidfont0' => 'getCid0',
-        'type1' => 'getTrueType',
-        'truetype' => 'getTrueType',
-        'truetypeunicode' => 'getTrueTypeUnicode',
-    ];
-
-    /**
      * Initialize font data
      *
-     * @param array<string, array{
-     *        'cbbox': array<int, array<int, int>>,
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
-     *        'compress': bool,
-     *        'ctg': string,
-     *        'cw':  array<int, int>,
-     *        'desc':  array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
-     *        'diff': string,
-     *        'diff_n': int,
-     *        'dir': string,
-     *        'dw': int,
-     *        'enc': string,
-     *        'encoding_id': int,
-     *        'fakestyle': bool,
-     *        'family': string,
-     *        'file': string,
-     *        'file_n': int,
-     *        'i': int,
-     *        'ifile': string,
-     *        'isUnicode': bool,
-     *        'key': string,
-     *        'length1': int,
-     *        'length2': bool|int,
-     *        'mode': array{
-     *            'bold': bool,
-     *            'italic': bool,
-     *            'linethrough': bool,
-     *            'overline': bool,
-     *            'underline': bool,
-     *        },
-     *        'n': int,
-     *        'name': string,
-     *        'originalsize': int,
-     *        'pdfa': bool,
-     *        'platform_id': int,
-     *        'style': string,
-     *        'subset': bool,
-     *        'subsetchars': array<int, bool>,
-     *        'type': string,
-     *        'unicode': bool,
-     *        'up': int,
-     *        'ut': int,
-     *    }>   $fonts Array of imported fonts data
+     * @param array<string, array> $fonts Array of imported fonts data
      * @param int     $pon   Current PDF Object Number
      * @param Encrypt $encrypt Encrypt object
      */
@@ -209,12 +135,23 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                 if (! isset($done[$dkey])) {
                     $fontfile = $this->getFontFullPath($font['dir'], $font['file']);
                     $font_data = file_get_contents($fontfile);
+                    if ($font_data === false) {
+                        throw new FontException('Unable to read font file: ' . $fontfile);
+                    }
+
                     if ($font['subset']) {
                         $font_data = gzuncompress($font_data);
+                        if ($font_data === false) {
+                            throw new FontException('Unable to uncompress font file: ' . $fontfile);
+                        }
+
                         $sub = new Subset($font_data, $font, $this->subchars[md5($font['file'])]);
                         $font_data = $sub->getSubsetFont();
                         $font['length1'] = strlen($font_data);
                         $font_data = gzcompress($font_data);
+                        if ($font_data === false) {
+                            throw new FontException('Unable to compress font file: ' . $fontfile);
+                        }
                     }
 
                     ++$this->pon;
@@ -250,12 +187,14 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     {
         $out = '';
         foreach ($this->fonts as $font) {
-            if (! isset(self::OUTFONTMAP[strtolower($font['type'])])) {
-                throw new FontException('Unsupported font type: ' . $font['type']);
-            }
-
-            $method = self::OUTFONTMAP[strtolower($font['type'])];
-            $out .= $this->$method($font);
+            match (strtolower($font['type'])) {
+                'core' => $this->getCore($font),
+                'cidfont0' => $this->getCid0($font),
+                'type1' => $this->getTrueType($font),
+                'truetype' => $this->getTrueType($font),
+                'truetypeunicode' => $this->getTrueTypeUnicode($font),
+                default => throw new FontException('Unsupported font type: ' . $font['type']),
+            };
         }
 
         return $out;
