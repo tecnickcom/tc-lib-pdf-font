@@ -47,7 +47,37 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * Get the PDF output string for a CID-0 font.
      * A Type 0 CIDFont contains glyph descriptions based on the Adobe Type 1 font format
      *
-     * @param array $font Font to process
+     * @param array{
+     *        'cidinfo': array{
+     *            'Ordering': string,
+     *            'Registry': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'cw':  array<int, int>,
+     *        'desc': array{
+     *            'Ascent': int,
+     *            'AvgWidth': int,
+     *            'CapHeight': int,
+     *            'Descent': int,
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Leading': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *            'StemH': int,
+     *            'StemV': int,
+     *            'XHeight': int,
+     *        },
+     *        'dw': int,
+     *        'enc': string,
+     *        'i': int,
+     *        'n': int,
+     *        'name': string,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *    } $font Font to process
      *
      * return string
      */
@@ -110,7 +140,15 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
     /**
      * Convert Unicode to CID
      *
-     * @param array $font      Font to process
+     * @param array{
+     *        'cidinfo': array{
+     *            'Ordering': string,
+     *            'Registry': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'cw':  array<int, int>,
+     *    } $font      Font to process
      * @param int   $cidoffset Offset for CID values
      */
     protected function uniToCid(array &$font, int $cidoffset): void
@@ -133,7 +171,41 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * Get the PDF output string for a TrueTypeUnicode font.
      * Based on PDF Reference 1.3 (section 5)
      *
-     * @param array $font Font to process
+     * @param array{
+     *        'cidinfo': array{
+     *            'Ordering': string,
+     *            'Registry': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'compress': bool,
+     *        'ctg': string,
+     *        'cw':  array<int, int>,
+     *        'desc': array{
+     *            'Ascent': int,
+     *            'AvgWidth': int,
+     *            'CapHeight': int,
+     *            'Descent': int,
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Leading': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *            'StemH': int,
+     *            'StemV': int,
+     *            'XHeight': int,
+     *        },
+     *        'dir': string,
+     *        'dw': int,
+     *        'enc': string,
+     *        'file_n': int,
+     *        'i': int,
+     *        'n': int,
+     *        'name': string,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *    } $font Font to process
      *
      * return string
      *
@@ -260,7 +332,12 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
     /**
      * Get the PDF output string for a Core font.
      *
-     * @param array $font Font to process
+     * @param array{
+     *        'family': string,
+     *        'i': int,
+     *        'n': int,
+     *        'name': string,
+     *    } $font Font to process
      *
      * return string
      */
@@ -282,7 +359,33 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
     /**
      * Get the PDF output string for a Core font.
      *
-     * @param array $font Font to process
+     * @param array{
+     *        'cw':  array<int, int>,
+     *        'desc': array{
+     *            'Ascent': int,
+     *            'AvgWidth': int,
+     *            'CapHeight': int,
+     *            'Descent': int,
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Leading': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *            'StemH': int,
+     *            'StemV': int,
+     *            'XHeight': int,
+     *        },
+     *        'diff_n': int,
+     *        'dw': int,
+     *        'enc': string,
+     *        'file': string,
+     *        'file_n': int,
+     *        'i': int,
+     *        'n': int,
+     *        'name': string,
+     *        'type': string,
+     *    } $font Font to process
      *
      * return string
      */

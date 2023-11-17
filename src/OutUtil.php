@@ -59,7 +59,12 @@ abstract class OutUtil
     /**
      * Outputs font widths
      *
-     * @param array $font      Font to process
+     * @param array{
+     *        'cw':  array<int, int>,
+     *        'dw': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *    } $font      Font to process
      * @param int   $cidoffset Offset for CID values
      *
      * @return string PDF command string for font widths
@@ -86,7 +91,12 @@ abstract class OutUtil
     /**
      * get width ranges of characters
      *
-     * @param array $font      Font to process
+     * @param array{
+     *        'cw':  array<int, int>,
+     *        'dw': int,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *    } $font      Font to process
      * @param int   $cidoffset Offset for CID values
      *
      * @return array<int, array<int, int>>

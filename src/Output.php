@@ -47,14 +47,52 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Initialize font data
      *
-     * @param array<string, array> $fonts Array of imported fonts data
+     * @param array<string, array{
+     *        'cidinfo': array{
+     *            'Ordering': string,
+     *            'Registry': string,
+     *            'Supplement': int,
+     *            'uni2cid': array<int, int>,
+     *        },
+     *        'compress': bool,
+     *        'ctg': string,
+     *        'cw':  array<int, int>,
+     *        'desc': array{
+     *            'Ascent': int,
+     *            'AvgWidth': int,
+     *            'CapHeight': int,
+     *            'Descent': int,
+     *            'Flags': int,
+     *            'FontBBox': string,
+     *            'ItalicAngle': int,
+     *            'Leading': int,
+     *            'MaxWidth': int,
+     *            'MissingWidth': int,
+     *            'StemH': int,
+     *            'StemV': int,
+     *            'XHeight': int,
+     *        },
+     *        'diff': string,
+     *        'diff_n': int,
+     *        'dir': string,
+     *        'dw': int,
+     *        'enc': string,
+     *        'family': string,
+     *        'file': string,
+     *        'file_n': int,
+     *        'i': int,
+     *        'length1': int,
+     *        'length2': int,
+     *        'n': int,
+     *        'name': string,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *        'type': string,
+     *    }> $fonts Array of imported fonts data
      * @param int     $pon   Current PDF Object Number
      * @param Encrypt $encrypt Encrypt object
      */
     public function __construct(
-        /**
-         * Array of imported fonts data
-         */
         protected array $fonts,
         int $pon,
         Encrypt $encrypt
