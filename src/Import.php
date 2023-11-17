@@ -20,7 +20,9 @@ use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\Dir;
 use Com\Tecnick\File\File;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Pdf\Font\Import\Core;
 use Com\Tecnick\Pdf\Font\Import\TrueType;
+use Com\Tecnick\Pdf\Font\Import\TypeOne;
 use Com\Tecnick\Unicode\Data\Encoding;
 
 /**
@@ -33,6 +35,8 @@ use Com\Tecnick\Unicode\Data\Encoding;
  * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type FontData from Load
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
@@ -50,6 +54,8 @@ class Import
 
     /**
      * Extracted font metrics
+     *
+     * @var FontData
      */
     protected array $fdt = [
         'Ascender' => 0,
@@ -147,7 +153,7 @@ class Import
         'pdfa' => false,
         'platform_id' => 0,
         'settype' => '',
-        'short_offset' => 0,
+        'short_offset' => false,
         'size1' => 0,
         'size2' => 0,
         'style' => '',
@@ -261,13 +267,12 @@ class Import
         $this->fdt['encoding_id'] = $encoding_id;
         $this->fdt['linked'] = $linked;
 
-        if ($this->fdt['type'] == 'Core') {
-            $processor = new \Com\Tecnick\Pdf\Font\Import\Core($this->font, $this->fdt);
-        } elseif ($this->fdt['type'] == 'Type1') {
-            $processor = new \Com\Tecnick\Pdf\Font\Import\TypeOne($this->font, $this->fdt);
-        } else {
-            $processor = new \Com\Tecnick\Pdf\Font\Import\TrueType($this->font, $this->fdt, $this->fbyte);
-        }
+        $processor = match ($this->fdt['type']) {
+            'Core' => new Core($this->font, $this->fdt),
+            'Type1' => new TypeOne($this->font, $this->fdt),
+            default => new TrueType($this->font, $this->fdt, $this->fbyte),
+        };
+        ;
 
         $this->fdt = $processor->getFontMetrics();
 
@@ -276,6 +281,8 @@ class Import
 
     /**
      * Get all the extracted font metrics
+     *
+     * @return FontData
      */
     public function getFontMetrics(): array
     {

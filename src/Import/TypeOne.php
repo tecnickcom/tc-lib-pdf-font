@@ -146,6 +146,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 
     /**
      * Extract eexec info
+     *
+     * @return array<int, array<int, string>>
      */
     protected function extractEplainInfo(): array
     {
@@ -206,9 +208,12 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         }
     }
 
+    /**
+     * @return array<int, array<int, string>>
+     */
     protected function getCharstringData(string $eplain): array
     {
-        $this->fdt['enc_map'] = false;
+        $this->fdt['enc_map'] = [];
         $eplain = substr($eplain, (strpos($eplain, '/CharStrings') + 1));
         preg_match_all('#/([A-Za-z0-9\.]*)[\s][0-9]+[\s]RD[\s](.*)[\s]ND#sU', $eplain, $matches, PREG_SET_ORDER);
         if ($this->fdt['enc'] === '') {

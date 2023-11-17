@@ -29,6 +29,8 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
  *
+ * @phpstan-import-type FontData from Load
+ *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Stack extends \Com\Tecnick\Pdf\Font\Buffer

@@ -28,6 +28,8 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type FontData from Load
  */
 class Font extends \Com\Tecnick\Pdf\Font\Load
 {
@@ -98,6 +100,8 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
 
     /**
      * Get the font data
+     *
+     * @return FontData
      */
     public function getFontData(): array
     {

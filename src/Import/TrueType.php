@@ -32,7 +32,10 @@ use Com\Tecnick\Unicode\Data\Encoding;
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
  *
+ * @phpstan-import-type FontData from \Com\Tecnick\Pdf\Font\Load
+ *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  */
 class TrueType
 {
@@ -61,7 +64,7 @@ class TrueType
      * Process TrueType font
      *
      * @param string $font     Content of the input font file
-     * @param array $fdt      Extracted font metrics
+     * @param FontData $fdt      Extracted font metrics
      * @param Byte $fbyte Object used to read font bytes
      * @param array<int, bool>  $subchars Array containing subset chars
      *
@@ -80,6 +83,8 @@ class TrueType
 
     /**
      * Get all the extracted font metrics
+     *
+     * @return FontData
      */
     public function getFontMetrics(): array
     {
@@ -185,7 +190,12 @@ class TrueType
             // get table info
             $tag = substr($this->font, $this->offset, 4);
             $this->offset += 4;
-            $this->fdt['table'][$tag] = [];
+            $this->fdt['table'][$tag] = [
+                'checkSum' => 0,
+                'data' => '',
+                'length' => 0,
+                'offset' => 0,
+            ];
             $this->fdt['table'][$tag]['checkSum'] = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
             $this->fdt['table'][$tag]['offset'] = $this->fbyte->getULong($this->offset);
@@ -221,13 +231,13 @@ class TrueType
         // units ratio constant
         $this->fdt['urk'] = (1000 / $this->fdt['unitsPerEm']);
         $this->offset += 16; // skip created, modified
-        $xMin = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $xMin = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
-        $yMin = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $yMin = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
-        $xMax = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $xMax = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
-        $yMax = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $yMax = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
         $this->fdt['bbox'] = $xMin . ' ' . $yMin . ' ' . $xMax . ' ' . $yMax;
         $macStyle = $this->fbyte->getUShort($this->offset);
@@ -253,7 +263,7 @@ class TrueType
         $this->offset = $this->fdt['table']['loca']['offset'];
         if ($this->fdt['short_offset']) {
             // short version
-            $this->fdt['tot_num_glyphs'] = floor($this->fdt['table']['loca']['length'] / 2); // numGlyphs + 1
+            $this->fdt['tot_num_glyphs'] = (int) floor($this->fdt['table']['loca']['length'] / 2); // numGlyphs + 1
             for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getUShort($this->offset) * 2;
                 if (
@@ -268,7 +278,7 @@ class TrueType
             }
         } else {
             // long version
-            $this->fdt['tot_num_glyphs'] = floor($this->fdt['table']['loca']['length'] / 4); // numGlyphs + 1
+            $this->fdt['tot_num_glyphs'] = (int) floor($this->fdt['table']['loca']['length'] / 4); // numGlyphs + 1
             for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getULong($this->offset);
                 if (
@@ -309,13 +319,13 @@ class TrueType
         $this->offset = $this->fdt['table']['OS/2']['offset'];
         $this->offset += 2; // skip version
         // xAvgCharWidth
-        $this->fdt['AvgWidth'] = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $this->fdt['AvgWidth'] = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
         // usWeightClass
         $usWeightClass = round($this->fbyte->getUFWord($this->offset) * $this->fdt['urk']);
         // estimate StemV and StemH (400 = usWeightClass for Normal - Regular font)
-        $this->fdt['StemV'] = round((70 * $usWeightClass) / 400);
-        $this->fdt['StemH'] = round((30 * $usWeightClass) / 400);
+        $this->fdt['StemV'] = (int) round((70 * $usWeightClass) / 400);
+        $this->fdt['StemH'] = (int) round((30 * $usWeightClass) / 400);
         $this->offset += 2;
         $this->offset += 2; // usWidthClass
         $fsType = $this->fbyte->getShort($this->offset);
@@ -367,9 +377,9 @@ class TrueType
         $this->offset += 4; // skip Format Type
         $this->fdt['italicAngle'] = $this->fbyte->getFixed($this->offset);
         $this->offset += 4;
-        $this->fdt['underlinePosition'] = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $this->fdt['underlinePosition'] = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
-        $this->fdt['underlineThickness'] = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $this->fdt['underlineThickness'] = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
         $isFixedPitch = ($this->fbyte->getULong($this->offset) != 0);
         $this->offset += 2;
@@ -384,16 +394,16 @@ class TrueType
         $this->offset = $this->fdt['table']['hhea']['offset'];
         $this->offset += 4; // skip Table version number
         // Ascender
-        $this->fdt['Ascent'] = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $this->fdt['Ascent'] = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
         // Descender
-        $this->fdt['Descent'] = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $this->fdt['Descent'] = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
         // LineGap
-        $this->fdt['Leading'] = round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
+        $this->fdt['Leading'] = (int) round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
         // advanceWidthMax
-        $this->fdt['MaxWidth'] = round($this->fbyte->getUFWord($this->offset) * $this->fdt['urk']);
+        $this->fdt['MaxWidth'] = (int) round($this->fbyte->getUFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
         $this->offset += 22; // skip some values
         // get the number of hMetric entries in hmtx table
@@ -425,7 +435,7 @@ class TrueType
             $this->offset += 4;
             $yMax = $this->fbyte->getFWord($this->offset);
             $this->offset += 2;
-            $this->fdt['XHeight'] = round(($yMax - $yMin) * $this->fdt['urk']);
+            $this->fdt['XHeight'] = (int) round(($yMax - $yMin) * $this->fdt['urk']);
         }
 
         // get CapHeight (height of H)
@@ -440,7 +450,7 @@ class TrueType
             $this->offset += 4;
             $yMax = $this->fbyte->getFWord($this->offset);
             $this->offset += 2;
-            $this->fdt['CapHeight'] = round(($yMax - $yMin) * $this->fdt['urk']);
+            $this->fdt['CapHeight'] = (int) round(($yMax - $yMin) * $this->fdt['urk']);
         }
     }
 

@@ -30,6 +30,8 @@ use Com\Tecnick\Pdf\Font\Import\TrueType;
  * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type FontData from Load
  */
 class Subset
 {
@@ -64,6 +66,8 @@ class Subset
 
     /**
      * Extracted font metrics
+     *
+     * @var FontData
      */
     protected array $fdt = [
         'Ascender' => 0,
@@ -161,7 +165,7 @@ class Subset
         'pdfa' => false,
         'platform_id' => 0,
         'settype' => '',
-        'short_offset' => 0,
+        'short_offset' => false,
         'size1' => 0,
         'size2' => 0,
         'style' => '',
@@ -201,7 +205,7 @@ class Subset
      * Process TrueType font
      *
      * @param string $font     Content of the input font file
-     * @param array $fdt      Extracted font metrics
+     * @param FontData $fdt      Extracted font metrics
      * @param array<int, bool>  $subchars Array containing subset chars
      *
      * @throws FontException in case of error
@@ -394,7 +398,7 @@ class Subset
                 $length = 0;
             }
 
-            if ($this->fdt['short_offset'] !== 0) {
+            if ($this->fdt['short_offset']) {
                 $loca .= pack('n', floor($this->offset / 2));
             } else {
                 $loca .= pack('N', $this->offset);

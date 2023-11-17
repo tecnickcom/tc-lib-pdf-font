@@ -29,6 +29,130 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-type FontData array{
+ *        'Ascender': int,
+ *        'Ascent': int,
+ *        'AvgWidth': float,
+ *        'CapHeight': int,
+ *        'CharacterSet': string,
+ *        'Descender': int,
+ *        'Descent': int,
+ *        'EncodingScheme': string,
+ *        'FamilyName': string,
+ *        'Flags': int,
+ *        'FontBBox': array<int>,
+ *        'FontName': string,
+ *        'FullName': string,
+ *        'IsFixedPitch': bool,
+ *        'ItalicAngle': float,
+ *        'Leading': int,
+ *        'MaxWidth': int,
+ *        'MissingWidth': int,
+ *        'StdHW': int,
+ *        'StdVW': int,
+ *        'StemH': int,
+ *        'StemV': int,
+ *        'UnderlinePosition': int,
+ *        'UnderlineThickness': int,
+ *        'Version': string,
+ *        'Weight': string,
+ *        'XHeight': int,
+ *        'bbox': string,
+ *        'cbbox': array<int, array<int, int>>,
+ *        'cidinfo': array{
+ *            'Ordering': string,
+ *            'Registry': string,
+ *            'Supplement': int,
+ *            'uni2cid': array<int, int>,
+ *        },
+ *        'compress': bool,
+ *        'ctg': string,
+ *        'ctgdata': array<int, int>,
+ *        'cw':  array<int, int>,
+ *        'datafile': string,
+ *        'desc': array{
+ *            'Ascent': int,
+ *            'AvgWidth': int,
+ *            'CapHeight': int,
+ *            'Descent': int,
+ *            'Flags': int,
+ *            'FontBBox': string,
+ *            'ItalicAngle': int,
+ *            'Leading': int,
+ *            'MaxWidth': int,
+ *            'MissingWidth': int,
+ *            'StemH': int,
+ *            'StemV': int,
+ *            'XHeight': int,
+ *        },
+ *        'diff': string,
+ *        'diff_n': int,
+ *        'dir': string,
+ *        'dw': int,
+ *        'enc': string,
+ *        'enc_map': array<int, string>,
+ *        'encodingTables': array<int, array{
+ *            'encodingID': int,
+ *            'offset': int,
+ *            'platformID': int,
+ *        }>,
+ *        'encoding_id': int,
+ *        'encrypted': string,
+ *        'fakestyle': bool,
+ *        'family': string,
+ *        'file': string,
+ *        'file_n': int,
+ *        'file_name': string,
+ *        'i': int,
+ *        'ifile': string,
+ *        'indexToLoc': array<int, int>,
+ *        'input_file': string,
+ *        'isUnicode': bool,
+ *        'italicAngle': float,
+ *        'key': string,
+ *        'lenIV': int,
+ *        'length1': int,
+ *        'length2': int,
+ *        'linked': bool,
+ *        'mode': array{
+ *            'bold': bool,
+ *            'italic': bool,
+ *            'linethrough': bool,
+ *            'overline': bool,
+ *            'underline': bool,
+ *        },
+ *        'n': int,
+ *        'name': string,
+ *        'numGlyphs': int,
+ *        'numHMetrics': int,
+ *        'originalsize': int,
+ *        'pdfa': bool,
+ *        'platform_id': int,
+ *        'settype': string,
+ *        'short_offset': bool,
+ *        'size1': int,
+ *        'size2': int,
+ *        'style': string,
+ *        'subset': bool,
+ *        'subsetchars': array<int, bool>,
+ *        'table': array<string, array{
+ *            'checkSum': int,
+ *            'data': string,
+ *            'length': int,
+ *            'offset': int,
+ *        }>,
+ *        'tot_num_glyphs': int,
+ *        'type': string,
+ *        'underlinePosition': int,
+ *        'underlineThickness': int,
+ *        'unicode': bool,
+ *        'unitsPerEm': int,
+ *        'up': int,
+ *        'urk': float,
+ *        'ut': int,
+ *        'weight': string,
+ *    }
  */
 abstract class Load
 {
@@ -47,6 +171,8 @@ abstract class Load
 
     /**
      * Font data
+     *
+     * @var FontData
      */
     protected array $data = [
         'Ascender' => 0,
@@ -144,7 +270,7 @@ abstract class Load
         'pdfa' => false,
         'platform_id' => 0,
         'settype' => '',
-        'short_offset' => 0,
+        'short_offset' => false,
         'size1' => 0,
         'size2' => 0,
         'style' => '',
@@ -185,6 +311,8 @@ abstract class Load
      * Load the font data
      *
      * @throws FontException in case of error
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     protected function getFontInfo(): void
     {
@@ -205,7 +333,7 @@ abstract class Load
             throw new FontException('JSON decoding error [' . json_last_error() . ']');
         }
 
-        if (! is_array($fdtdata)) {
+        if (! is_array($fdtdata) || (! isset($fdtdata['type']))) {
             throw new FontException('fhe font definition file has a bad format: ' . $this->data['ifile']);
         }
 
@@ -330,7 +458,7 @@ abstract class Load
         if ($this->data['mode']['bold']) {
             $this->data['name'] .= 'Bold';
             $this->data['desc']['StemV'] = empty($this->data['desc']['StemV'])
-                ? 123 : round($this->data['desc']['StemV'] * 1.75);
+                ? 123 : (int) round($this->data['desc']['StemV'] * 1.75);
         }
 
         // artificial italic

@@ -29,6 +29,8 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type FontData from Load
  */
 class Output extends \Com\Tecnick\Pdf\Font\OutFont
 {
@@ -40,55 +42,14 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     protected array $subchars = [];
 
     /**
-     * PDF string block to return containinf the fonts definitions
+     * PDF string block with the fonts definitions
      */
     protected string $out = '';
 
     /**
      * Initialize font data
      *
-     * @param array<string, array{
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
-     *        'compress': bool,
-     *        'ctg': string,
-     *        'cw':  array<int, int>,
-     *        'desc': array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
-     *        'diff': string,
-     *        'diff_n': int,
-     *        'dir': string,
-     *        'dw': int,
-     *        'enc': string,
-     *        'family': string,
-     *        'file': string,
-     *        'file_n': int,
-     *        'i': int,
-     *        'length1': int,
-     *        'length2': int,
-     *        'n': int,
-     *        'name': string,
-     *        'subset': bool,
-     *        'subsetchars': array<int, bool>,
-     *        'type': string,
-     *    }> $fonts Array of imported fonts data
+     * @param array<string, FontData> $fonts Array of imported fonts data
      * @param int     $pon   Current PDF Object Number
      * @param Encrypt $encrypt Encrypt object
      */

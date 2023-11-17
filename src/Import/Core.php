@@ -29,6 +29,8 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type FontData from \Com\Tecnick\Pdf\Font\Load
  */
 class Core
 {
@@ -50,18 +52,12 @@ class Core
 
     /**
      * @param string $font    Content of the input font file
-     * @param array $fdt Extracted font metrics
+     * @param FontData $fdt Extracted font metrics
      *
      * @throws FontException in case of error
      */
     public function __construct(
-        /**
-         * Content of the input font file
-         */
         protected string $font,
-        /**
-         * Extracted font metrics
-         */
         protected array $fdt
     ) {
         $this->process();
@@ -69,6 +65,8 @@ class Core
 
     /**
      * Get all the extracted font metrics
+     *
+     * @return FontData
      */
     public function getFontMetrics(): array
     {
@@ -109,7 +107,7 @@ class Core
         $this->fdt['cw'] = [];
         for ($cid = 0; $cid <= 255; ++$cid) {
             if (isset($cwidths[$cid])) {
-                if ($cwidths[$cid] > $this->fdt['MaxWidth']) {
+                if ($cwidths[$cid] > (int) $this->fdt['MaxWidth']) {
                     $this->fdt['MaxWidth'] = $cwidths[$cid];
                 }
 
