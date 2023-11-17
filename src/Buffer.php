@@ -168,6 +168,10 @@ abstract class Buffer
      */
     public function addSubsetChar(string $key, int $char): void
     {
+        if (! isset($this->font[$key])) {
+            throw new FontException('The font ' . $key . ' has not been loaded');
+        }
+
         $this->font[$key]['subsetchars'][$char] = true;
     }
 
