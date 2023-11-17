@@ -66,11 +66,11 @@ class Core
         }
 
         if ($this->fdt['IsFixedPitch']) {
-            $this->fdt['Flags'] |= 1;
+            $this->fdt['Flags'] = ((int) $this->fdt['Flags']) | 1;
         }
 
         if ($this->fdt['ItalicAngle'] != 0) {
-            $this->fdt['Flags'] |= 64;
+            $this->fdt['Flags'] = ((int) $this->fdt['Flags']) | 64;
         }
     }
 
@@ -130,52 +130,48 @@ class Core
      *
      * @param array<int, string> $col Array containing row elements to process
      * @param array<int, int>    $cwd Array contianing cid widths
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     protected function processMetricRow(array $col, array &$cwd): void
     {
-        if (($col[0] == 'C') && (($cid = (int) $col[1]) >= 0)) {
-            // character metrics
-            $cwd[$cid] = (int) $col[4];
-            if (! empty($col[14])) {
-                //cbbox
-                $this->fdt['cbbox'][$cid] = [$col[10], $col[11], $col[12], $col[13]];
-            }
-        } elseif (
-            in_array(
-                $col[0],
-                [
-                    'FontName',
-                    'FullName',
-                    'FamilyName',
-                    'Weight',
-                    'CharacterSet',
-                    'Version',
-                    'EncodingScheme',
-                ]
-            )
-        ) {
-            $this->fdt[$col[0]] = $col[1];
-        } elseif (
-            in_array(
-                $col[0],
-                [
-                    'ItalicAngle',
-                    'UnderlinePosition',
-                    'UnderlineThickness',
-                    'CapHeight',
-                    'XHeight',
-                    'Ascender',
-                    'Descender',
-                    'StdHW',
-                    'StdVW',
-                ]
-            )
-        ) {
-            $this->fdt[$col[0]] = (int) $col[1];
-        } elseif ($col[0] == 'IsFixedPitch') {
-            $this->fdt[$col[0]] = ($col[1] == 'true');
-        } elseif ($col[0] == 'FontBBox') {
-            $this->fdt[$col[0]] = [(int) $col[1], (int) $col[2], (int) $col[3], (int) $col[4]];
+        switch ($col[0]) {
+            case 'IsFixedPitch':
+                $this->fdt['IsFixedPitch'] = ($col[1] == 'true');
+                break;
+            case 'FontBBox':
+                $this->fdt['FontBBox'] = [(int) $col[1], (int) $col[2], (int) $col[3], (int) $col[4]];
+                break;
+            case 'C':
+                $cid = (int) $col[1];
+                if ($cid >= 0) {
+                    $cwd[$cid] = (int) $col[4];
+                    if (! empty($col[14])) {
+                        $this->fdt['cbbox'][$cid] = [(int) $col[10], (int) $col[11], (int) $col[12], (int) $col[13]];
+                    }
+                }
+
+                break;
+            case 'FontName':
+            case 'FullName':
+            case 'FamilyName':
+            case 'Weight':
+            case 'CharacterSet':
+            case 'Version':
+            case 'EncodingScheme':
+                $this->fdt[$col[0]] = $col[1];
+                break;
+            case 'ItalicAngle':
+            case 'UnderlinePosition':
+            case 'UnderlineThickness':
+            case 'CapHeight':
+            case 'XHeight':
+            case 'Ascender':
+            case 'Descender':
+            case 'StdHW':
+            case 'StdVW':
+                $this->fdt[$col[0]] = (int) $col[1];
+                break;
         }
     }
 
