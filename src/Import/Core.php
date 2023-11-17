@@ -35,22 +35,6 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 class Core
 {
     /**
-     * Map property names to the correct key name.
-     *
-     * @var array<string, string>
-     */
-    protected const PROPERTYMAP = [
-        'FullName' => 'name',
-        'UnderlinePosition' => 'underlinePosition',
-        'UnderlineThickness' => 'underlineThickness',
-        'ItalicAngle' => 'italicAngle',
-        'Ascender' => 'Ascent',
-        'Descender' => 'Descent',
-        'StdVW' => 'StemV',
-        'StdHW' => 'StemH',
-    ];
-
-    /**
      * @param string   $font Content of the input font file
      * @param FontData $fdt  Extracted font metrics
      *
@@ -102,23 +86,23 @@ class Core
             $this->fdt['MissingWidth'] = $cwidths[32];
         }
 
-        $this->fdt['MaxWidth'] = $this->fdt['MissingWidth'];
+        $this->fdt['MaxWidth'] = (int) $this->fdt['MissingWidth'];
         $this->fdt['AvgWidth'] = 0;
         $this->fdt['cw'] = [];
         for ($cid = 0; $cid <= 255; ++$cid) {
             if (isset($cwidths[$cid])) {
-                if ($cwidths[$cid] > (int) $this->fdt['MaxWidth']) {
+                if ($cwidths[$cid] > $this->fdt['MaxWidth']) {
                     $this->fdt['MaxWidth'] = $cwidths[$cid];
                 }
 
                 $this->fdt['AvgWidth'] += $cwidths[$cid];
                 $this->fdt['cw'][$cid] = $cwidths[$cid];
             } else {
-                $this->fdt['cw'][$cid] = $this->fdt['MissingWidth'];
+                $this->fdt['cw'][$cid] = (int) $this->fdt['MissingWidth'];
             }
         }
 
-        $this->fdt['AvgWidth'] = round($this->fdt['AvgWidth'] / count($cwidths));
+        $this->fdt['AvgWidth'] = (int) round($this->fdt['AvgWidth'] / count($cwidths));
     }
 
     /**
@@ -200,11 +184,22 @@ class Core
      */
     protected function remapValues(): void
     {
-        foreach (self::PROPERTYMAP as $old => $new) {
-            $this->fdt[$new] = $this->fdt[$old];
+        // rename properties
+        $this->fdt['name'] = $this->fdt['FullName'];
+        $this->fdt['underlinePosition'] = $this->fdt['UnderlinePosition'];
+        $this->fdt['underlineThickness'] = $this->fdt['UnderlineThickness'];
+        $this->fdt['italicAngle'] = $this->fdt['ItalicAngle'];
+        $this->fdt['Ascent'] = $this->fdt['Ascender'];
+        $this->fdt['Descent'] = $this->fdt['Descender'];
+        $this->fdt['StemV'] = $this->fdt['StdVW'];
+        $this->fdt['StemH'] = $this->fdt['StdHW'];
+
+        $name = preg_replace('/[^a-zA-Z0-9_\-]/', '', $this->fdt['name']);
+        if ($name === null) {
+            throw new FontException('Invalid font name');
         }
 
-        $this->fdt['name'] = preg_replace('/[^a-zA-Z0-9_\-]/', '', $this->fdt['name']);
+        $this->fdt['name'] = $name;
         $this->fdt['bbox'] = implode(' ', $this->fdt['FontBBox']);
 
         if (empty($this->fdt['XHeight'])) {

@@ -336,41 +336,42 @@ class Subset
         $this->offset = 12;
         $tabname = array_keys($this->fdt['table']);
         foreach ($tabname as $tag) {
-            if (isset(self::TABLENAMES[$tag])) {
-                if (empty($this->fdt['table'][$tag])) {
-                    $this->fdt['table'][$tag] = [
-                        'checkSum' => 0,
-                        'data' => '',
-                        'length' => 0,
-                        'offset' => 0,
-                    ];
-                }
-
-                $this->fdt['table'][$tag]['data'] = substr(
-                    $this->font,
-                    $this->fdt['table'][$tag]['offset'],
-                    $this->fdt['table'][$tag]['length']
-                );
-                if ($tag == 'head') {
-                    // set the checkSumAdjustment to 0
-                    $this->fdt['table'][$tag]['data'] = substr($this->fdt['table'][$tag]['data'], 0, 8)
-                        . "\x0\x0\x0\x0" . substr($this->fdt['table'][$tag]['data'], 12);
-                }
-
-                $pad = 4 - ($this->fdt['table'][$tag]['length'] % 4);
-                if ($pad != 4) {
-                    // the length of a table must be a multiple of four bytes
-                    $this->fdt['table'][$tag]['length'] += $pad;
-                    $this->fdt['table'][$tag]['data'] .= str_repeat("\x0", $pad);
-                }
-
-                $this->fdt['table'][$tag]['offset'] = $this->offset;
-                $this->offset += $this->fdt['table'][$tag]['length'];
-                // check sum is not changed
-            } else {
+            if (! isset(self::TABLENAMES[$tag])) {
                 // remove the table
                 unset($this->fdt['table'][$tag]);
+                continue;
             }
+
+            if (empty($this->fdt['table'][$tag])) {
+                $this->fdt['table'][$tag] = [
+                    'checkSum' => 0,
+                    'data' => '',
+                    'length' => 0,
+                    'offset' => 0,
+                ];
+            }
+
+            $this->fdt['table'][$tag]['data'] = substr(
+                $this->font,
+                $this->fdt['table'][$tag]['offset'],
+                $this->fdt['table'][$tag]['length']
+            );
+            if ($tag == 'head') {
+                // set the checkSumAdjustment to 0
+                $this->fdt['table'][$tag]['data'] = substr($this->fdt['table'][$tag]['data'], 0, 8)
+                    . "\x0\x0\x0\x0" . substr($this->fdt['table'][$tag]['data'], 12);
+            }
+
+            $pad = 4 - ((int) $this->fdt['table'][$tag]['length'] % 4);
+            if ($pad != 4) {
+                // the length of a table must be a multiple of four bytes
+                $this->fdt['table'][$tag]['length'] += (int) $pad;
+                $this->fdt['table'][$tag]['data'] .= str_repeat("\x0", $pad);
+            }
+
+            $this->fdt['table'][$tag]['offset'] = $this->offset;
+            $this->offset += $this->fdt['table'][$tag]['length'];
+            // check sum is not changed
         }
     }
 

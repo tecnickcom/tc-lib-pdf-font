@@ -434,7 +434,7 @@ abstract class Load
     protected function setName(): void
     {
         if ($this->data['type'] == 'Core') {
-            $this->data['name'] = Core::FONT[$this->data['key']];
+            $this->data['name'] = (string) Core::FONT[$this->data['key']];
             $this->data['subset'] = false;
         } elseif (($this->data['type'] == 'Type1') || ($this->data['type'] == 'TrueType')) {
             $this->data['subset'] = false;
@@ -445,7 +445,7 @@ abstract class Load
         }
 
         if (empty($this->data['name'])) {
-            $this->data['name'] = $this->data['key'];
+            $this->data['name'] = (string) $this->data['key'];
         }
     }
 
