@@ -30,6 +30,8 @@ use Com\Tecnick\Unicode\Data\Encoding;
  * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 {
@@ -78,7 +80,12 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             preg_match('#/FullName[\s]*\(([^\)]*)#', $this->font, $matches);
         }
 
-        $this->fdt['name'] = preg_replace('/[^a-zA-Z0-9_\-]/', '', $matches[1]);
+        $name = preg_replace('/[^a-zA-Z0-9_\-]/', '', $matches[1]);
+        if ($name === null) {
+            throw new FontException('Unable to extract font name');
+        }
+
+        $this->fdt['name'] = $name;
         preg_match('#/FontBBox[\s]*{([^}]*)#', $this->font, $matches);
         $this->fdt['bbox'] = trim($matches[1]);
         $bvl = explode(' ', $this->fdt['bbox']);
@@ -86,6 +93,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $this->fdt['Descent'] = (int) $bvl[1];
         preg_match('#/ItalicAngle[\s]*([0-9\+\-]*)#', $this->font, $matches);
         $this->fdt['italicAngle'] = (int) $matches[1];
+
         if ($this->fdt['italicAngle'] != 0) {
             $this->fdt['Flags'] |= 64;
         }
@@ -96,7 +104,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $this->fdt['underlineThickness'] = (int) $matches[1];
         preg_match('#/isFixedPitch[\s]*([^\s]*)#', $this->font, $matches);
         if ($matches[1] == 'true') {
-            $this->fdt['Flags'] |= 1;
+            $this->fdt['Flags'] = (((int) $this->fdt['Flags']) | 1);
         }
 
         preg_match('#/Weight[\s]*\(([^\)]*)#', $this->font, $matches);
@@ -191,10 +199,10 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         if (preg_match('#/Cap[X]?Height[\s]*\[([^\]]*)#', $eplain, $matches) > 0) {
             $this->fdt['CapHeight'] = (int) $matches[1];
         } else {
-            $this->fdt['CapHeight'] = $this->fdt['Ascent'];
+            $this->fdt['CapHeight'] = (int) $this->fdt['Ascent'];
         }
 
-        $this->fdt['XHeight'] = ($this->fdt['Ascent'] + $this->fdt['Descent']);
+        $this->fdt['XHeight'] = ((int) $this->fdt['Ascent'] + (int) $this->fdt['Descent']);
     }
 
     /**

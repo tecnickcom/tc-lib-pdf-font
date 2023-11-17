@@ -555,17 +555,27 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             $this->metric[$mkey]['cw'][(int) $cid] = ((float) $width * $wratio);
         }
 
-        foreach ($data['cbbox'] as $cid => $val) {
-            $this->metric[$mkey]['cbbox'][(int) $cid] = [
-                // left
-                ((float) $val[0] * $wratio),
-                // bottom
-                ((float) $val[1] * $cratio),
-                // right
-                ((float) $val[2] * $wratio),
-                // top
-                ((float) $val[3] * $cratio),
-            ];
+        if (is_array($data['cbbox'])) {
+            foreach ($data['cbbox'] as $cid => $val) {
+                if (! is_array($val)) {
+                    continue;
+                }
+
+                if (count($val) != 4) {
+                    continue;
+                }
+
+                $this->metric[$mkey]['cbbox'][(int) $cid] = [
+                    // left
+                    ((float) $val[0] * $wratio),
+                    // bottom
+                    ((float) $val[1] * $cratio),
+                    // right
+                    ((float) $val[2] * $wratio),
+                    // top
+                    ((float) $val[3] * $cratio),
+                ];
+            }
         }
 
         return $this->metric[$mkey];
