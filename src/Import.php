@@ -3,13 +3,13 @@
 /**
  * Import.php
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
  */
@@ -28,13 +28,13 @@ use Com\Tecnick\Unicode\Data\Encoding;
 /**
  * Com\Tecnick\Pdf\Font\Import
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type FontData from Load
  *
@@ -175,47 +175,36 @@ class Import
     /**
      * Import the specified font and create output files.
      *
-     * @param string $file           Font file to process
-     * @param string $output_path    Output path for generated font files (must be writeable by the web server).
-     *                               Leave null for default font folder.
-     * @param string $type           Font type. Leave empty for autodetect mode. Valid values are:
-     *                                   Core (AFM - Adobe Font Metrics)
-     *                                   TrueTypeUnicode
-     *                                   TrueType
-     *                                   Type1
-     *                                   CID0JP (CID-0 Japanese)
-     *                                   CID0KR (CID-0 Korean)
-     *                                   CID0CS (CID-0 Chinese Simplified)
-     *                                   CID0CT (CID-0 Chinese Traditional)
-     * @param string $encoding       Name of the encoding table to use. Leave empty for default mode.
-     *                               Omit this parameter for TrueType Unicode and symbolic fonts
-     *                               like Symbol or ZapfDingBats.
-     * @param int    $flags          Unsigned 32-bit integer containing flags specifying various characteristics
-     *                               of the font as described in "PDF32000:2008 - 9.8.2 Font Descriptor Flags":
-     *                                   +1 for fixed width font
-     *                                   +4 for symbol or +32 for non-symbol
-     *                                   +64 for italic
-     *                               Note: Fixed and Italic mode are generally autodetected, so you have to set it to
-     *                                     32 = non-symbolic font (default) or 4 = symbolic font.
-     * @param int    $platform_id    Platform ID for CMAP table to extract.
-     *                               For a Unicode font for Windows this value should be 3, for Macintosh should be 1.
-     * @param int    $encoding_id    Encoding ID for CMAP table to extract.
-     *                               For a Unicode font for Windows this value should be 1, for Macintosh should be 0.
-     *                               When Platform ID is 3, legal values for Encoding ID are:
-     *                                0 = Symbol,
-     *                                1 = Unicode,
-     *                                2 = ShiftJIS,
-     *                                3 = PRC,
-     *                                4 = Big5,
-     *                                5 = Wansung,
-     *                                6 = Johab,
-     *                                7 = Reserved,
-     *                                8 = Reserved,
-     *                                9 = Reserved,
-     *                               10 = UCS-4.
-     * @param bool   $linked         If true, links the font file to system font instead of copying the font data
-     *                               (not transportable).
-     *                               Note: this option do not work with Type1 fonts.
+     * @param string $file        Font file to process
+     * @param string $output_path Output path for generated font files (must be writeable by the web server).
+     *                            Leave null for default font folder.
+     * @param string $type        Font type. Leave empty for autodetect mode. Valid values are:
+     *                            Core (AFM - Adobe Font Metrics) TrueTypeUnicode TrueType
+     *                            Type1 CID0JP (CID-0 Japanese) CID0KR (CID-0 Korean) CID0CS
+     *                            (CID-0 Chinese Simplified) CID0CT (CID-0 Chinese Traditional)
+     * @param string $encoding    Name of the encoding table to use. Leave empty for default mode.
+     *                            Omit this parameter for TrueType Unicode and symbolic fonts like
+     *                            Symbol or ZapfDingBats.
+     * @param int    $flags       Unsigned 32-bit integer containing flags specifying various characteristics
+     *                            of the font as described in "PDF32000:2008 - 9.8.2 Font Descriptor Flags":
+     *                            +1 for fixed width font +4 for symbol or +32 for non-symbol +64 for italic
+     *                            Note: Fixed and Italic mode are generally autodetected, so you have to set
+     *                            it to 32 = non-symbolic font (default) or 4 = symbolic font.
+     * @param int    $platform_id Platform ID for CMAP table to extract.
+     *                            For a Unicode font for Windows this
+     *                            value should be 3, for Macintosh
+     *                            should be 1.
+     * @param int    $encoding_id Encoding ID for CMAP table to extract.
+     *                            For a Unicode font for Windows this
+     *                            value should be 1, for Macintosh
+     *                            should be 0. When Platform ID is 3,
+     *                            legal values for Encoding ID are: 0 =
+     *                            Symbol, 1 = Unicode, 2 = ShiftJIS, 3 =
+     *                            PRC, 4 = Big5, 5 = Wansung, 6 = Johab,
+     *                            7 = Reserved, 8 = Reserved, 9 =
+     *                            Reserved, 10 = UCS-4.
+     * @param bool   $linked      If true, links the font file to system font instead of copying the font data
+     *                            (not transportable). Note: this option do not work with Type1 fonts.
      *
      * @throws FontException in case of error
      */
@@ -456,8 +445,8 @@ class Import
     /**
      * Find the path where to store the processed font.
      *
-     * @param string $output_path    Output path for generated font files (must be writeable by the web server).
-     *                               Leave null for default font folder (K_PATH_FONTS).
+     * @param string $output_path Output path for generated font files (must be writeable by the web server).
+     *                            Leave null for default font folder (K_PATH_FONTS).
      */
     protected function findOutputPath(string $output_path = ''): string
     {
@@ -485,7 +474,7 @@ class Import
     /**
      * Get the font type
      *
-     * @param string $font_type      Font type. Leave empty for autodetect mode.
+     * @param string $font_type Font type. Leave empty for autodetect mode.
      */
     protected function getFontType(string $font_type): string
     {
@@ -521,9 +510,9 @@ class Import
     /**
      * Get the encoding table
      *
-     * @param string $encoding  Name of the encoding table to use. Leave empty for default mode.
-     *                          Omit this parameter for TrueType Unicode and symbolic fonts
-     *                          like Symbol or ZapfDingBats.
+     * @param string $encoding Name of the encoding table to use. Leave empty for default mode.
+     *                         Omit this parameter for TrueType Unicode and symbolic fonts like
+     *                         Symbol or ZapfDingBats.
      */
     protected function getEncodingTable(string $encoding = ''): string
     {

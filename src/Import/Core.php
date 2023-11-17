@@ -3,13 +3,13 @@
 /**
  * Core.php
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
  */
@@ -22,13 +22,13 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 /**
  * Com\Tecnick\Pdf\Font\Import\Core
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type FontData from \Com\Tecnick\Pdf\Font\Load
  */
@@ -51,8 +51,8 @@ class Core
     ];
 
     /**
-     * @param string $font    Content of the input font file
-     * @param FontData $fdt Extracted font metrics
+     * @param string   $font Content of the input font file
+     * @param FontData $fdt  Extracted font metrics
      *
      * @throws FontException in case of error
      */
@@ -145,7 +145,7 @@ class Core
      * Extract Metrics
      *
      * @param array<int, string> $col Array containing row elements to process
-     * @param array<int, int> $cwd Array contianing cid widths
+     * @param array<int, int>    $cwd Array contianing cid widths
      */
     protected function processMetricRow(array $col, array &$cwd): void
     {

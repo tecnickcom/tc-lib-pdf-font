@@ -3,13 +3,13 @@
 /**
  * Output.php
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
  */
@@ -22,13 +22,13 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 /**
  * Com\Tecnick\Pdf\Font\Output
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type FontData from Load
  */
@@ -49,9 +49,9 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Initialize font data
      *
-     * @param array<string, FontData> $fonts Array of imported fonts data
-     * @param int     $pon   Current PDF Object Number
-     * @param Encrypt $encrypt Encrypt object
+     * @param array<string, FontData> $fonts   Array of imported fonts data
+     * @param int                     $pon     Current PDF Object Number
+     * @param Encrypt                 $encrypt Encrypt object
      */
     public function __construct(
         protected array $fonts,

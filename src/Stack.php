@@ -3,13 +3,13 @@
 /**
  * Stack.php
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
  */
@@ -21,13 +21,13 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 /**
  * Com\Tecnick\Pdf\Font\Stack
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type FontData from Load
  *
@@ -102,27 +102,33 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *                           If it is a standard family name, it will override the corresponding font.
      * @param string $style      Font style.
      *                           Possible values are (case insensitive):
-     *                             regular (default)
-     *                             B: bold
-     *                             I: italic
-     *                             U: underline
-     *                             D: strikeout (linethrough)
-     *                             O: overline
-     * @param ?int     $size       Font size in points (set to null to inherit the last font size).
-     * @param ?float  $spacing    Extra spacing between characters.
-     * @param ?float  $stretching Horizontal character stretching ratio.
+     *                           regular (default)
+     *                           B: bold
+     *                           I: italic
+     *                           U: underline
+     *                           D: strikeout (linethrough)
+     *                           O: overline
+     * @param ?int   $size       Font size in points (set to null to inherit the last font size).
+     * @param ?float $spacing    Extra spacing between characters.
+     * @param ?float $stretching Horizontal character stretching ratio.
      * @param string $ifile      The font definition file (or empty for autodetect).
      *                           By default, the name is built from the family and style, in lower case with no spaces.
-     * @param ?bool   $subset     If true embedd only a subset of the font
-     *                           (stores only the information related to the used characters);
-     *                           If false embedd full font;
-     *                           This option is valid only for TrueTypeUnicode fonts and it is disabled for PDF/A.
-     *                           If you want to enable users to modify the document, set this parameter to false.
-     *                           If you subset the font, the person who receives your PDF would need to have
-     *                           your same font in order to make changes to your PDF.
-     *                           The file size of the PDF would also be smaller because you are embedding only a subset.
-     *                           Set this to null to use the default value.
-     *                           NOTE: This option is computational and memory intensive.
+     * @param ?bool  $subset     If true embedd only a subset of the font
+     *                           (stores only the information related to
+     *                           the used characters); If false embedd
+     *                           full font; This option is valid only for
+     *                           TrueTypeUnicode fonts and it is disabled
+     *                           for PDF/A. If you want to enable users
+     *                           to modify the document, set this
+     *                           parameter to false. If you subset the
+     *                           font, the person who receives your PDF
+     *                           would need to have your same font in
+     *                           order to make changes to your PDF. The
+     *                           file size of the PDF would also be
+     *                           smaller because you are embedding only a
+     *                           subset. Set this to null to use the
+     *                           default value. NOTE: This option is
+     *                           computational and memory intensive.
      *
      * @return array{
      *     'outraw': string,
@@ -316,10 +322,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Replace missing characters with selected substitutions
      *
-     * @param array<int, int> $uniarr Array of character codepoints.
+     * @param array<int, int>        $uniarr Array of character codepoints.
      * @param array<int, array<int>> $subs   Array of possible character substitutions.
-     *                      The key is the character to check (integer value),
-     *                      the value is an array of possible substitutes.
+     *                                       The key is the character to check (integer value),
+     *                                       the value is an array of possible substitutes.
      *
      * @return array<int, int> Array of character codepoints.
      */
@@ -570,7 +576,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @param ?int $size Font size in points (set to null to inherit the last font size).
      *
-     * return float
+     *                   return float
      */
     protected function getInputSize(?int $size = null): float
     {
@@ -589,9 +595,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Normalize the input spacing
      *
-     * @param ?float  $spacing  Extra spacing between characters.
-     *
-     * return float
+     * @param ?float $spacing Extra spacing between characters.
+     *                        return float
      */
     protected function getInputSpacing(?float $spacing = null): float
     {
@@ -610,9 +615,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Normalize the input stretching
      *
-     * @param ?float  $stretching Horizontal character stretching ratio.
-     *
-     * return float
+     * @param ?float $stretching Horizontal character stretching ratio.
+     *                           return float
      */
     protected function getInputStretching(?float $stretching = null): float
     {

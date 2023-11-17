@@ -3,13 +3,13 @@
 /**
  * OutUtil.php
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
  */
@@ -22,13 +22,13 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 /**
  * Com\Tecnick\Pdf\Font\OutUtil
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  */
 abstract class OutUtil
 {
@@ -65,7 +65,7 @@ abstract class OutUtil
      *        'subset': bool,
      *        'subsetchars': array<int, bool>,
      *    } $font      Font to process
-     * @param int   $cidoffset Offset for CID values
+     * @param int    $cidoffset Offset for CID values
      *
      * @return string PDF command string for font widths
      */
@@ -97,7 +97,7 @@ abstract class OutUtil
      *        'subset': bool,
      *        'subsetchars': array<int, bool>,
      *    } $font      Font to process
-     * @param int   $cidoffset Offset for CID values
+     * @param int    $cidoffset Offset for CID values
      *
      * @return array<int, array<int, int>>
      */

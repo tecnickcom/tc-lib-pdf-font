@@ -3,13 +3,13 @@
 /**
  * TrueType.php
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
  */
@@ -24,13 +24,13 @@ use Com\Tecnick\Unicode\Data\Encoding;
 /**
  * Com\Tecnick\Pdf\Font\Import\TrueType
  *
- * @since       2011-05-23
- * @category    Library
- * @package     PdfFont
- * @author      Nicola Asuni <info@tecnick.com>
- * @copyright   2011-2023 Nicola Asuni - Tecnick.com LTD
- * @license     http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
- * @link        https://github.com/tecnickcom/tc-lib-pdf-font
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
+ * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type FontData from \Com\Tecnick\Pdf\Font\Load
  *
@@ -63,10 +63,10 @@ class TrueType
     /**
      * Process TrueType font
      *
-     * @param string $font     Content of the input font file
-     * @param FontData $fdt      Extracted font metrics
-     * @param Byte $fbyte Object used to read font bytes
-     * @param array<int, bool>  $subchars Array containing subset chars
+     * @param string           $font     Content of the input font file
+     * @param FontData         $fdt      Extracted font metrics
+     * @param Byte             $fbyte    Object used to read font bytes
+     * @param array<int, bool> $subchars Array containing subset chars
      *
      * @throws FontException in case of error
      */
@@ -788,6 +788,7 @@ class TrueType
 
     /**
      * Process Format 13: Many-to-one range mappings
+     *
      * @TODO: TO BE IMPLEMENTED
      */
     protected function processFormat13(): void
@@ -796,6 +797,7 @@ class TrueType
 
     /**
      * Process Format 14: Unicode Variation Sequences
+     *
      * @TODO: TO BE IMPLEMENTED
      */
     protected function processFormat14(): void
