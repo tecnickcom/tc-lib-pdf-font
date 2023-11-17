@@ -157,8 +157,8 @@ foreach ($fontdir as $dir) {
             $font = substr($font, 0, -4).'.ttf';
         }
         
-        $type = null;
-        $encoding = null;
+        $type = '';
+        $encoding = '';
         if ($dir == 'cid0') {
             $type = strtoupper(basename($font, '.ttf'));
         } elseif (($dir == 'core') || ($dir == 'pdfa')) {
