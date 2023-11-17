@@ -45,7 +45,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'FontName': string,
  *        'FullName': string,
  *        'IsFixedPitch': bool,
- *        'ItalicAngle': float,
+ *        'ItalicAngle': int,
  *        'Leading': int,
  *        'MaxWidth': int,
  *        'MissingWidth': int,

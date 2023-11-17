@@ -181,20 +181,20 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
             $suffix .= 'I';
         }
 
-        $this->data['style'] = $suffix;
+        $this->data['style'] = (string) $suffix;
         if (str_contains($style, 'U')) {
-            $this->data['mode']['underline'] = true;
             $this->data['style'] .= 'U';
+            $this->data['mode']['underline'] = true;
         }
 
         if (str_contains($style, 'D')) {
-            $this->data['mode']['linethrough'] = true;
             $this->data['style'] .= 'D';
+            $this->data['mode']['linethrough'] = true;
         }
 
         if (str_contains($style, 'O')) {
-            $this->data['mode']['overline'] = true;
             $this->data['style'] .= 'O';
+            $this->data['mode']['overline'] = true;
         }
 
         $this->data['key'] = $this->data['family'] . $suffix;

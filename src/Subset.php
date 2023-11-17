@@ -379,6 +379,7 @@ class Subset
      * Add glyf and loca tables
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     protected function addProcessedTables(): void
     {

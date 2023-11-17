@@ -363,7 +363,12 @@ class TrueType
                 $this->offset += 2;
                 $this->offset = ($this->fdt['table']['name']['offset'] + $stringStorageOffset + $stringOffset);
                 $this->fdt['name'] = substr($this->font, $this->offset, $stringLength);
-                $this->fdt['name'] = preg_replace('/[^a-zA-Z0-9_\-]/', '', $this->fdt['name']);
+                $name = preg_replace('/[^a-zA-Z0-9_\-]/', '', $this->fdt['name']);
+                if (($name === null) || ($name === '')) {
+                    throw new FontException('Error getting font name.');
+                }
+
+                $this->fdt['name'] = $name;
                 break;
             } else {
                 $this->offset += 4; // skip String length, String offset
@@ -439,7 +444,7 @@ class TrueType
         }
 
         // get CapHeight (height of H)
-        $this->fdt['CapHeight'] = $this->fdt['Ascent'];
+        $this->fdt['CapHeight'] = (int) $this->fdt['Ascent'];
         if (! empty($this->fdt['ctgdata'][72])) {
             $this->offset = (
                 $this->fdt['table']['glyf']['offset']

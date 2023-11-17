@@ -69,7 +69,7 @@ class Core
             $this->fdt['Flags'] = ((int) $this->fdt['Flags']) | 1;
         }
 
-        if ($this->fdt['ItalicAngle'] != 0) {
+        if ((int) $this->fdt['ItalicAngle'] != 0) {
             $this->fdt['Flags'] = ((int) $this->fdt['Flags']) | 64;
         }
     }

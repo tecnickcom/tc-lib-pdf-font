@@ -354,7 +354,7 @@ class Import
                 // create CIDToGIDMap
                 $cidtogidmap = str_pad('', 131072, "\x00"); // (256 * 256 * 2) = 131072
                 foreach ($this->fdt['ctgdata'] as $cid => $gid) {
-                    $cidtogidmap = $this->updateCIDtoGIDmap($cidtogidmap, $cid, $gid);
+                    $cidtogidmap = $this->updateCIDtoGIDmap($cidtogidmap, (int) $cid, (int) $gid);
                 }
 
                 // store compressed CIDToGIDMap
