@@ -186,7 +186,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     {
         $out = '';
         foreach ($this->fonts as $font) {
-            match (strtolower($font['type'])) {
+            $out .= match (strtolower($font['type'])) {
                 'core' => $this->getCore($font),
                 'cidfont0' => $this->getCid0($font),
                 'type1' => $this->getTrueType($font),
