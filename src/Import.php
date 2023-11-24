@@ -36,7 +36,7 @@ use Com\Tecnick\Unicode\Data\Encoding;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-import-type FontData from Load
+ * @phpstan-import-type TFontData from Load
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
@@ -55,7 +55,7 @@ class Import
     /**
      * Extracted font metrics
      *
-     * @var FontData
+     * @var TFontData
      */
     protected array $fdt = [
         'Ascender' => 0,
@@ -271,7 +271,7 @@ class Import
     /**
      * Get all the extracted font metrics
      *
-     * @return FontData
+     * @return TFontData
      */
     public function getFontMetrics(): array
     {

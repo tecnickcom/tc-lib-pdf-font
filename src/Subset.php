@@ -31,7 +31,7 @@ use Com\Tecnick\Pdf\Font\Import\TrueType;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-import-type FontData from Load
+ * @phpstan-import-type TFontData from Load
  */
 class Subset
 {
@@ -67,7 +67,7 @@ class Subset
     /**
      * Extracted font metrics
      *
-     * @var FontData
+     * @var TFontData
      */
     protected array $fdt = [
         'Ascender' => 0,
@@ -205,7 +205,7 @@ class Subset
      * Process TrueType font
      *
      * @param string           $font     Content of the input font file
-     * @param FontData         $fdt      Extracted font metrics
+     * @param TFontData         $fdt      Extracted font metrics
      * @param array<int, bool> $subchars Array containing subset chars
      *
      * @throws FontException in case of error

@@ -29,7 +29,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-import-type FontData from Load
+ * @phpstan-import-type TFontData from Load
  */
 class Font extends \Com\Tecnick\Pdf\Font\Load
 {
@@ -120,7 +120,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     /**
      * Get the font data
      *
-     * @return FontData
+     * @return TFontData
      */
     public function getFontData(): array
     {

@@ -32,7 +32,7 @@ use Com\Tecnick\Unicode\Data\Encoding;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-import-type FontData from \Com\Tecnick\Pdf\Font\Load
+ * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
@@ -64,7 +64,7 @@ class TrueType
      * Process TrueType font
      *
      * @param string           $font     Content of the input font file
-     * @param FontData         $fdt      Extracted font metrics
+     * @param TFontData         $fdt      Extracted font metrics
      * @param Byte             $fbyte    Object used to read font bytes
      * @param array<int, bool> $subchars Array containing subset chars
      *
@@ -84,7 +84,7 @@ class TrueType
     /**
      * Get all the extracted font metrics
      *
-     * @return FontData
+     * @return TFontData
      */
     public function getFontMetrics(): array
     {

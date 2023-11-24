@@ -30,7 +30,51 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-type FontData array{
+ * @phpstan-type TFontDataCidInfo array{
+ *            'Ordering': string,
+ *            'Registry': string,
+ *            'Supplement': int,
+ *            'uni2cid': array<int, int>,
+ *        }
+ *
+ * @phpstan-type TFontDataDesc array{
+ *            'Ascent': int,
+ *            'AvgWidth': int,
+ *            'CapHeight': int,
+ *            'Descent': int,
+ *            'Flags': int,
+ *            'FontBBox': string,
+ *            'ItalicAngle': int,
+ *            'Leading': int,
+ *            'MaxWidth': int,
+ *            'MissingWidth': int,
+ *            'StemH': int,
+ *            'StemV': int,
+ *            'XHeight': int,
+ *        }
+ *
+ * @phpstan-type TFontDataEncTable array{
+ *            'encodingID': int,
+ *            'offset': int,
+ *            'platformID': int,
+ *        }
+ *
+ * @phpstan-type TFontDataMode array{
+ *            'bold': bool,
+ *            'italic': bool,
+ *            'linethrough': bool,
+ *            'overline': bool,
+ *            'underline': bool,
+ *        }
+ *
+ * @phpstan-type TFontDataTableItem array{
+ *            'checkSum': int,
+ *            'data': string,
+ *            'length': int,
+ *            'offset': int,
+ *        }
+ *
+ * @phpstan-type TFontData array{
  *        'Ascender': int,
  *        'Ascent': int,
  *        'AvgWidth': float,
@@ -60,43 +104,20 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'XHeight': int,
  *        'bbox': string,
  *        'cbbox': array<int, array<int, int>>,
- *        'cidinfo': array{
- *            'Ordering': string,
- *            'Registry': string,
- *            'Supplement': int,
- *            'uni2cid': array<int, int>,
- *        },
+ *        'cidinfo': TFontDataCidInfo,
  *        'compress': bool,
  *        'ctg': string,
  *        'ctgdata': array<int, int>,
  *        'cw':  array<int, int>,
  *        'datafile': string,
- *        'desc': array{
- *            'Ascent': int,
- *            'AvgWidth': int,
- *            'CapHeight': int,
- *            'Descent': int,
- *            'Flags': int,
- *            'FontBBox': string,
- *            'ItalicAngle': int,
- *            'Leading': int,
- *            'MaxWidth': int,
- *            'MissingWidth': int,
- *            'StemH': int,
- *            'StemV': int,
- *            'XHeight': int,
- *        },
+ *        'desc': TFontDataDesc,
  *        'diff': string,
  *        'diff_n': int,
  *        'dir': string,
  *        'dw': int,
  *        'enc': string,
  *        'enc_map': array<int, string>,
- *        'encodingTables': array<int, array{
- *            'encodingID': int,
- *            'offset': int,
- *            'platformID': int,
- *        }>,
+ *        'encodingTables': array<int, TFontDataEncTable>,
  *        'encoding_id': int,
  *        'encrypted': string,
  *        'fakestyle': bool,
@@ -115,13 +136,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'length1': int,
  *        'length2': int,
  *        'linked': bool,
- *        'mode': array{
- *            'bold': bool,
- *            'italic': bool,
- *            'linethrough': bool,
- *            'overline': bool,
- *            'underline': bool,
- *        },
+ *        'mode': TFontDataMode,
  *        'n': int,
  *        'name': string,
  *        'numGlyphs': int,
@@ -136,12 +151,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'style': string,
  *        'subset': bool,
  *        'subsetchars': array<int, bool>,
- *        'table': array<string, array{
- *            'checkSum': int,
- *            'data': string,
- *            'length': int,
- *            'offset': int,
- *        }>,
+ *        'table': array<string, TFontDataTableItem>,
  *        'tot_num_glyphs': int,
  *        'type': string,
  *        'underlinePosition': int,
@@ -172,7 +182,7 @@ abstract class Load
     /**
      * Font data
      *
-     * @var FontData
+     * @var TFontData
      */
     protected array $data = [
         'Ascender' => 0,

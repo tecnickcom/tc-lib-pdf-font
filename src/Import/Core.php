@@ -30,13 +30,13 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-import-type FontData from \Com\Tecnick\Pdf\Font\Load
+ * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  */
 class Core
 {
     /**
      * @param string   $font Content of the input font file
-     * @param FontData $fdt  Extracted font metrics
+     * @param TFontData $fdt  Extracted font metrics
      *
      * @throws FontException in case of error
      */
@@ -50,7 +50,7 @@ class Core
     /**
      * Get all the extracted font metrics
      *
-     * @return FontData
+     * @return TFontData
      */
     public function getFontMetrics(): array
     {

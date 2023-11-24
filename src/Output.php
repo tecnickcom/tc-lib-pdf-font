@@ -30,7 +30,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-import-type FontData from Load
+ * @phpstan-import-type TFontData from Load
  */
 class Output extends \Com\Tecnick\Pdf\Font\OutFont
 {
@@ -49,7 +49,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Initialize font data
      *
-     * @param array<string, FontData> $fonts   Array of imported fonts data
+     * @param array<string, TFontData> $fonts   Array of imported fonts data
      * @param int                     $pon     Current PDF Object Number
      * @param Encrypt                 $encrypt Encrypt object
      */

@@ -29,14 +29,14 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-import-type FontData from Load
+ * @phpstan-import-type TFontData from Load
  */
 abstract class Buffer
 {
     /**
      * Array containing all fonts data
      *
-     * @var array<string, FontData>
+     * @var array<string, TFontData>
      */
     protected array $font = [];
 
@@ -115,7 +115,7 @@ abstract class Buffer
     /**
      * Returns the fonts buffer
      *
-     * @return array<string, FontData>
+     * @return array<string, TFontData>
      */
     public function getFonts(): array
     {
@@ -147,7 +147,7 @@ abstract class Buffer
      *
      * @param string $key Font key
      *
-     * @return FontData Returns the fonts array.
+     * @return TFontData Returns the fonts array.
      *
      * @throws FontException in case of error
      */

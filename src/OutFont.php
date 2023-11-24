@@ -30,6 +30,9 @@ use Com\Tecnick\Unicode\Data\Identity;
  * @copyright 2011-2023 Nicola Asuni - Tecnick.com LTD
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type TFontDataCidInfo from Load
+ * @phpstan-import-type TFontDataDesc from Load
  */
 abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
 {
@@ -48,28 +51,9 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * A Type 0 CIDFont contains glyph descriptions based on the Adobe Type 1 font format
      *
      * @param array{
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
+     *        'cidinfo': TFontDataCidInfo,
      *        'cw':  array<int, int>,
-     *        'desc': array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
+     *        'desc': TFontDataDesc,
      *        'dw': int,
      *        'enc': string,
      *        'i': int,
@@ -141,12 +125,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * Convert Unicode to CID
      *
      * @param array{
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
+     *        'cidinfo': TFontDataCidInfo,
      *        'cw':  array<int, int>,
      *    } $font      Font to process
      * @param int    $cidoffset Offset for CID values
@@ -172,30 +151,11 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * Based on PDF Reference 1.3 (section 5)
      *
      * @param array{
-     *        'cidinfo': array{
-     *            'Ordering': string,
-     *            'Registry': string,
-     *            'Supplement': int,
-     *            'uni2cid': array<int, int>,
-     *        },
+     *        'cidinfo': TFontDataCidInfo,
      *        'compress': bool,
      *        'ctg': string,
      *        'cw':  array<int, int>,
-     *        'desc': array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
+     *        'desc': TFontDataDesc,
      *        'dir': string,
      *        'dw': int,
      *        'enc': string,
@@ -361,21 +321,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * @param array{
      *        'cw':  array<int, int>,
-     *        'desc': array{
-     *            'Ascent': int,
-     *            'AvgWidth': int,
-     *            'CapHeight': int,
-     *            'Descent': int,
-     *            'Flags': int,
-     *            'FontBBox': string,
-     *            'ItalicAngle': int,
-     *            'Leading': int,
-     *            'MaxWidth': int,
-     *            'MissingWidth': int,
-     *            'StemH': int,
-     *            'StemV': int,
-     *            'XHeight': int,
-     *        },
+     *        'desc': TFontDataDesc,
      *        'diff_n': int,
      *        'dw': int,
      *        'enc': string,

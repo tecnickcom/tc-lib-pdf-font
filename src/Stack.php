@@ -29,7 +29,51 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-import-type FontData from Load
+ * @phpstan-import-type TFontData from Load
+ *
+ * @phpstan-type TTextDims array{
+ *     'chars': int,
+ *     'spaces': int,
+ *     'totwidth': float,
+ *     'totspacewidth': float,
+ * }
+ *
+ * @phpstan-type TBBox array{float, float, float, float}
+ *
+ * @phpstan-type TStackItem array{
+ *        'key': string,
+ *        'style': string,
+ *        'size': float,
+ *        'spacing': float,
+ *        'stretching': float,
+ *    }
+ *
+ * @phpstan-type TFontMetric array{
+ *     'ascent': float,
+ *     'avgwidth': float,
+ *     'capheight': float,
+ *     'cbbox': array<int, TBBox>,
+ *     'cratio': float,
+ *     'cw': array<int, float>,
+ *     'descent': float,
+ *     'dw': float,
+ *     'fbbox': array<int, float>,
+ *     'height': float,
+ *     'key': string,
+ *     'maxwidth': float,
+ *     'midpoint': float,
+ *     'missingwidth': float,
+ *     'out': string,
+ *     'outraw': string,
+ *     'size': float,
+ *     'spacing': float,
+ *     'stretching': float,
+ *     'type': string,
+ *     'up': float,
+ *     'usize': float,
+ *     'ut': float,
+ *     'xheight': float,
+ * }
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
@@ -44,13 +88,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Array (stack) containing fonts in order of insertion.
      * The last item is the current font.
      *
-     * @var array<int, array{
-     *        'key': string,
-     *        'style': string,
-     *        'size': float,
-     *        'spacing': float,
-     *        'stretching': float,
-     *    }>
+     * @var array<int, TStackItem>
      */
     protected array $stack = [];
 
@@ -62,32 +100,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Array containing font metrics for each fontkey-size combination.
      *
-     * @var array<string, array{
-     *     'outraw': string,
-     *     'out': string,
-     *     'key': string,
-     *     'type': string,
-     *     'size': float,
-     *     'spacing': float,
-     *     'stretching': float,
-     *     'usize': float,
-     *     'cratio': float,
-     *     'up': float,
-     *     'ut': float,
-     *     'dw': float,
-     *     'ascent': float,
-     *     'descent': float,
-     *     'height': float,
-     *     'midpoint': float,
-     *     'capheight': float,
-     *     'xheight': float,
-     *     'avgwidth': float,
-     *     'maxwidth': float,
-     *     'missingwidth': float,
-     *     'cw': array<int, float>,
-     *     'cbbox': array<int, array<int, float>>,
-     *     'fbbox': array<int, float>,
-     * }>
+     * @var array<string, TFontMetric>
      */
     protected array $metric = [];
 
@@ -130,32 +143,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *                           default value. NOTE: This option is
      *                           computational and memory intensive.
      *
-     * @return array{
-     *     'outraw': string,
-     *     'out': string,
-     *     'key': string,
-     *     'type': string,
-     *     'size': float,
-     *     'spacing': float,
-     *     'stretching': float,
-     *     'usize': float,
-     *     'cratio': float,
-     *     'up': float,
-     *     'ut': float,
-     *     'dw': float,
-     *     'ascent': float,
-     *     'descent': float,
-     *     'height': float,
-     *     'midpoint': float,
-     *     'capheight': float,
-     *     'xheight': float,
-     *     'avgwidth': float,
-     *     'maxwidth': float,
-     *     'missingwidth': float,
-     *     'cw': array<int, float>,
-     *     'cbbox': array<int, array<int, float>>,
-     *     'fbbox': array<int, float>,
-     * } Font data
+     * @return TFontMetric Font data
      *
      * @throws FontException in case of error
      */
@@ -212,32 +200,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Returns the current font data array
      *
-     * @return array{
-     *     'outraw': string,
-     *     'out': string,
-     *     'key': string,
-     *     'type': string,
-     *     'size': float,
-     *     'spacing': float,
-     *     'stretching': float,
-     *     'usize': float,
-     *     'cratio': float,
-     *     'up': float,
-     *     'ut': float,
-     *     'dw': float,
-     *     'ascent': float,
-     *     'descent': float,
-     *     'height': float,
-     *     'midpoint': float,
-     *     'capheight': float,
-     *     'xheight': float,
-     *     'avgwidth': float,
-     *     'maxwidth': float,
-     *     'missingwidth': float,
-     *     'cw': array<int, float>,
-     *     'cbbox': array<int, array<int, float>>,
-     *     'fbbox': array<int, float>,
-     * }
+     * @return TFontMetric
      */
     public function getCurrentFont(): array
     {
@@ -281,32 +244,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Remove and return the last inserted font
      *
-     * @return array{
-     *     'outraw': string,
-     *     'out': string,
-     *     'key': string,
-     *     'type': string,
-     *     'size': float,
-     *     'spacing': float,
-     *     'stretching': float,
-     *     'usize': float,
-     *     'cratio': float,
-     *     'up': float,
-     *     'ut': float,
-     *     'dw': float,
-     *     'ascent': float,
-     *     'descent': float,
-     *     'height': float,
-     *     'midpoint': float,
-     *     'capheight': float,
-     *     'xheight': float,
-     *     'avgwidth': float,
-     *     'maxwidth': float,
-     *     'missingwidth': float,
-     *     'cw': array<int, float>,
-     *     'cbbox': array<int, array<int, float>>,
-     *     'fbbox': array<int, float>,
-     * }
+     * @return TFontMetric
      */
     public function popLastFont(): array
     {
@@ -394,12 +332,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @param array<int, int> $uniarr Array of character codepoints.
      *
-     * @return array{
-     *     'chars': int,
-     *     'spaces': int,
-     *     'totwidth': float,
-     *     'totspacewidth': float,
-     * }
+     * @return TTextDims
      */
     public function getOrdArrDims(array $uniarr): array
     {
@@ -432,7 +365,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @param int $ord Unicode character value.
      *
-     * @return array<int, float> (xMin, yMin, xMax, yMax)
+     * @return TBBox (xMin, yMin, xMax, yMax)
      */
     public function getCharBBox(int $ord): array
     {
@@ -464,40 +397,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Returns the font metrics associated to the input key.
      *
-     * @param array{
-     *        'key': string,
-     *        'style': string,
-     *        'size': float,
-     *        'spacing': float,
-     *        'stretching': float,
-     *    } $font Stack item
+     * @param TStackItem $font Stack item
      *
-     * @return array{
-     *     'ascent': float,
-     *     'avgwidth': float,
-     *     'capheight': float,
-     *     'cbbox': array<int, array<int, float>>,
-     *     'cratio': float,
-     *     'cw': array<int, float>,
-     *     'descent': float,
-     *     'dw': float,
-     *     'fbbox': array<int, float>,
-     *     'height': float,
-     *     'key': string,
-     *     'maxwidth': float,
-     *     'midpoint': float,
-     *     'missingwidth': float,
-     *     'out': string,
-     *     'outraw': string,
-     *     'size': float,
-     *     'spacing': float,
-     *     'stretching': float,
-     *     'type': string,
-     *     'up': float,
-     *     'usize': float,
-     *     'ut': float,
-     *     'xheight': float,
-     * }
+     * @return TFontMetric
      */
     protected function getFontMetric(array $font): array
     {
