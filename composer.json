@@ -27,7 +27,7 @@
     "ext-zlib": "*",
     "tecnickcom/tc-lib-file": "^2.0",
     "tecnickcom/tc-lib-unicode-data": "^2.0",
-    "tecnickcom/tc-lib-pdf-encrypt": "^2.0"
+    "tecnickcom/tc-lib-pdf-encrypt": "^2.1"
   },
   "require-dev": {
     "pdepend/pdepend": "2.13.0",
