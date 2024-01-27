@@ -122,6 +122,14 @@ class StackTest extends TestUtil
         $this->assertEquals(2, $widths['spaces']);
         $this->bcAssertEqualsWithDelta(60.9384, $widths['totwidth'], 0.0001);
         $this->bcAssertEqualsWithDelta(8.76, $widths['totspacewidth'], 0.0001);
+        $this->assertEquals(6, $widths['words']);
+
+        $this->assertEquals(11, $widths['split'][5]['pos']);
+        $this->assertEquals(8203, $widths['split'][5]['ord']);
+        $this->bcAssertEqualsWithDelta(4.92, $widths['split'][5]['wordwidth'], 0.0001);
+        $this->assertEquals(2, $widths['split'][5]['spaces']);
+        $this->bcAssertEqualsWithDelta(60.9384, $widths['split'][5]['totwidth'], 0.0001);
+        $this->bcAssertEqualsWithDelta(8.76, $widths['split'][5]['totspacewidth'], 0.0001);
 
         $outfont = $stack->getOutCurrentFont();
         $this->assertEquals("BT /F2 14.000000 Tf ET\r", $outfont);

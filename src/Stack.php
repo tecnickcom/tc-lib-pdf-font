@@ -16,6 +16,7 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
+use Com\Tecnick\Unicode\Data\Type as UnicodeType;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
@@ -31,11 +32,22 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *
  * @phpstan-import-type TFontData from Load
  *
+ * @phpstan-type TTextSplit array{
+ *     'pos': int,
+ *     'ord': int,
+ *     'wordwidth': float,
+ *     'spaces': int,
+ *     'totwidth': float,
+ *     'totspacewidth': float,
+ * }
+ *
  * @phpstan-type TTextDims array{
  *     'chars': int,
  *     'spaces': int,
  *     'totwidth': float,
  *     'totspacewidth': float,
+ *     'words': int,
+ *     'split': array<int, TTextSplit>,
  * }
  *
  * @phpstan-type TBBox array{float, float, float, float}
@@ -308,8 +320,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getCharWidth(int $ord): float
     {
-        if ($ord == 173) {
-            // SHY character is not printed, as it is used for text hyphenation
+        if (($ord == 173) || ($ord == 8203)) {
+            // 173 = SHY character is not printed, as it is used for text hyphenation
+            // 8203 = ZWSP character
             return 0;
         }
 
@@ -340,16 +353,37 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $spaces = 0; // total number of spaces
         $totwidth = 0; // total string width
         $totspacewidth = 0; // total space width
+        $words = 0; // total number of words
         $spw = $this->getCharWidth(32); // width of a single space
-        foreach ($uniarr as $ord) {
-            $totwidth += $this->getCharWidth($ord);
+        $fact = ($this->stack[$this->index]['spacing'] * $this->stack[$this->index]['stretching']);
+        $uniarr[] = 8203; // add null at the end to ensure that the last word is processed
+        $split = [];
+        foreach ($uniarr as $idx => $ord) {
+            $unitype = UnicodeType::UNI[$ord];
+            // 'B' Paragraph Separator
+            // 'S' Segment Separator
+            // 'WS' Whitespace
+            // 'BN' Boundary Neutral
+            if (($unitype == 'B') || ($unitype == 'S') || ($unitype == 'WS') || ($unitype == 'BN')) {
+                $split[$words] = [
+                    'pos' => $idx,
+                    'ord' => $ord,
+                    'wordwidth' => 0,
+                    'spaces' => $spaces,
+                    'totwidth' => ($totwidth + ($fact * ($idx - 1))),
+                    'totspacewidth' => ($totspacewidth + ($fact * ($spaces - 1))),
+                ];
+                if ($words > 0) {
+                    $split[$words]['wordwidth'] = ($split[$words]['totwidth'] - $split[($words - 1)]['totwidth']);
+                }
+                $words++;
+            }
             if ($ord == 32) {
                 ++$spaces;
                 $totspacewidth += $spw;
             }
+            $totwidth += $this->getCharWidth($ord);
         }
-
-        $fact = ($this->stack[$this->index]['spacing'] * $this->stack[$this->index]['stretching']);
         $totwidth += ($fact * ($chars - 1));
         $totspacewidth += ($fact * ($spaces - 1));
         return [
@@ -357,6 +391,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'spaces' => $spaces,
             'totwidth' => $totwidth,
             'totspacewidth' => $totspacewidth,
+            'words' => $words,
+            'split' => $split,
         ];
     }
 
