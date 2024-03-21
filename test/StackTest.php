@@ -126,6 +126,7 @@ class StackTest extends TestUtil
 
         $this->assertEquals(11, $widths['split'][5]['pos']);
         $this->assertEquals(8203, $widths['split'][5]['ord']);
+        $this->assertEquals('BN', $widths['split'][5]['septype']);
         $this->bcAssertEqualsWithDelta(4.92, $widths['split'][5]['wordwidth'], 0.0001);
         $this->assertEquals(2, $widths['split'][5]['spaces']);
         $this->bcAssertEqualsWithDelta(60.9384, $widths['split'][5]['totwidth'], 0.0001);

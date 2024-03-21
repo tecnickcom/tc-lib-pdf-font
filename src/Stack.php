@@ -35,8 +35,9 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @phpstan-type TTextSplit array{
  *     'pos': int,
  *     'ord': int,
- *     'wordwidth': float,
  *     'spaces': int,
+ *     'septype': string,
+ *     'wordwidth': float,
  *     'totwidth': float,
  *     'totspacewidth': float,
  * }
@@ -44,9 +45,9 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @phpstan-type TTextDims array{
  *     'chars': int,
  *     'spaces': int,
+ *     'words': int,
  *     'totwidth': float,
  *     'totspacewidth': float,
- *     'words': int,
  *     'split': array<int, TTextSplit>,
  * }
  *
@@ -368,8 +369,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 $split[$words] = [
                     'pos' => $idx,
                     'ord' => $ord,
-                    'wordwidth' => 0,
                     'spaces' => $spaces,
+                    'septype' => $unitype,
+                    'wordwidth' => 0,
                     'totwidth' => ($totwidth + ($fact * ($idx - 1))),
                     'totspacewidth' => ($totspacewidth + ($fact * ($spaces - 1))),
                 ];
@@ -389,9 +391,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         return [
             'chars' => $chars,
             'spaces' => $spaces,
+            'words' => $words,
             'totwidth' => $totwidth,
             'totspacewidth' => $totspacewidth,
-            'words' => $words,
             'split' => $split,
         ];
     }
