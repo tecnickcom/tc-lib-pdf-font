@@ -35,8 +35,9 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @phpstan-type TTextSplit array{
  *     'pos': int,
  *     'ord': int,
- *     'wordwidth': float,
  *     'spaces': int,
+ *     'septype': string,
+ *     'wordwidth': float,
  *     'totwidth': float,
  *     'totspacewidth': float,
  * }
@@ -44,9 +45,9 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @phpstan-type TTextDims array{
  *     'chars': int,
  *     'spaces': int,
+ *     'words': int,
  *     'totwidth': float,
  *     'totspacewidth': float,
- *     'words': int,
  *     'split': array<int, TTextSplit>,
  * }
  *
@@ -241,7 +242,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public function isCurrentByteFont(): bool
     {
         $currentFontType = $this->getCurrentFontType();
-        return ! (($currentFontType == 'Core') || ($currentFontType == 'TrueType') || ($currentFontType == 'Type1'));
+        return (($currentFontType == 'Core') || ($currentFontType == 'TrueType') || ($currentFontType == 'Type1'));
     }
 
     /**
@@ -250,7 +251,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public function isCurrentUnicodeFont(): bool
     {
         $currentFontType = $this->getCurrentFontType();
-        return $currentFontType != 'TrueTypeUnicode' && $currentFontType != 'cidfont0';
+        return (($currentFontType == 'TrueTypeUnicode') || ($currentFontType == 'cidfont0'));
     }
 
     /**
@@ -354,12 +355,12 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $totwidth = 0; // total string width
         $totspacewidth = 0; // total space width
         $words = 0; // total number of words
-        $spw = $this->getCharWidth(32); // width of a single space
         $fact = ($this->stack[$this->index]['spacing'] * $this->stack[$this->index]['stretching']);
         $uniarr[] = 8203; // add null at the end to ensure that the last word is processed
         $split = [];
         foreach ($uniarr as $idx => $ord) {
             $unitype = UnicodeType::UNI[$ord];
+            $chrwidth = $this->getCharWidth($ord);
             // 'B' Paragraph Separator
             // 'S' Segment Separator
             // 'WS' Whitespace
@@ -368,8 +369,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 $split[$words] = [
                     'pos' => $idx,
                     'ord' => $ord,
-                    'wordwidth' => 0,
                     'spaces' => $spaces,
+                    'septype' => $unitype,
+                    'wordwidth' => 0,
                     'totwidth' => ($totwidth + ($fact * ($idx - 1))),
                     'totspacewidth' => ($totspacewidth + ($fact * ($spaces - 1))),
                 ];
@@ -377,21 +379,21 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                     $split[$words]['wordwidth'] = ($split[$words]['totwidth'] - $split[($words - 1)]['totwidth']);
                 }
                 $words++;
+                if ($unitype == 'WS') {
+                    ++$spaces;
+                    $totspacewidth += $chrwidth;
+                }
             }
-            if ($ord == 32) {
-                ++$spaces;
-                $totspacewidth += $spw;
-            }
-            $totwidth += $this->getCharWidth($ord);
+            $totwidth += $chrwidth;
         }
         $totwidth += ($fact * ($chars - 1));
         $totspacewidth += ($fact * ($spaces - 1));
         return [
             'chars' => $chars,
             'spaces' => $spaces,
+            'words' => $words,
             'totwidth' => $totwidth,
             'totspacewidth' => $totspacewidth,
-            'words' => $words,
             'split' => $split,
         ];
     }

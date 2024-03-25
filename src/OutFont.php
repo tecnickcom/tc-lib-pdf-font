@@ -205,7 +205,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             . '<<';
         $cidhmap = Identity::CIDHMAP;
         if ($font['compress']) {
-            $out .= '/Filter /FlateDecode';
+            $out .= ' /Filter /FlateDecode';
             $cidhmap = gzcompress($cidhmap);
             if ($cidhmap === false) {
                 throw new \RuntimeException('Unable to compress CIDHMAP');
@@ -213,8 +213,8 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
         }
 
         $stream = $this->enc->encryptString($cidhmap, $this->pon); // ToUnicode map for Identity-H
-        $out .= '/Length ' . strlen($stream)
-            . '>>'
+        $out .= ' /Length ' . strlen($stream)
+            . ' >>'
             . ' stream' . "\n"
             . $stream . "\n"
             . 'endstream' . "\n"
