@@ -368,7 +368,7 @@ abstract class Load
         }
 
         $parent_font_dir = $dir->findParentDir('fonts', __DIR__);
-        if ($parent_font_dir !== '') {
+        if (($parent_font_dir !== '') && ($parent_font_dir !== '/')) {
             $dirs[] = $parent_font_dir;
             $glb = glob($parent_font_dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
             if ($glb !== false) {

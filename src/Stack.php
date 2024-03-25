@@ -355,12 +355,12 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $totwidth = 0; // total string width
         $totspacewidth = 0; // total space width
         $words = 0; // total number of words
-        $spw = $this->getCharWidth(32); // width of a single space
         $fact = ($this->stack[$this->index]['spacing'] * $this->stack[$this->index]['stretching']);
         $uniarr[] = 8203; // add null at the end to ensure that the last word is processed
         $split = [];
         foreach ($uniarr as $idx => $ord) {
             $unitype = UnicodeType::UNI[$ord];
+            $chrwidth = $this->getCharWidth($ord);
             // 'B' Paragraph Separator
             // 'S' Segment Separator
             // 'WS' Whitespace
@@ -379,12 +379,12 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                     $split[$words]['wordwidth'] = ($split[$words]['totwidth'] - $split[($words - 1)]['totwidth']);
                 }
                 $words++;
+                if ($unitype == 'WS') {
+                    ++$spaces;
+                    $totspacewidth += $chrwidth;
+                }
             }
-            if ($ord == 32) {
-                ++$spaces;
-                $totspacewidth += $spw;
-            }
-            $totwidth += $this->getCharWidth($ord);
+            $totwidth += $chrwidth;
         }
         $totwidth += ($fact * ($chars - 1));
         $totspacewidth += ($fact * ($spaces - 1));
