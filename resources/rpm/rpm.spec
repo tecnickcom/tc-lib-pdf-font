@@ -21,11 +21,11 @@ Requires:  php-json
 Requires:  php-pcre
 Requires:  php-zlib
 Requires:  php-composer(%{c_vendor}/tc-lib-file) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 2.0.10
+Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 2.0.11
 Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 2.0.10
+Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 2.0.11
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 2.1.1
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 2.1.2
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) < 2.0.0
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) >= 1.8.7
 
@@ -53,5 +53,5 @@ rm -rf $RPM_BUILD_ROOT
 #%config(noreplace) %{_configpath}*
 
 %changelog
-* Mon Aug 10 2015 Nicola Asuni <info@tecnick.com> 1.0.0-1
+* Mon Aug 10 2024 Nicola Asuni <info@tecnick.com> 1.0.0-1
 - Initial Commit
