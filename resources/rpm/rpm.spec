@@ -20,12 +20,12 @@ Requires:  php(language) >= 8.0.0
 Requires:  php-json
 Requires:  php-pcre
 Requires:  php-zlib
-Requires:  php-composer(%{c_vendor}/tc-lib-file) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 2.0.11
-Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 2.0.11
-Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) < 2.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 2.1.2
+Requires:  php-composer(%{c_vendor}/tc-lib-file) < 3.0.0
+Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 2.0.12
+Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) < 3.0.0
+Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 2.0.12
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) < 3.0.0
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 2.1.3
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) < 2.0.0
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) >= 1.8.7
 
