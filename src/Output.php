@@ -83,6 +83,48 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     }
 
     /**
+     * Get the PDF output string for Font resources dictionary.
+     *
+     * @return string
+     */
+    public function getOutFontDict(): string
+    {
+        if (empty($this->fonts)) {
+            return '';
+        }
+
+        $out = ' /Font <<';
+
+        foreach ($this->fonts as $font) {
+            $out .= ' /F' . $font['i'] . ' ' . $font['n'] . ' 0 R';
+        }
+
+        return $out . ' >>';
+    }
+
+    /**
+     * Get the PDF output string for XOBject Font resources dictionary.
+     *
+     * @param array<string> $keys Array of font keys.
+     *
+     * @return string
+     */
+    public function getOutFontDictByKeys(array $keys): string
+    {
+        if (empty($keys)) {
+            return '';
+        }
+
+        $out = ' /Font <<';
+
+        foreach ($keys as $key) {
+            $out .= ' /F' . $this->fonts[$key]['i'] . ' ' . $this->fonts[$key]['n'] . ' 0 R';
+        }
+
+        return $out . ' >>';
+    }
+
+    /**
      * Get the PDF output string for font encoding diffs
      *
      * return string

@@ -452,7 +452,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $wratio = ($cratio * $font['stretching']); // horizontal ratio
         $data = $this->getFont($font['key']);
         $outfont = sprintf('/F%d %F Tf', $data['i'], $font['size']); // PDF output string
-        $objname = 'F' . $data['i'];
         // add this font in the stack wit metrics in internal units
         $this->metric[$mkey] = [
             'ascent' => ((float) $data['desc']['Ascent'] * $cratio),
@@ -469,9 +468,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'maxwidth' => ((float) $data['desc']['MaxWidth'] * $cratio * $font['stretching']),
             'midpoint' => ((float) ($data['desc']['Ascent'] + $data['desc']['Descent']) * $cratio / 2),
             'missingwidth' => ((float) $data['desc']['MissingWidth'] * $cratio * $font['stretching']),
-            'objdic' => ' /' . $objname . ' ' . $data['n'] . ' 0 R',
-            'objid' => $data['n'],
-            'objname' => $objname,
             'out' => 'BT ' . $outfont . ' ET' . "\r",
             'outraw' => $outfont,
             'size' => $size,

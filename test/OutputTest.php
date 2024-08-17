@@ -78,5 +78,14 @@ class OutputTest extends TestUtil
         $this->assertEquals(37, $output->getObjectNumber());
 
         $this->assertNotEmpty($output->getFontsBlock());
+
+        $this->assertNotEmpty($output->getOutFontDict());
+
+        $keys = [];
+        foreach ($fonts as $font) {
+            $keys[] = $font['key'];
+        }
+
+        $this->assertNotEmpty($output->getOutFontDictByKeys($keys));
     }
 }
