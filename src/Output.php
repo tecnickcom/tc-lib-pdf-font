@@ -85,21 +85,34 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Get the PDF output string for Font resources dictionary.
      *
+     * @param array<string, array{'i': int, 'n': int}> $data Font data.
+     *
      * @return string
      */
-    public function getOutFontDict(): string
+    private function getOutFontResources(array $data): string
     {
-        if (empty($this->fonts)) {
+        if (empty($data)) {
             return '';
         }
 
         $out = ' /Font <<';
 
-        foreach ($this->fonts as $font) {
+        foreach ($data as $font) {
             $out .= ' /F' . $font['i'] . ' ' . $font['n'] . ' 0 R';
         }
 
         return $out . ' >>';
+    }
+
+
+    /**
+     * Get the PDF output string for Font resources dictionary.
+     *
+     * @return string
+     */
+    public function getOutFontDict(): string
+    {
+        return $this->getOutFontResources($this->fonts);
     }
 
     /**
@@ -115,13 +128,15 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             return '';
         }
 
-        $out = ' /Font <<';
-
+        $data = [];
         foreach ($keys as $key) {
-            $out .= ' /F' . $this->fonts[$key]['i'] . ' ' . $this->fonts[$key]['n'] . ' 0 R';
+            $data[$key] = [
+                'i' => $this->fonts[$key]['i'],
+                'n' => $this->fonts[$key]['n'],
+            ];
         }
 
-        return $out . ' >>';
+        return $this->getOutFontResources($data);
     }
 
     /**
