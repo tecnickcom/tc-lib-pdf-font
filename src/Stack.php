@@ -72,6 +72,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *     'dw': float,
  *     'fbbox': array<int, float>,
  *     'height': float,
+ *     'idx': int,
  *     'key': string,
  *     'maxwidth': float,
  *     'midpoint': float,
@@ -81,6 +82,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *     'size': float,
  *     'spacing': float,
  *     'stretching': float,
+ *     'style': string,
  *     'type': string,
  *     'up': float,
  *     'usize': float,
@@ -207,17 +209,82 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'stretching' => $stretching,
         ];
 
-        return $this->getFontMetric($this->stack[$this->index]);
+        return $this->getFontMetric($this->index);
     }
 
     /**
-     * Returns the current font data array
+     * Returns the current font data array.
      *
      * @return TFontMetric
      */
     public function getCurrentFont(): array
     {
-        return $this->getFontMetric($this->stack[$this->index]);
+        return $this->getFontMetric($this->index);
+    }
+
+    /**
+     * Returns a clone of the specified font with new parameters.
+     *
+     * @param int     $objnum    Current PDF object number.
+     * @param ?int    $idx       Font index. Leave it null to use the current font.
+     * @param ?string $style     Font style.
+     *                           Possible values are (case insensitive):
+     *                           regular (default)
+     *                           B: bold
+     *                           I: italic
+     *                           U: underline
+     *                           D: strikeout (linethrough)
+     *                           O: overline
+     * @param ?int   $size       Font size in points (set to null to inherit the last font size).
+     * @param ?float $spacing    Extra spacing between characters.
+     * @param ?float $stretching Horizontal character stretching ratio.
+     *
+     * @return TFontMetric
+     */
+    public function cloneFont(
+        int &$objnum,
+        ?int $idx = null,
+        ?string $style = null,
+        ?int $size = null,
+        ?float $spacing = null,
+        ?float $stretching = null,
+    ): array {
+        if ($idx === null) {
+            $idx = $this->index;
+        } elseif (($idx < 0) || ($idx > $this->index)) {
+            throw new FontException('Invalid font index');
+        }
+
+        $curfont = $this->stack[$idx];
+
+        if (($style === null) || ($style == $curfont['style'])) {
+            $size = $this->getInputSize($size);
+            $spacing = $this->getInputSpacing($spacing);
+            $stretching = $this->getInputStretching($stretching);
+
+            $this->stack[++$this->index] = [
+                'key' => $curfont['key'],
+                'style' => $curfont['style'],
+                'size' => $size,
+                'spacing' => $spacing,
+                'stretching' => $stretching,
+            ];
+
+            return $this->getFontMetric($this->index);
+        }
+
+        $data = $this->getFont($curfont['key']);
+
+        return $this->insert(
+            $objnum,
+            $data['family'],
+            $style,
+            $size,
+            $spacing,
+            $stretching,
+            $data['ifile'],
+            $data['subset'],
+        );
     }
 
     /**
@@ -233,7 +300,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getOutCurrentFont(): string
     {
-        return $this->getFontMetric($this->stack[$this->index])['out'];
+        return $this->getFontMetric($this->index)['out'];
     }
 
     /**
@@ -265,9 +332,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             throw new FontException('The font stack is empty');
         }
 
-        $font = array_pop($this->stack);
+        $font = $this->getFontMetric($this->index);
+        array_pop($this->stack);
         --$this->index;
-        return $this->getFontMetric($font);
+        return $font;
     }
 
     /**
@@ -282,7 +350,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function replaceMissingChars(array $uniarr, array $subs = []): array
     {
-        $font = $this->getFontMetric($this->stack[$this->index]);
+        $font = $this->getFontMetric($this->index);
         foreach ($uniarr as $pos => $uni) {
             if (isset($font['cw'][$uni])) {
                 continue;
@@ -310,7 +378,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function isCharDefined(int $ord): bool
     {
-        $font = $this->getFontMetric($this->stack[$this->index]);
+        $font = $this->getFontMetric($this->index);
         return isset($font['cw'][$ord]);
     }
 
@@ -327,7 +395,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             return 0;
         }
 
-        $font = $this->getFontMetric($this->stack[$this->index]);
+        $font = $this->getFontMetric($this->index);
         return $font['cw'][$ord] ?? $font['dw'];
     }
 
@@ -407,7 +475,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getCharBBox(int $ord): array
     {
-        $font = $this->getFontMetric($this->stack[$this->index]);
+        $font = $this->getFontMetric($this->index);
         return $font['cbbox'][$ord] ?? [0.0, 0.0, 0.0, 0.0]; // glyph without outline
     }
 
@@ -435,18 +503,19 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Returns the font metrics associated to the input key.
      *
-     * @param TStackItem $font Stack item
+     * @param int $idx Font index in the stack.
      *
      * @return TFontMetric
      */
-    protected function getFontMetric(array $font): array
+    protected function getFontMetric(int $idx): array
     {
+        $font = $this->stack[$idx];
         $mkey = md5(serialize($font));
         if (! empty($this->metric[$mkey])) {
             return $this->metric[$mkey];
         }
 
-        $size = ($font['size']);
+        $size = $font['size'];
         $usize = ((float) $size / $this->kunit);
         $cratio = ((float) $size / 1000);
         $wratio = ($cratio * $font['stretching']); // horizontal ratio
@@ -464,6 +533,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'dw' => ((float) $data['dw'] * $cratio * $font['stretching']),
             'fbbox' => [],
             'height' => ((float) ($data['desc']['Ascent'] - $data['desc']['Descent']) * $cratio),
+            'idx' => $idx,
             'key' => $font['key'],
             'maxwidth' => ((float) $data['desc']['MaxWidth'] * $cratio * $font['stretching']),
             'midpoint' => ((float) ($data['desc']['Ascent'] + $data['desc']['Descent']) * $cratio / 2),
@@ -473,6 +543,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'size' => $size,
             'spacing' => $font['spacing'],
             'stretching' => $font['stretching'],
+            'style' => $font['style'],
             'type' => $data['type'],
             'up' => ((float) $data['up'] * $cratio),
             'usize' => $usize,
@@ -533,7 +604,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         if (($size === null) || ($size < 0)) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
-                return $this->stack[$this->index]['size'];
+                return $this->stack[$this->index]['size'] ?? 0;
             }
 
             return self::DEFAULT_SIZE;
@@ -553,7 +624,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         if ($spacing === null) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
-                return $this->stack[$this->index]['spacing'];
+                return $this->stack[$this->index]['spacing'] ?? 0;
             }
 
             return 0;
@@ -573,7 +644,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         if ($stretching === null) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
-                return $this->stack[$this->index]['stretching'];
+                return $this->stack[$this->index]['stretching'] ?? 0;
             }
 
             return 1;

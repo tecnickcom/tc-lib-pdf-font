@@ -134,6 +134,17 @@ class StackTest extends TestUtil
 
         $outfont = $stack->getOutCurrentFont();
         $this->assertEquals("BT /F2 14.000000 Tf ET\r", $outfont);
+
+        $font = $stack->cloneFont($objnum, null, null, 13, 0.3, 0.7);
+        $this->assertEquals(13, $font['size']);
+        $this->assertEquals(0.3, $font['spacing']);
+        $this->assertEquals(0.7, $font['stretching']);
+
+        $font = $stack->cloneFont($objnum, 0, 'BI', 17, 0.7, 1.3);
+        $this->assertEquals('BI', $font['style']);
+        $this->assertEquals(17, $font['size']);
+        $this->assertEquals(0.7, $font['spacing']);
+        $this->assertEquals(1.3, $font['stretching']);
     }
 
     public function testEmptyStack(): void
