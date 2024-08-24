@@ -387,18 +387,19 @@ abstract class Load
     protected function findFontFile(): void
     {
         if (! empty($this->data['ifile'])) {
+            $this->data['dir'] = dirname($this->data['ifile']);
             return;
         }
 
         $this->data['ifile'] = strtolower($this->data['key']) . '.json';
 
-        // directories where to search for the font definition file
-        $dirs = $this->findFontDirectories();
-
         // find font definition file names
         $files = array_unique(
             [strtolower($this->data['key']) . '.json', strtolower($this->data['family']) . '.json']
         );
+
+        // directories where to search for the font definition file
+        $dirs = $this->findFontDirectories();
 
         foreach ($files as $file) {
             foreach ($dirs as $dir) {
