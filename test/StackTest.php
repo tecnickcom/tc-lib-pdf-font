@@ -76,6 +76,9 @@ class StackTest extends TestUtil
         $this->bcAssertEqualsWithDelta(4.6704, $bfont['missingwidth'], 0.0001);
         $this->bcAssertEqualsWithDelta([-1.092, -3.08, 18.5976, 13.342], $bfont['fbbox'], 0.0001);
 
+        $fkey = $stack->getCurrentFontKey();
+        $this->assertEquals('pdfahelveticaBI', $fkey);
+
         $font = $stack->getCurrentFont();
         $this->assertEquals($bfont, $font);
 
@@ -106,6 +109,9 @@ class StackTest extends TestUtil
 
         $font = $stack->getCurrentFont();
         $this->assertEquals($afont, $font);
+
+        $fkey = $stack->getCurrentFontKey();
+        $this->assertEquals('pdfatimes', $fkey);
 
         $type = $stack->getCurrentFontType();
         $this->assertEquals('Type1', $type);
@@ -145,6 +151,22 @@ class StackTest extends TestUtil
         $this->assertEquals(17, $font['size']);
         $this->assertEquals(0.7, $font['spacing']);
         $this->assertEquals(1.3, $font['stretching']);
+
+        $fname = $stack->getFontFamilyName('unknown');
+        $this->assertEquals('freesansBI', $fname);
+
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'pdfa/pfb/PDFACourier.pfb');
+        $bfont = $stack->insert($objnum, 'courier', '', null, null, null, '', null);
+        $this->assertNotEmpty($bfont);
+
+        $fname = $stack->getFontFamilyName('freesans');
+        $this->assertEquals('freesans', $fname);
+
+        $fname = $stack->getFontFamilyName('cursive');
+        $this->assertEquals('pdfatimes', $fname);
+
+        $fname = $stack->getFontFamilyName('unknown');
+        $this->assertEquals('pdfacourier', $fname);
     }
 
     public function testEmptyStack(): void

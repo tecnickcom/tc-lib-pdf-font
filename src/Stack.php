@@ -288,7 +288,19 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
+     * Returns the current font key.
+     *
+     * @return string
+     */
+    public function getCurrentFontKey(): string
+    {
+        return $this->stack[$this->index]['key'];
+    }
+
+    /**
      * Returns the current font type (i.e.: Core, TrueType, TrueTypeUnicode, Type1).
+     *
+     * @return string
      */
     public function getCurrentFontType(): string
     {
@@ -297,6 +309,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Returns the PDF code to use the current font.
+     *
+     * @return string
      */
     public function getOutCurrentFont(): string
     {
@@ -305,6 +319,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Returns true if the current font type is Core, TrueType or Type1.
+     *
+     * @return bool
      */
     public function isCurrentByteFont(): bool
     {
@@ -314,6 +330,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Returns true if the current font type is TrueTypeUnicode or cidfont0.
+     *
+     * @return bool
      */
     public function isCurrentUnicodeFont(): bool
     {
@@ -375,6 +393,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Returns true if the specified unicode value is defined in the current font
      *
      * @param int $ord Unicode character value to convert
+     *
+     * @return bool
      */
     public function isCharDefined(int $ord): bool
     {
@@ -386,6 +406,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Returns the width of the specified character
      *
      * @param int $ord Unicode character value.
+     *
+     * @return float
      */
     public function getCharWidth(int $ord): float
     {
@@ -403,6 +425,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Returns the lenght of the string specified using an array of codepoints.
      *
      * @param array<int, int> $uniarr Array of character codepoints.
+     *
+     * @return float
      */
     public function getOrdArrWidth(array $uniarr): float
     {
@@ -597,7 +621,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @param ?int $size Font size in points (set to null to inherit the last font size).
      *
-     *                   return float
+     * @return float
      */
     protected function getInputSize(?int $size = null): float
     {
@@ -617,7 +641,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Normalize the input spacing
      *
      * @param ?float $spacing Extra spacing between characters.
-     *                        return float
+     *
+     * @return float
      */
     protected function getInputSpacing(?float $spacing = null): float
     {
@@ -637,7 +662,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Normalize the input stretching
      *
      * @param ?float $stretching Horizontal character stretching ratio.
-     *                           return float
+     *
+     * @return float
      */
     protected function getInputStretching(?float $stretching = null): float
     {
@@ -704,5 +730,29 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         }
 
         return $keys;
+    }
+
+    /**
+     * Returns the nomalized font family name or the current font name (key.
+     *
+     * @param string $fontfamily Raw font family name.
+     *
+     * @return string
+     */
+    public function getFontFamilyName(string $fontfamily): string
+    {
+        $fkeys = $this->getNormalizedFontKeys($fontfamily);
+        foreach ($fkeys as $fkey) {
+            if ($this->isValidKey($fkey)) {
+                return $fkey;
+            }
+
+            $pdfakey = 'pdfa' . $fkey;
+            if ($this->isValidKey($pdfakey)) {
+                return $pdfakey;
+            }
+        }
+
+        return $this->getCurrentFontKey();
     }
 }
