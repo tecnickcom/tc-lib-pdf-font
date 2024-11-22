@@ -108,6 +108,7 @@ help:
 	@echo "  make rpm      : Build an RPM package for RedHat-like Linux distributions"
 	@echo "  make server   : Start the development server"
 	@echo "  make test     : Run unit tests"
+	@echo "  make versionup: Increase the version patch number"
 	@echo ""
 	@echo "  make fonts    : Import and convert fonts"
 	@echo "  make rpm_fonts: Build fonts RPM packages"
@@ -279,6 +280,11 @@ test:
 uninstall:
 	rm -rf $(PATHINSTBIN)
 	rm -rf $(PATHINSTDOC)
+
+# Increase the version patch number
+.PHONY: versionup
+versionup:
+	echo ${VERSION} | gawk -F. '{printf("%d.%d.%d\n",$$1,$$2,(($$3+1)));}' > VERSION
 
 # ----------
 
