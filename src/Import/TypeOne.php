@@ -87,10 +87,11 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 
         $this->fdt['name'] = $name;
         preg_match('#/FontBBox[\s]*+{([^}]*+)#', $this->font, $matches);
-        $this->fdt['bbox'] = trim($matches[1]);
-        $bvl = explode(' ', $this->fdt['bbox']);
-        $this->fdt['Ascent'] = (int) $bvl[3];
-        $this->fdt['Descent'] = (int) $bvl[1];
+        $rawbvl = explode(' ', trim($matches[1]));
+        $bvl = [(int) $rawbvl[0], (int) $rawbvl[1], (int) $rawbvl[2], (int) $rawbvl[3]];
+        $this->fdt['bbox'] = implode(' ', $bvl);
+        $this->fdt['Ascent'] = $bvl[3];
+        $this->fdt['Descent'] = $bvl[1];
         preg_match('#/ItalicAngle[\s]*+([0-9\+\-]*+)#', $this->font, $matches);
         $this->fdt['italicAngle'] = (int) $matches[1];
 
