@@ -93,8 +93,6 @@ abstract class Buffer
      * @param bool  $pdfa    True if we are in PDF/A mode.
      *
      * @return string Font key
-     *
-     * @throws FontException in case of error
      */
     public function __construct(
         protected float $kunit,

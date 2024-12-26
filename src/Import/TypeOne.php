@@ -31,7 +31,7 @@ use Com\Tecnick\Unicode\Data\Encoding;
  * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  */
 class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 {
@@ -283,11 +283,11 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         if ($ccom[$idx] == 255) {
             $sval = chr($ccom[($idx + 1)]) . chr($ccom[($idx + 2)]) . chr($ccom[($idx + 3)]) . chr($ccom[($idx + 4)]);
             $vsval = unpack('li', $sval);
-            if ($vsval === false) {
+            if (($vsval === false) || (!is_numeric($vsval['i']))) {
                 throw new FontException('Unable to unpack number');
             }
 
-            $cdec[$cck] = $vsval['i'];
+            $cdec[$cck] = (int) $vsval['i'];
             return ($idx + 5);
         }
 

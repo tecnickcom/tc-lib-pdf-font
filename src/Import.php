@@ -38,7 +38,7 @@ use Com\Tecnick\Unicode\Data\Encoding;
  *
  * @phpstan-import-type TFontData from Load
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  */
 class Import
 {
@@ -319,8 +319,8 @@ class Import
     /**
      * Save the eported metadata font file
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+     * @SuppressWarnings("PHPMD.NPathComplexity")
      */
     protected function saveFontData(): void
     {
@@ -535,7 +535,7 @@ class Import
     /**
      * If required, get differences between the reference encoding (cp1252) and the current encoding
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      */
     protected function getEncodingDiff(): string
     {

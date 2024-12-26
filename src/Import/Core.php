@@ -131,7 +131,7 @@ class Core
      * @param array<int, string> $col Array containing row elements to process
      * @param array<int, int>    $cwd Array contianing cid widths
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      */
     protected function processMetricRow(array $col, array &$cwd): void
     {

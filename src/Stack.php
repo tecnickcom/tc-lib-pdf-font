@@ -90,7 +90,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *     'xheight': float,
  * }
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  */
 class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 {

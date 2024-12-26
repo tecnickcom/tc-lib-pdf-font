@@ -34,8 +34,8 @@ use Com\Tecnick\Unicode\Data\Encoding;
  *
  * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.ExcessiveClassLength")
  */
 class TrueType
 {
@@ -491,10 +491,10 @@ class TrueType
                         $this->fdt['table']['glyf']['offset']
                         + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]]
                     );
-                    $xMin = round($this->fbyte->getFWord($this->offset + 2) * $this->fdt['urk']);
-                    $yMin = round($this->fbyte->getFWord($this->offset + 4) * $this->fdt['urk']);
-                    $xMax = round($this->fbyte->getFWord($this->offset + 6) * $this->fdt['urk']);
-                    $yMax = round($this->fbyte->getFWord($this->offset + 8) * $this->fdt['urk']);
+                    $xMin = (int) round($this->fbyte->getFWord($this->offset + 2) * $this->fdt['urk']);
+                    $yMin = (int) round($this->fbyte->getFWord($this->offset + 4) * $this->fdt['urk']);
+                    $xMax = (int) round($this->fbyte->getFWord($this->offset + 6) * $this->fdt['urk']);
+                    $yMax = (int) round($this->fbyte->getFWord($this->offset + 8) * $this->fdt['urk']);
                     $this->fdt['cbbox'][$cid] = [$xMin, $yMin, $xMax, $yMax];
                 }
             }
@@ -515,7 +515,7 @@ class TrueType
     /**
      * Process the  CID To GID Map.
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      */
     protected function getCIDToGIDMap(): void
     {

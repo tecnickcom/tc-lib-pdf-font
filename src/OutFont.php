@@ -127,7 +127,15 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * @param array{
      *        'cidinfo': TFontDataCidInfo,
      *        'cw':  array<int, int>,
-     *    } $font      Font to process
+     *        'desc': TFontDataDesc,
+     *        'dw': int,
+     *        'enc': string,
+     *        'i': int,
+     *        'n': int,
+     *        'name': string,
+     *        'subset': bool,
+     *        'subsetchars': array<int, bool>,
+     *    } $font Font to process
      * @param int    $cidoffset Offset for CID values
      */
     protected function uniToCid(array &$font, int $cidoffset): void
@@ -169,9 +177,9 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *
      * return string
      *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings("PHPMD.ExcessiveMethodLength")
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+     * @SuppressWarnings("PHPMD.NPathComplexity")
      */
     protected function getTrueTypeUnicode(array $font): string
     {

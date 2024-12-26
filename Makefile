@@ -179,7 +179,7 @@ endif
 deps: ensuretarget
 	rm -rf ./vendor/* $(TARGETDIR)/fonts
 	($(COMPOSER) install -vvv --no-interaction)
-	curl --silent --show-error --fail --location --output ./vendor/phpstan.phar https://github.com/phpstan/phpstan/releases/download/1.10.41/phpstan.phar \
+	curl --silent --show-error --fail --location --output ./vendor/phpstan.phar https://github.com/phpstan/phpstan/releases/download/2.0.4/phpstan.phar \
 	&& chmod +x ./vendor/phpstan.phar
 	cd util && make deps
 
@@ -224,7 +224,7 @@ endif
 lint:
 	./vendor/bin/phpcs --ignore="./vendor/" --standard=phpcs.xml src test
 	./vendor/bin/phpmd src text codesize,unusedcode,naming,design --exclude vendor
-	./vendor/bin/phpmd test text unusedcode,naming,design
+	./vendor/bin/phpmd test text unusedcode,naming,design --exclude vendor
 	php -r 'exit((int)version_compare(PHP_MAJOR_VERSION, "7", ">"));' || ./vendor/phpstan.phar analyse
 
 # Run all tests and reports
@@ -272,7 +272,7 @@ tag:
 .PHONY: test
 test:
 	cp phpunit.xml.dist phpunit.xml
-	./vendor/bin/phpunit --migrate-configuration || true
+	#./vendor/bin/phpunit --migrate-configuration || true
 	XDEBUG_MODE=coverage ./vendor/bin/phpunit --stderr test
 
 # Remove all installed files

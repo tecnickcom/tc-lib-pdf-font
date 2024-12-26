@@ -322,7 +322,7 @@ abstract class Load
      *
      * @throws FontException in case of error
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      */
     protected function getFontInfo(): void
     {
