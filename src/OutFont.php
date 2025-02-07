@@ -112,7 +112,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
         $out .= (++$this->pon) . ' 0 obj' . "\n"
             . '<</Type /FontDescriptor /FontName /' . $name;
         foreach ($font['desc'] as $key => $val) {
-            if ($key != 'Style') {
+            if ($key !== 'Style') { // @phpstan-ignore-line
                 $out .= $this->getKeyValOut($key, $val);
             }
         }
