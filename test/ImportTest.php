@@ -33,6 +33,18 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 class ImportTest extends TestUtil
 {
+    public function testImportForbiddenProtocol(): void
+    {
+        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        new \Com\Tecnick\Pdf\Font\Import('phar://test.txt');
+    }
+
+    public function testImportParentDir(): void
+    {
+        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        new \Com\Tecnick\Pdf\Font\Import('/tmp/something/../test.txt');
+    }
+
     public function testImportEmptyName(): void
     {
         $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);

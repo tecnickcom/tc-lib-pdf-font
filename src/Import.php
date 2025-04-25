@@ -218,6 +218,10 @@ class Import
         int $encoding_id = 1,
         bool $linked = false
     ) {
+        if (FILE::hasDoubleDots($file) || FILE::hasForbiddenProtocol($file)) {
+            throw new FontException('Invalid font file name: ' . $file);
+        }
+
         $this->fdt['input_file'] = $file;
         $this->fdt['file_name'] = $this->makeFontName($file);
         if (empty($this->fdt['file_name'])) {
@@ -450,7 +454,12 @@ class Import
      */
     protected function findOutputPath(string $output_path = ''): string
     {
-        if ($output_path !== '' && is_writable($output_path)) {
+        if (
+            $output_path !== ''
+            && (strpos($output_path, '://') === false)
+            && !FILE::hasDoubleDots($output_path)
+            && is_writable($output_path)
+        ) {
             return $output_path;
         }
 

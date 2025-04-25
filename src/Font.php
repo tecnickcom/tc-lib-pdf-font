@@ -17,6 +17,7 @@
 namespace Com\Tecnick\Pdf\Font;
 
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\File\File;
 
 /**
  * Com\Tecnick\Pdf\Font\Font
@@ -95,6 +96,10 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     ) {
         if ($font === '') {
             throw new FontException('empty font family name');
+        }
+
+        if (FILE::hasDoubleDots($ifile) || FILE::hasForbiddenProtocol($ifile)) {
+            throw new FontException('Invalid font ifile: ' . $ifile);
         }
 
         $this->data['ifile'] = $ifile;
