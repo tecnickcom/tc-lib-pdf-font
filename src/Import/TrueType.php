@@ -468,7 +468,7 @@ class TrueType
         $chw = [];
         $this->offset = $this->fdt['table']['hmtx']['offset'];
         for ($i = 0; $i < $this->fdt['numHMetrics']; ++$i) {
-            $chw[$i] = round($this->fbyte->getUFWord($this->offset) * $this->fdt['urk']);
+            $chw[$i] = (int) round($this->fbyte->getUFWord($this->offset) * $this->fdt['urk']);
             $this->offset += 4; // skip lsb
         }
 
@@ -685,7 +685,7 @@ class TrueType
                 if ($idRangeOffset[$kdx] == 0) {
                     $gid = max(0, (($idDelta[$kdx] + $chr) % 65536));
                 } else {
-                    $gid = (floor($idRangeOffset[$kdx] / 2) + ($chr - $startCount[$kdx]) - ($segCount - $kdx));
+                    $gid = (int) (floor($idRangeOffset[$kdx] / 2) + ($chr - $startCount[$kdx]) - ($segCount - $kdx));
                     $gid = max(0, (($glyphIdArray[$gid] + $idDelta[$kdx]) % 65536));
                 }
 
@@ -733,7 +733,7 @@ class TrueType
             $startGlyphID = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
             for ($cpw = $startCharCode; $cpw <= $endCharCode; ++$cpw) {
-                $is32idx = floor($cpw / 8);
+                $is32idx = (int) floor($cpw / 8);
                 if ((isset($is32[$is32idx])) && (($is32[$is32idx] & (1 << (7 - ($cpw % 8)))) == 0)) {
                     $chr = $cpw;
                 } else {

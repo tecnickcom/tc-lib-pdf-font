@@ -28,6 +28,7 @@ namespace Com\Tecnick\Pdf\Font;
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @SuppressWarnings("PHPMD")
+ * @phpcs:disable Generic.Files.LineLength
  */
 class UniToCid
 {

@@ -239,7 +239,7 @@ abstract class Buffer
         $this->setFontDiff($key);
 
         $this->font[$key]['i'] = ++$this->numfonts;
-        $this->font[$key]['n'] = ++$objnum;
+        $this->font[$key]['n'] = ++$objnum; // @phpstan-ignore assign.propertyType
 
         return $key;
     }
