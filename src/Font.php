@@ -108,7 +108,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         $this->data['pdfa'] = $pdfa;
         $this->data['compress'] = $compress;
         $this->data['subset'] = $subset;
-        $this->data['subsetchars'] = array_fill(0, 255, true);
+        $this->data['subsetchars'] = \array_fill(0, 255, true);
 
         // generate the font key and set styles
         $this->setStyle($style);
@@ -139,19 +139,19 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      */
     protected function setStyle(string $style): void
     {
-        $style = strtoupper($style);
-        if (str_ends_with($this->data['family'], 'I')) {
+        $style = \strtoupper($style);
+        if (\str_ends_with($this->data['family'], 'I')) {
             $style .= 'I';
-            $this->data['family'] = substr($this->data['family'], 0, -1);
+            $this->data['family'] = \substr($this->data['family'], 0, -1);
         }
 
-        if (str_ends_with($this->data['family'], 'B')) {
+        if (\str_ends_with($this->data['family'], 'B')) {
             $style .= 'B';
-            $this->data['family'] = substr($this->data['family'], 0, -1);
+            $this->data['family'] = \substr($this->data['family'], 0, -1);
         }
 
         // normalize family name
-        $this->data['family'] = strtolower($this->data['family']);
+        $this->data['family'] = \strtolower($this->data['family']);
         if ((! $this->data['unicode']) && ($this->data['family'] == 'arial')) {
             $this->data['family'] = 'helvetica';
         }
@@ -176,28 +176,28 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     protected function setStyleMode(string $style): void
     {
         $suffix = '';
-        if (str_contains($style, 'B')) {
+        if (\str_contains($style, 'B')) {
             $this->data['mode']['bold'] = true;
             $suffix .= 'B';
         }
 
-        if (str_contains($style, 'I')) {
+        if (\str_contains($style, 'I')) {
             $this->data['mode']['italic'] = true;
             $suffix .= 'I';
         }
 
         $this->data['style'] = (string) $suffix;
-        if (str_contains($style, 'U')) {
+        if (\str_contains($style, 'U')) {
             $this->data['style'] .= 'U';
             $this->data['mode']['underline'] = true;
         }
 
-        if (str_contains($style, 'D')) {
+        if (\str_contains($style, 'D')) {
             $this->data['style'] .= 'D';
             $this->data['mode']['linethrough'] = true;
         }
 
-        if (str_contains($style, 'O')) {
+        if (\str_contains($style, 'O')) {
             $this->data['style'] .= 'O';
             $this->data['mode']['overline'] = true;
         }

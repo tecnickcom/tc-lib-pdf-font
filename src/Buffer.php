@@ -266,7 +266,7 @@ abstract class Buffer
             ];
         }
 
-        if (! in_array($key, $this->file[$file]['keys'])) {
+        if (! \in_array($key, $this->file[$file]['keys'])) {
             $this->file[$file]['keys'][] = $key;
         }
 
@@ -287,7 +287,7 @@ abstract class Buffer
             return;
         }
 
-        $diffid = array_search($this->font[$key]['diff'], $this->encdiff, true);
+        $diffid = \array_search($this->font[$key]['diff'], $this->encdiff, true);
         if ($diffid === false) {
             $diffid = ++$this->numdiffs;
             $this->encdiff[$diffid] = $this->font[$key]['diff'];

@@ -36,16 +36,16 @@ class TestUtil extends TestCase
 {
     protected function setupTest(): void
     {
-        if (! defined('K_PATH_FONTS')) {
-            define('K_PATH_FONTS', dirname(__DIR__) . '/target/tmptest/');
+        if (! \defined('K_PATH_FONTS')) {
+            \define('K_PATH_FONTS', \dirname(__DIR__) . '/target/tmptest/');
         }
 
-        system('rm -rf ' . K_PATH_FONTS . ' && mkdir -p ' . K_PATH_FONTS);
+        \system('rm -rf ' . K_PATH_FONTS . ' && mkdir -p ' . K_PATH_FONTS);
     }
 
     protected function getFontPath(): string
     {
-        if (defined('K_PATH_FONTS')) {
+        if (\defined('K_PATH_FONTS')) {
             return K_PATH_FONTS;
         }
 

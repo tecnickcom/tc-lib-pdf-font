@@ -151,7 +151,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             } // else unknown character
         }
 
-        $font['cw'] = array_merge($font['cw'], $chw);
+        $font['cw'] = \array_merge($font['cw'], $chw);
     }
 
     /**
@@ -186,8 +186,8 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
         $fontname = '';
         if ($font['subset']) {
             // change name for font subsetting
-            $subtag = sprintf('%06u', $font['i']);
-            $subtag = strtr($subtag, '0123456789', 'ABCDEFGHIJ');
+            $subtag = \sprintf('%06u', $font['i']);
+            $subtag = \strtr($subtag, '0123456789', 'ABCDEFGHIJ');
             $fontname .= $subtag . '+';
         }
 
@@ -214,14 +214,14 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
         $cidhmap = Identity::CIDHMAP;
         if ($font['compress']) {
             $out .= ' /Filter /FlateDecode';
-            $cidhmap = gzcompress($cidhmap);
+            $cidhmap = \gzcompress($cidhmap);
             if ($cidhmap === false) {
                 throw new \RuntimeException('Unable to compress CIDHMAP');
             }
         }
 
         $stream = $this->enc->encryptString($cidhmap, $this->pon); // ToUnicode map for Identity-H
-        $out .= ' /Length ' . strlen($stream)
+        $out .= ' /Length ' . \strlen($stream)
             . ' >>'
             . ' stream' . "\n"
             . $stream . "\n"
@@ -271,17 +271,17 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             // Embed CIDToGIDMap
             // A specification of the mapping from CIDs to glyph indices
             // search and get CTG font file to embedd
-            $ctgfile = strtolower($font['ctg']);
+            $ctgfile = \strtolower($font['ctg']);
             // search and get ctg font file to embedd
             $fontfile = $this->getFontFullPath($font['dir'], $ctgfile);
-            $content = file_get_contents($fontfile);
+            $content = \file_get_contents($fontfile);
             if ($content === false) {
                 throw new FontException('Unable to read font file: ' . $fontfile);
             }
 
             $stream = $this->enc->encryptString($content, $this->pon);
-            $out .= '<< /Length ' . strlen($stream) . '';
-            if (str_ends_with($fontfile, '.z')) { // check file extension
+            $out .= '<< /Length ' . \strlen($stream) . '';
+            if (\str_ends_with($fontfile, '.z')) { // check file extension
                 // Decompresses data encoded using the public-domain
                 // zlib/deflate compression method, reproducing the
                 // original text or binary data
@@ -402,8 +402,8 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      */
     protected function getKeyValOut(string $key, mixed $val): string
     {
-        if (is_float($val)) {
-            $val = sprintf('%F', $val);
+        if (\is_float($val)) {
+            $val = \sprintf('%F', $val);
         }
 
         return ' /' . $key . ' ' . $val . '';

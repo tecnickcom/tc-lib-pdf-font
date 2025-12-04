@@ -244,7 +244,7 @@ class Subset
         $tlen = ($length / 4);
         $offset = 0;
         for ($idx = 0; $idx < $tlen; ++$idx) {
-            $val = unpack('Ni', substr($table, $offset, 4));
+            $val = \unpack('Ni', \substr($table, $offset, 4));
             if ($val === false) {
                 throw new FontException('Unable to unpack table data');
             }
@@ -253,7 +253,7 @@ class Subset
             $offset += 4;
         }
 
-        $sum = unpack('Ni', pack('N', $sum));
+        $sum = \unpack('Ni', \pack('N', $sum));
         if ($sum === false) {
             throw new FontException('Unable to unpack checksum');
         }
@@ -268,7 +268,7 @@ class Subset
     {
         $new_sga = $this->subglyphs;
         while ($new_sga !== []) {
-            $sga = array_keys($new_sga);
+            $sga = \array_keys($new_sga);
             $new_sga = [];
             foreach ($sga as $key) {
                 $new_sga = $this->findCompositeGlyphs($new_sga, $key);
@@ -278,7 +278,7 @@ class Subset
         }
 
         // sort glyphs by key (and remove duplicates)
-        ksort($this->subglyphs);
+        \ksort($this->subglyphs);
     }
 
     /**
@@ -334,7 +334,7 @@ class Subset
     {
         // get the tables to preserve
         $this->offset = 12;
-        $tabname = array_keys($this->fdt['table']);
+        $tabname = \array_keys($this->fdt['table']);
         foreach ($tabname as $tag) {
             if (! isset(self::TABLENAMES[$tag])) {
                 // remove the table
@@ -351,22 +351,22 @@ class Subset
                 ];
             }
 
-            $this->fdt['table'][$tag]['data'] = substr(
+            $this->fdt['table'][$tag]['data'] = \substr(
                 $this->font,
                 $this->fdt['table'][$tag]['offset'],
                 $this->fdt['table'][$tag]['length']
             );
             if ($tag == 'head') {
                 // set the checkSumAdjustment to 0
-                $this->fdt['table'][$tag]['data'] = substr($this->fdt['table'][$tag]['data'], 0, 8)
-                    . "\x0\x0\x0\x0" . substr($this->fdt['table'][$tag]['data'], 12);
+                $this->fdt['table'][$tag]['data'] = \substr($this->fdt['table'][$tag]['data'], 0, 8)
+                    . "\x0\x0\x0\x0" . \substr($this->fdt['table'][$tag]['data'], 12);
             }
 
             $pad = 4 - ((int) $this->fdt['table'][$tag]['length'] % 4);
             if ($pad != 4) {
                 // the length of a table must be a multiple of four bytes
                 $this->fdt['table'][$tag]['length'] += (int) $pad;
-                $this->fdt['table'][$tag]['data'] .= str_repeat("\x0", $pad);
+                $this->fdt['table'][$tag]['data'] .= \str_repeat("\x0", $pad);
             }
 
             $this->fdt['table'][$tag]['offset'] = $this->offset;
@@ -395,15 +395,15 @@ class Subset
                 && isset($this->fdt['indexToLoc'][($i + 1)])
             ) {
                 $length = ($this->fdt['indexToLoc'][($i + 1)] - $this->fdt['indexToLoc'][$i]);
-                $glyf .= substr($this->font, ($glyf_offset + $this->fdt['indexToLoc'][$i]), $length);
+                $glyf .= \substr($this->font, ($glyf_offset + $this->fdt['indexToLoc'][$i]), $length);
             } else {
                 $length = 0;
             }
 
             if ($this->fdt['short_offset']) {
-                $loca .= pack('n', floor($this->offset / 2));
+                $loca .= \pack('n', \floor($this->offset / 2));
             } else {
-                $loca .= pack('N', $this->offset);
+                $loca .= \pack('N', $this->offset);
             }
 
             $this->offset += $length;
@@ -420,13 +420,13 @@ class Subset
         }
 
         $this->fdt['table']['loca']['data'] = $loca;
-        $this->fdt['table']['loca']['length'] = strlen($loca);
+        $this->fdt['table']['loca']['length'] = \strlen($loca);
         $this->fdt['table']['loca']['offset'] = $this->offset;
         $pad = 4 - ($this->fdt['table']['loca']['length'] % 4);
         if ($pad != 4) {
             // the length of a table must be a multiple of four bytes
             $this->fdt['table']['loca']['length'] += $pad;
-            $this->fdt['table']['loca']['data'] .= str_repeat("\x0", $pad);
+            $this->fdt['table']['loca']['data'] .= \str_repeat("\x0", $pad);
         }
 
         $this->fdt['table']['loca']['checkSum'] = $this->getTableChecksum(
@@ -447,13 +447,13 @@ class Subset
         }
 
         $this->fdt['table']['glyf']['data'] = $glyf;
-        $this->fdt['table']['glyf']['length'] = strlen($glyf);
+        $this->fdt['table']['glyf']['length'] = \strlen($glyf);
         $this->fdt['table']['glyf']['offset'] = $this->offset;
         $pad = 4 - ($this->fdt['table']['glyf']['length'] % 4);
         if ($pad != 4) {
             // the length of a table must be a multiple of four bytes
             $this->fdt['table']['glyf']['length'] += $pad;
-            $this->fdt['table']['glyf']['data'] .= str_repeat("\x0", $pad);
+            $this->fdt['table']['glyf']['data'] .= \str_repeat("\x0", $pad);
         }
 
         $this->fdt['table']['glyf']['checkSum'] = $this->getTableChecksum(
@@ -468,21 +468,21 @@ class Subset
     protected function buildSubsetFont(): void
     {
         $this->subfont = '';
-        $this->subfont .= pack('N', 0x10000); // sfnt version
-        $numTables = count($this->fdt['table']);
-        $this->subfont .= pack('n', $numTables); // numTables
-        $entrySelector = floor(log($numTables, 2));
+        $this->subfont .= \pack('N', 0x10000); // sfnt version
+        $numTables = \count($this->fdt['table']);
+        $this->subfont .= \pack('n', $numTables); // numTables
+        $entrySelector = \floor(\log($numTables, 2));
         $searchRange = 2 ** $entrySelector * 16;
         $rangeShift = ($numTables * 16) - $searchRange;
-        $this->subfont .= pack('n', $searchRange); // searchRange
-        $this->subfont .= pack('n', $entrySelector); // entrySelector
-        $this->subfont .= pack('n', $rangeShift); // rangeShift
+        $this->subfont .= \pack('n', $searchRange); // searchRange
+        $this->subfont .= \pack('n', $entrySelector); // entrySelector
+        $this->subfont .= \pack('n', $rangeShift); // rangeShift
         $this->offset = ($numTables * 16);
         foreach ($this->fdt['table'] as $tag => $data) {
             $this->subfont .= $tag; // tag
-            $this->subfont .= pack('N', $data['checkSum']); // checkSum
-            $this->subfont .= pack('N', ($data['offset'] + $this->offset)); // offset
-            $this->subfont .= pack('N', $data['length']); // length
+            $this->subfont .= \pack('N', $data['checkSum']); // checkSum
+            $this->subfont .= \pack('N', ($data['offset'] + $this->offset)); // offset
+            $this->subfont .= \pack('N', $data['length']); // length
         }
 
         foreach ($this->fdt['table'] as $data) {
@@ -490,9 +490,9 @@ class Subset
         }
 
         // set checkSumAdjustment on head table
-        $checkSumAdjustment = (0xB1B0AFBA - $this->getTableChecksum($this->subfont, strlen($this->subfont)));
-        $this->subfont = substr($this->subfont, 0, $this->fdt['table']['head']['offset'] + 8)
-            . pack('N', $checkSumAdjustment)
-            . substr($this->subfont, $this->fdt['table']['head']['offset'] + 12);
+        $checkSumAdjustment = (0xB1B0AFBA - $this->getTableChecksum($this->subfont, \strlen($this->subfont)));
+        $this->subfont = \substr($this->subfont, 0, $this->fdt['table']['head']['offset'] + 8)
+            . \pack('N', $checkSumAdjustment)
+            . \substr($this->subfont, $this->fdt['table']['head']['offset'] + 12);
     }
 }

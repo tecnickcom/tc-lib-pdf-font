@@ -351,7 +351,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         }
 
         $font = $this->getFontMetric($this->index);
-        array_pop($this->stack);
+        \array_pop($this->stack);
         --$this->index;
         return $font;
     }
@@ -442,7 +442,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getOrdArrDims(array $uniarr): array
     {
-        $chars = count($uniarr); // total number of chars
+        $chars = \count($uniarr); // total number of chars
         $spaces = 0; // total number of spaces
         $totwidth = 0; // total string width
         $totspacewidth = 0; // total space width
@@ -534,7 +534,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     protected function getFontMetric(int $idx): array
     {
         $font = $this->stack[$idx];
-        $mkey = md5(serialize($font));
+        $mkey = \md5(\serialize($font));
         if (! empty($this->metric[$mkey])) {
             return $this->metric[$mkey];
         }
@@ -544,7 +544,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $cratio = ((float) $size / 1000);
         $wratio = ($cratio * $font['stretching']); // horizontal ratio
         $data = $this->getFont($font['key']);
-        $outfont = sprintf('/F%d %F Tf', $data['i'], $font['size']); // PDF output string
+        $outfont = \sprintf('/F%d %F Tf', $data['i'], $font['size']); // PDF output string
         // add this font in the stack wit metrics in internal units
         $this->metric[$mkey] = [
             'ascent' => ((float) $data['desc']['Ascent'] * $cratio),
@@ -574,7 +574,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'ut' => ((float) $data['ut'] * $cratio),
             'xheight' => ((float) $data['desc']['XHeight'] * $cratio),
         ];
-        $tbox = explode(' ', substr($data['desc']['FontBBox'], 1, -1));
+        $tbox = \explode(' ', \substr($data['desc']['FontBBox'], 1, -1));
         $this->metric[$mkey]['fbbox'] = [
             // left
             ((float) $tbox[0] * $wratio),
@@ -590,13 +590,13 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             $this->metric[$mkey]['cw'][(int) $cid] = ((float) $width * $wratio);
         }
 
-        if (is_array($data['cbbox'])) {
+        if (\is_array($data['cbbox'])) {
             foreach ($data['cbbox'] as $cid => $val) {
-                if (! is_array($val)) {
+                if (! \is_array($val)) {
                     continue;
                 }
 
-                if (count($val) != 4) {
+                if (\count($val) != 4) {
                     continue;
                 }
 
@@ -634,7 +634,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             return self::DEFAULT_SIZE;
         }
 
-        return max(0, (float) $size);
+        return \max(0, (float) $size);
     }
 
     /**
@@ -694,13 +694,13 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
         $keys = [];
         // remove spaces and symbols
-        $fontfamily = preg_replace('/[^a-z0-9_\,]/', '', strtolower($fontfamily));
-        if (($fontfamily === null) || (! is_string($fontfamily))) {
+        $fontfamily = \preg_replace('/[^a-z0-9_\,]/', '', \strtolower($fontfamily));
+        if (($fontfamily === null) || (! \is_string($fontfamily))) {
             throw new FontException('Invalid font family name: ' . $fontfamily);
         }
 
         // extract all font names
-        $fontslist = preg_split('/[,]/', $fontfamily);
+        $fontslist = \preg_split('/[,]/', $fontfamily);
         if ($fontslist === false) {
             throw new FontException('Invalid font family name: ' . $fontfamily);
         }
@@ -715,13 +715,13 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
         // find first valid font name
         foreach ($fontslist as $font) {
-            $font = preg_replace($fontpattern, $fontreplacement, $font);
+            $font = \preg_replace($fontpattern, $fontreplacement, $font);
             if ($font === null) {
                 throw new FontException('Invalid font family name: ' . $fontfamily);
             }
 
             // replace common family names and core fonts
-            $fontkey = preg_replace($keypattern, $keyreplacement, $font);
+            $fontkey = \preg_replace($keypattern, $keyreplacement, $font);
             if ($fontkey === null) {
                 throw new FontException('Invalid font family name: ' . $fontfamily);
             }

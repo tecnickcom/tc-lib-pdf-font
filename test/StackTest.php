@@ -34,7 +34,7 @@ class StackTest extends TestUtil
     public function testStack(): void
     {
         $this->setupTest();
-        $indir = dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);

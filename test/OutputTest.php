@@ -34,7 +34,7 @@ class OutputTest extends TestUtil
     public function testOutput(): void
     {
         $this->setupTest();
-        $indir = dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);

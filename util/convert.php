@@ -16,8 +16,8 @@
  * Command-line tool to convert fonts data for the tc-lib-pdf-font library.
  */
 
-if (php_sapi_name() != 'cli') {
-    fwrite(STDERR, 'You need to run this command from console.'."\n");
+if (\php_sapi_name() != 'cli') {
+    \fwrite(STDERR, 'You need to run this command from console.'."\n");
     exit(1);
 }
 
@@ -116,12 +116,12 @@ Examples:
 
 
 EOD;
-    fwrite(STDOUT, $help);
+    \fwrite(STDOUT, $help);
     exit(0);
 }
 
 // remove the name of the executing script
-array_shift($argv);
+\array_shift($argv);
 
 // no options chosen, display help
 if (empty($argv)) {
@@ -156,21 +156,21 @@ $lopt = array(
 );
 
 // parse input options
-$inopt = getopt($sopt, $lopt);
+$inopt = \getopt($sopt, $lopt);
 
 // import options (with some sanitization)
 foreach ($inopt as $opt => $val) {
     switch ($opt) {
         case 'o':
         case 'outpath':
-            $options['outpath'] = realpath($val);
-            if (substr($options['outpath'], -1) != '/') {
+            $options['outpath'] = \realpath($val);
+            if (\substr($options['outpath'], -1) != '/') {
                 $options['outpath'] .= '/';
             }
             break;
         case 't':
         case 'type':
-            if (in_array($val, array('TrueTypeUnicode', 'TrueType', 'Type1', 'CID0JP', 'CID0KR', 'CID0CS', 'CID0CT'))) {
+            if (\in_array($val, array('TrueTypeUnicode', 'TrueType', 'Type1', 'CID0JP', 'CID0KR', 'CID0CS', 'CID0CT'))) {
                 $options['type'] = $val;
             }
             break;
@@ -180,15 +180,15 @@ foreach ($inopt as $opt => $val) {
             break;
         case 'f':
         case 'flags':
-            $options['flags'] = intval($val);
+            $options['flags'] = \intval($val);
             break;
         case 'p':
         case 'platform_id':
-            $options['platform_id'] = min(max(1, intval($val)), 3);
+            $options['platform_id'] = \min(\max(1, \intval($val)), 3);
             break;
         case 'n':
         case 'encoding_id':
-            $options['encoding_id'] = min(max(0, intval($val)), 10);
+            $options['encoding_id'] = \min(\max(0, \intval($val)), 10);
             break;
         case 'l':
         case 'linked':
@@ -196,7 +196,7 @@ foreach ($inopt as $opt => $val) {
             break;
         case 'i':
         case 'fonts':
-            $options['fonts'] = explode(',', $val);
+            $options['fonts'] = \explode(',', $val);
             break;
         case 'h':
         case 'help':
@@ -208,28 +208,28 @@ foreach ($inopt as $opt => $val) {
 
 // check input values
 
-if (!is_dir($options['outpath']) || !is_writable($options['outpath'])) {
-    fwrite(STDERR, 'ERROR: Can\'t write to '.$options['outpath']."\n\n");
+if (!is_dir($options['outpath']) || !\is_writable($options['outpath'])) {
+    \fwrite(STDERR, 'ERROR: Can\'t write to '.$options['outpath']."\n\n");
     exit(2);
 }
 
 if (empty($options['fonts'])) {
-    fwrite(STDERR, 'ERROR: missing input fonts (try --help for usage)'."\n\n");
+    \fwrite(STDERR, 'ERROR: missing input fonts (try --help for usage)'."\n\n");
     exit(3);
 }
 
-fwrite(STDOUT, "\n".'>>> Converting fonts:'."\n".'*** Output directory set to '.$options['outpath']."\n");
+\fwrite(STDOUT, "\n".'>>> Converting fonts:'."\n".'*** Output directory set to '.$options['outpath']."\n");
 
 // count conversions
 $convert_errors = 0;
 $convert_success = 0;
 
-require_once (dirname(dirname(__DIR__)).'/vendor/autoload.php');
+require_once (\dirname(\dirname(__DIR__)).'/vendor/autoload.php');
 
 foreach ($options['fonts'] as $font) {
     try {
         $import = new \Com\Tecnick\Pdf\Font\Import(
-            realpath($font),
+            \realpath($font),
             $options['outpath'],
             $options['type'],
             $options['encoding'],
@@ -239,20 +239,20 @@ foreach ($options['fonts'] as $font) {
             $options['linked']
         );
         $fontname = $import->getFontName();
-        fwrite(STDOUT, "\033[32m".'+++ OK   : '.$font.' added as '.$fontname."\033[m\n");
+        \fwrite(STDOUT, "\033[32m".'+++ OK   : '.$font.' added as '.$fontname."\033[m\n");
         ++$convert_success;
     } catch (\Exception $exc) {
         ++$convert_errors;
-        fwrite(STDERR, "\033[31m".'--- ERROR: can\'t add '.$font."\n           ".$exc->getMessage()."\033[m\n");
+        \fwrite(STDERR, "\033[31m".'--- ERROR: can\'t add '.$font."\n           ".$exc->getMessage()."\033[m\n");
     }
 }
 
 $endmsg = '>>> PROCESS COMPLETED: '.$convert_success.' CONVERTED FONT(S), '.$convert_errors.' ERROR(S)!'."\n\n";
 
 if ($convert_errors > 0) {
-    fwrite(STDERR, "\033[31m".$endmsg.'ERROR'."\033[m");
+    \fwrite(STDERR, "\033[31m".$endmsg.'ERROR'."\033[m");
     exit(4);
 }
 
-fwrite(STDOUT, "\033[32m".$endmsg."\033[m");
+\fwrite(STDOUT, "\033[32m".$endmsg."\033[m");
 exit(0);

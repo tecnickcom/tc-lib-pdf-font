@@ -102,7 +102,7 @@ class Core
             }
         }
 
-        $this->fdt['AvgWidth'] = (int) round($this->fdt['AvgWidth'] / count($cwidths));
+        $this->fdt['AvgWidth'] = (int) \round($this->fdt['AvgWidth'] / \count($cwidths));
     }
 
     /**
@@ -112,11 +112,11 @@ class Core
     {
         $cwd = [];
         $this->fdt['cbbox'] = [];
-        $lines = explode("\n", str_replace("\r", '', $this->font));
+        $lines = \explode("\n", \str_replace("\r", '', $this->font));
         // process each row
         foreach ($lines as $line) {
-            $col = explode(' ', rtrim($line));
-            if (count($col) > 1) {
+            $col = \explode(' ', \rtrim($line));
+            if (\count($col) > 1) {
                 $this->processMetricRow($col, $cwd);
             }
         }
@@ -190,13 +190,13 @@ class Core
         $this->fdt['StemV'] = $this->fdt['StdVW'];
         $this->fdt['StemH'] = $this->fdt['StdHW'];
 
-        $name = preg_replace('/[^a-zA-Z0-9_\-]/', '', $this->fdt['name']);
+        $name = \preg_replace('/[^a-zA-Z0-9_\-]/', '', $this->fdt['name']);
         if ($name === null) {
             throw new FontException('Invalid font name');
         }
 
         $this->fdt['name'] = $name;
-        $this->fdt['bbox'] = implode(' ', $this->fdt['FontBBox']);
+        $this->fdt['bbox'] = \implode(' ', $this->fdt['FontBBox']);
 
         if (empty($this->fdt['XHeight'])) {
             $this->fdt['XHeight'] = 0;

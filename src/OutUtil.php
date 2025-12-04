@@ -44,11 +44,11 @@ abstract class OutUtil
     {
         $dirobj = new Dir();
         // directories where to search for the font definition file
-        $dirs = array_unique(
-            ['', $fontdir, (defined('K_PATH_FONTS') ? K_PATH_FONTS : ''), $dirobj->findParentDir('fonts', __DIR__)]
+        $dirs = \array_unique(
+            ['', $fontdir, (\defined('K_PATH_FONTS') ? K_PATH_FONTS : ''), $dirobj->findParentDir('fonts', __DIR__)]
         );
         foreach ($dirs as $dir) {
-            if (@is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
+            if (@\is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
                 return $dir . DIRECTORY_SEPARATOR . $file;
             }
         }
@@ -71,17 +71,17 @@ abstract class OutUtil
      */
     protected function getCharWidths(array $font, int $cidoffset = 0): string
     {
-        ksort($font['cw']);
+        \ksort($font['cw']);
         $range = $this->getWidthRanges($font, $cidoffset);
         // output data
         $wdt = '';
         foreach ($range as $kdx => $wds) {
-            if (count(array_count_values($wds)) == 1) {
+            if (\count(\array_count_values($wds)) == 1) {
                 // interval mode is more compact
-                $wdt .= ' ' . $kdx . ' ' . ($kdx + count($wds) - 1) . ' ' . $wds[0];
+                $wdt .= ' ' . $kdx . ' ' . ($kdx + \count($wds) - 1) . ' ' . $wds[0];
             } else {
                 // range mode
-                $wdt .= ' ' . $kdx . ' [ ' . implode(' ', $wds) . ' ]';
+                $wdt .= ' ' . $kdx . ' [ ' . \implode(' ', $wds) . ' ]';
             }
         }
 
@@ -123,7 +123,7 @@ abstract class OutUtil
                         if ($width === $range[$rangeid][0]) {
                             $range[$rangeid][] = $width;
                         } else {
-                            array_pop($range[$rangeid]);
+                            \array_pop($range[$rangeid]);
                             // new range
                             $rangeid = $prevcid;
                             $range[$rangeid] = [];
@@ -174,7 +174,7 @@ abstract class OutUtil
         $nextk = -1;
         $prevint = false;
         foreach ($range as $kdx => $wds) {
-            $cws = count($wds);
+            $cws = \count($wds);
             if (($kdx == $nextk) && (! $prevint) && ((! isset($wds[-1])) || ($cws < 4))) {
                 unset($range[$kdx][-1]);
                 $range[$prevk] = [...$range[$prevk], ...$range[$kdx]];
