@@ -98,7 +98,7 @@ if (!is_dir($ttfdir)) {
 $convert_errors = 0;
 $convert_success = 0;
 
-require_once dirname(__DIR__, 4).'/vendor/autoload.php';
+require_once (\dirname(__DIR__, 4).'/vendor/autoload.php');
 
 $fontdir = \array_diff(\scandir($ttfdir), array('.', '..', '.git'));
 
