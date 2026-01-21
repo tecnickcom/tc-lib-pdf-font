@@ -17,6 +17,7 @@
 namespace Com\Tecnick\Pdf\Font;
 
 use Com\Tecnick\Pdf\Encrypt\Encrypt;
+use Com\Tecnick\Pdf\Encrypt\Exception as EncException;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Unicode\Data\Identity;
 
@@ -63,7 +64,9 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *        'subsetchars': array<int, bool>,
      *    } $font Font to process
      *
-     * return string
+     * @return string
+     *
+     * @throws EncException
      */
     protected function getCid0(array $font): string
     {
@@ -175,7 +178,10 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      *        'subsetchars': array<int, bool>,
      *    } $font Font to process
      *
-     * return string
+     * @return string
+     *
+     * @throws EncException
+     * @throws FontException
      *
      * @SuppressWarnings("PHPMD.ExcessiveMethodLength")
      * @SuppressWarnings("PHPMD.CyclomaticComplexity")

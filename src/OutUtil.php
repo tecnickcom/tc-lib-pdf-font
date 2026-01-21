@@ -39,6 +39,8 @@ abstract class OutUtil
      * @param string $file    Font file name.
      *
      * @return string Font full path or empty string
+     *
+     * @throws FontException
      */
     protected function getFontFullPath(string $fontdir, string $file): string
     {
@@ -164,7 +166,7 @@ abstract class OutUtil
     /**
      * Optimize width ranges
      *
-     * @param array<int, array<int, int>> $range Widht Ranges
+     * @param array<int, array<int, int>> $range Width Ranges
      *
      * @return array<int, array<int, int>>
      */

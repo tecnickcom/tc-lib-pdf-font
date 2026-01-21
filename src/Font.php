@@ -16,8 +16,8 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\File\File;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Com\Tecnick\Pdf\Font\Font
@@ -41,35 +41,22 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      * or in the one indicated by K_PATH_FONTS if the constant is defined.
      *
      * @param string $font     Font family.
-     *                         If it is a
-     *                         standard
-     *                         family name,
-     *                         it will
-     *                         override the
-     *                         corresponding
-     *                         font.
-     * @param string $style    Font style.
-     *                         Possible
-     *                         values are
-     *                         (case
-     *                         insensitive):
-     *                         regular
-     *                         (default)
-     *                         B: bold I:
-     *                         italic U:
-     *                         underline
-     *                         D:
-     *                         strikeout
-     *                         (linethrough)
+     *                         If it is a standard family name, it will override the corresponding font.
+     * @param string $style    Font style. Possible values are (case-insensitive):
+     *                         regular (default)
+     *                         B: bold
+     *                         I: italic
+     *                         U: underline
+     *                         D: strikeout (linethrough)
      *                         O: overline
      * @param string $ifile    The font definition file (or empty for autodetect).
      *                         By default, the name is built from the family and
      *                         style, in lower case with no spaces.
-     * @param bool   $subset   If true embedd only a subset of the font
+     * @param bool   $subset   If true embed only a subset of the font
      *                         (stores only the information related to
-     *                         the used characters); If false embedd
+     *                         the used characters); If false embed
      *                         full font; This option is valid only for
-     *                         TrueTypeUnicode fonts and it is disabled
+     *                         TrueTypeUnicode fonts and is disabled
      *                         for PDF/A. If you want to enable users
      *                         to modify the document, set this
      *                         parameter to false. If you subset the
@@ -77,10 +64,9 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *                         would need to have your same font in
      *                         order to make changes to your PDF. The
      *                         file size of the PDF would also be
-     *                         smaller because you are embedding only a
-     *                         subset.
-     * @param bool   $unicode  True if we are in Unicode mode, False otherwhise.
-     * @param bool   $pdfa     True if we are in PDF/A mode.
+     *                         smaller because you are embedding only a subset.
+     * @param bool   $unicode  True in Unicode mode, False otherwise.
+     * @param bool   $pdfa     True in PDF/A mode, False otherwise.
      * @param bool   $compress Set to false to disable stream compression.
      *
      * @throws FontException in case of error

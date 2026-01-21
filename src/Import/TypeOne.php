@@ -16,6 +16,7 @@
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
+use Com\Tecnick\File\Exception as FileException;
 use Com\Tecnick\File\File;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Unicode\Data\Encoding;
@@ -37,6 +38,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 {
     /**
      * Store font data
+     *
+     *  @throws FileException
+     *  @throws FontException
      */
     protected function storeFontData(): void
     {
@@ -73,6 +77,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 
     /**
      * Extract Font information
+     *
+     * @throws FontException
      */
     protected function extractFontInfo(): void
     {
@@ -271,6 +277,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      * @param array<int, int> $ccom
      * @param array<int, int> $cdec
      * @param array<int, int> $cwidths
+     *
+     * @throws FontException
      */
     protected function decodeNumber(
         int $idx,
@@ -325,6 +333,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 
     /**
      * Process Type1 font
+     *
+     * @throws FileException
+     * @throws FontException
      */
     protected function process(): void
     {

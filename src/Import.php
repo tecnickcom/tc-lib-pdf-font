@@ -18,6 +18,7 @@ namespace Com\Tecnick\Pdf\Font;
 
 use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\Dir;
+use Com\Tecnick\File\Exception as FileException;
 use Com\Tecnick\File\File;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Pdf\Font\Import\Core;
@@ -206,6 +207,7 @@ class Import
      * @param bool   $linked      If true, links the font file to system font instead of copying the font data
      *                            (not transportable). Note: this option do not work with Type1 fonts.
      *
+     * @throws FileException in case of error
      * @throws FontException in case of error
      */
     public function __construct(
@@ -265,7 +267,6 @@ class Import
             'Type1' => new TypeOne($this->font, $this->fdt),
             default => new TrueType($this->font, $this->fdt, $this->fbyte),
         };
-        ;
 
         $this->fdt = $processor->getFontMetrics();
 
@@ -321,7 +322,10 @@ class Import
     }
 
     /**
-     * Save the eported metadata font file
+     * Save the exported metadata font file
+     *
+     * @throws FileException
+     * @throws FontException
      *
      * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      * @SuppressWarnings("PHPMD.NPathComplexity")
@@ -426,6 +430,8 @@ class Import
      * Make the output font name
      *
      * @param string $font_file Input font file
+     *
+     * @throws FontException
      */
     protected function makeFontName(string $font_file): string
     {
@@ -484,6 +490,8 @@ class Import
      * Get the font type
      *
      * @param string $font_type Font type. Leave empty for autodetect mode.
+     *
+     * @throws FontException
      */
     protected function getFontType(string $font_type): string
     {
@@ -522,6 +530,8 @@ class Import
      * @param string $encoding Name of the encoding table to use. Leave empty for default mode.
      *                         Omit this parameter for TrueType Unicode and symbolic fonts like
      *                         Symbol or ZapfDingBats.
+     *
+     * @throws FontException
      */
     protected function getEncodingTable(string $encoding = ''): string
     {
@@ -578,7 +588,10 @@ class Import
     /**
      * Update the CIDToGIDMap string with a new value
      *
-     * @param string $map CIDToGIDMap.
+     * The CIDToGIDMap is made up of 16-bit values mapping a zero-based
+     * Character Identifier index to its zero-based glyph id index.
+     *
+     * @param string $map CIDToGIDMap (binary).
      * @param int    $cid CID value.
      * @param int    $gid GID value.
      */

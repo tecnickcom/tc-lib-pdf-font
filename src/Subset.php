@@ -205,9 +205,10 @@ class Subset
      * Process TrueType font
      *
      * @param string           $font     Content of the input font file
-     * @param TFontData         $fdt      Extracted font metrics
+     * @param TFontData        $fdt      Extracted font metrics
      * @param array<int, bool> $subchars Array containing subset chars
      *
+     * @throws FileException in case of error
      * @throws FontException in case of error
      */
     public function __construct(string $font, array $fdt, array $subchars = [])
@@ -231,12 +232,14 @@ class Subset
     }
 
     /**
-     * Returs the checksum of a TTF table.
+     * Returns the checksum of a TTF table.
      *
      * @param string $table  Table to check
      * @param int    $length Length of table in bytes
      *
      * @return int checksum
+     *
+     * @throws FontException
      */
     protected function getTableChecksum(string $table, int $length): int
     {
@@ -277,24 +280,42 @@ class Subset
             $this->subglyphs = [...$this->subglyphs, ...$new_sga];
         }
 
-        // sort glyphs by key (and remove duplicates)
+        // sort glyphs by key
         \ksort($this->subglyphs);
     }
 
     /**
-     * Add composite glyphs
+     * Find composite glyphs
      *
      * @param array<int, bool> $new_sga
+     * @param int $key
      *
      * @return array<int, bool>
      */
     protected function findCompositeGlyphs(array $new_sga, int $key): array
     {
         if (isset($this->fdt['indexToLoc'][$key])) {
+            /**
+             * Glyph Header
+             * - int16      numberOfContours    Normal glyph if >= 0 or composite glyph if negative (should be -1)
+             * - int16      xMin                Minimum x for coordinate data.
+             * - int16      yMin                Minimum y for coordinate data.
+             * - int16      xMax                Maximum x for coordinate data.
+             * - int16      yMax                Maximum y for coordinate data.
+             */
+
             $this->offset = ($this->fdt['table']['glyf']['offset'] + $this->fdt['indexToLoc'][$key]);
             $numberOfContours = $this->fbyte->getShort($this->offset);
             $this->offset += 2;
             if ($numberOfContours < 0) { // composite glyph
+                /**
+                 * ComponentGlyph record
+                 * - uint16            flags          Normal glyph if >= 0 or composite glyph if negative (should be -1)
+                 * - uint16            glyphIndex     glyph index of component
+                 * - u/int8|u/int16    argument1      x-offset for component or point number; type depends on bits 0 and 1 in component flags
+                 * - u/int8|u/int16    argument2      y-offset for component or point number; type depends on bits 0 and 1 in component flags
+                 * - [transform data]                 optional transform data
+                 */
                 $this->offset += 8; // skip xMin, yMin, xMax, yMax
                 do {
                     $flags = $this->fbyte->getUShort($this->offset);
@@ -307,6 +328,7 @@ class Subset
                     }
 
                     // skip some bytes by case
+                    // ARG_1_AND_2_ARE_WORDS (bit 0): [u]int32 if set and [u]int16 if not set
                     if (($flags & 1) !== 0) {
                         $this->offset += 4;
                     } else {
@@ -314,13 +336,16 @@ class Subset
                     }
 
                     if (($flags & 8) !== 0) {
+                        // WE_HAVE_A_SCALE (bit 3):            Adds 1 * F2DOT14 field
                         $this->offset += 2;
                     } elseif (($flags & 64) !== 0) {
+                        // WE_HAVE_AN_X_AND_Y_SCALE (bit 6):   Adds 2 * F2DOT14 fields
                         $this->offset += 4;
                     } elseif (($flags & 128) !== 0) {
+                        // WE_HAVE_A_TWO_BY_TWO (bit 7):       Adds 4 * F2DOT14 fields
                         $this->offset += 8;
                     }
-                } while ($flags & 32);
+                } while ($flags & 32); // MORE_COMPONENTS (bit 5)
             }
         }
 
@@ -464,6 +489,8 @@ class Subset
 
     /**
      * build new subset font
+     *
+     * @throws FontException
      */
     protected function buildSubsetFont(): void
     {

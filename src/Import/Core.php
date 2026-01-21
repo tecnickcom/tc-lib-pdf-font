@@ -16,7 +16,6 @@
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
-use Com\Tecnick\File\File;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
@@ -177,6 +176,8 @@ class Core
 
     /**
      * Map values to the correct key name
+     *
+     * @throws FontException
      */
     protected function remapValues(): void
     {
@@ -216,6 +217,8 @@ class Core
 
     /**
      * Process Core font
+     *
+     * @throws FontException
      */
     protected function process(): void
     {

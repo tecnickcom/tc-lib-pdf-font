@@ -17,9 +17,9 @@
 namespace Com\Tecnick\Pdf\Font\Import;
 
 use Com\Tecnick\File\Byte;
+use Com\Tecnick\File\Exception as FileException;
 use Com\Tecnick\File\File;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
-use Com\Tecnick\Unicode\Data\Encoding;
 
 /**
  * Com\Tecnick\Pdf\Font\Import\TrueType
@@ -64,11 +64,12 @@ class TrueType
      * Process TrueType font
      *
      * @param string           $font     Content of the input font file
-     * @param TFontData         $fdt      Extracted font metrics
+     * @param TFontData        $fdt      Extracted font metrics
      * @param Byte             $fbyte    Object used to read font bytes
      * @param array<int, bool> $subchars Array containing subset chars
      *
-     * @throws FontException in case of error
+     * @throws FileException
+     * @throws FontException
      */
     public function __construct(
         protected string $font,
@@ -103,6 +104,9 @@ class TrueType
 
     /**
      * Process TrueType font
+     *
+     * @throws FileException
+     * @throws FontException
      */
     protected function process(): void
     {
@@ -125,13 +129,15 @@ class TrueType
     }
 
     /**
-     * Check if the font is a valid type
+     * Check if the font has a valid sfnt version header
+     *
+     * Valid TTF 1.0 files begin with 1.0 in Version16Dot16 format
      *
      * @throws FontException if the font is invalid
      */
     protected function isValidType(): void
     {
-        if ($this->fbyte->getULong($this->offset) != 0x10000) {
+        if ($this->fbyte->getULong($this->offset) != 0x00010000) {
             throw new FontException('sfnt version must be 0x00010000 for TrueType version 1.0.');
         }
 
@@ -140,6 +146,9 @@ class TrueType
 
     /**
      * Copy or link the original font file
+     *
+     * @throws FileException
+     * @throws FontException
      */
     protected function setFontFile(): void
     {
@@ -181,8 +190,10 @@ class TrueType
         // get number of tables
         $numTables = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
-        // skip searchRange, entrySelector and rangeShift
+
+        // Skip the searchRange, entrySelector and rangeShift fields (3 * uint16)
         $this->offset += 6;
+
         // tables array
         $this->fdt['table'] = [];
         // ---------- get tables ----------
@@ -208,21 +219,45 @@ class TrueType
     /**
      * Check if the font is a valid type
      *
+     * Valid TTF 1.0 files have the magic number 0x5f0f3cf5 in
+     * the "head" table offset 12 bytes from the start of the table.
+     *
      * @throws FontException if the font is invalid
      */
     protected function checkMagickNumber(): void
     {
         $this->offset = ($this->fdt['table']['head']['offset'] + 12);
-        if ($this->fbyte->getULong($this->offset) != 0x5F0F3CF5) {
-            // magicNumber must be 0x5F0F3CF5
-            throw new FontException('magicNumber must be 0x5F0F3CF5');
+        if ($this->fbyte->getULong($this->offset) != 0x5f0f3cf5) {
+            // magicNumber must be 0x5f0f3cf5
+            throw new FontException('magicNumber must be 0x5f0f3cf5');
         }
 
         $this->offset += 4;
     }
 
     /**
-     * Get BBox, units and flags
+     *  Parse Font Header Table (head) for BBox, units and flags
+     *
+     *  0 - uint16             majorVersion        Major version of font header table (always 1)
+     *  2 - uint16             minorVersion        Major version of font header table (always 0)
+     *  6 - Fixed (32-bit)     fontRevision        Set by font manufacturer (Fixed = 4 bytes)
+     * 10 - uint32             checksumAdjustment
+     * 14 - uint32             magicNumber         Always 0x5F0F3CF5
+     * 16 - uint16             flags               @Link https://learn.microsoft.com/en-us/typography/opentype/spec/head
+     * 18 - uint16             unitsPerEm          Any value from 16 to 16384 (a power of 2 is recommended)
+     * 26 - LONGDATETIME       created             64-bit number of seconds since 12:00 midnight 1904/01/01 in GMT/UTC time zone.
+     * 34 - LONGDATETIME       modified            64-bit number of seconds since 12:00 midnight 1904/01/01 in GMT/UTC time zone.
+     * 36 - int16              xMin                Minimum x coordinate across all glyph bounding boxes.
+     * 38 - int16              yMin                Minimum y coordinate across all glyph bounding boxes.
+     * 40 - int16              xMax                Maximum x coordinate across all glyph bounding boxes.
+     * 42 - int16              yMax                Maximum y coordinate across all glyph bounding boxes.
+     * 44 - uint16             macStyle            bits (0:Bold, 1:Italic, 2:Underline, 3:Outline, 4:Shadow, 5:Condensed, 6:Extended, 7-15:(0) Reserved)
+     * 46 - uint16             lowestRecPPEM       Smallest readable size in pixels.
+     * 48 - int16              fontDirectionHint   Deprecated -- Set to 2
+     * 50 - int16              indexToLocFormat    0 for short offsets (Offset16), 1 for long (Offset32).
+     * 52 - int16              glyphDataFormat     0 for current format.
+     *
+     *  @return void
      */
     protected function getBbox(): void
     {
@@ -230,7 +265,9 @@ class TrueType
         $this->offset += 2;
         // units ratio constant
         $this->fdt['urk'] = (1000 / $this->fdt['unitsPerEm']);
-        $this->offset += 16; // skip created, modified
+        // skip field: created: (LONGDATETIME int64)
+        // skip field: modified: (LONGDATETIME int64)
+        $this->offset += 16;
         $xMin = (int) \round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
         $yMin = (int) \round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
@@ -250,11 +287,15 @@ class TrueType
     }
 
     /**
-     * Get index to loc map
+     * Create a glyph index to glyf table byte offset mapping
+     *
+     * The loca table is an array of values mapping each glyph id to the glyph's symbol in the TTF glyf table.
+     * These offsets will be stored using uint16-be values if the indexToLocFormat flag in the header table is 0 and
+     * uint32-be values otherwise.
      */
     protected function getIndexToLoc(): void
     {
-        // get offset mode (indexToLocFormat : 0 = short, 1 = long)
+        // indexToLocFormat flag in the head table (indexToLocFormat : 0 = short, 1 = long)
         $this->offset = ($this->fdt['table']['head']['offset'] + 50);
         $this->fdt['short_offset'] = ($this->fbyte->getShort($this->offset) == 0);
         $this->offset += 2;
@@ -262,7 +303,7 @@ class TrueType
         $this->fdt['indexToLoc'] = [];
         $this->offset = $this->fdt['table']['loca']['offset'];
         if ($this->fdt['short_offset']) {
-            // short version
+            // The loca table uses data type Offset16 (uint16-be)
             $this->fdt['tot_num_glyphs'] = (int) \floor($this->fdt['table']['loca']['length'] / 2); // numGlyphs + 1
             for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getUShort($this->offset) * 2;
@@ -277,7 +318,7 @@ class TrueType
                 $this->offset += 2;
             }
         } else {
-            // long version
+            // The loca table uses data type Offset32 (uint32-be)
             $this->fdt['tot_num_glyphs'] = (int) \floor($this->fdt['table']['loca']['length'] / 4); // numGlyphs + 1
             for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getULong($this->offset);
@@ -294,9 +335,22 @@ class TrueType
         }
     }
 
+    /**
+     * Map character encoding ids to the index of the matching glyph (TTF cmap table)
+     *
+     * cmap table header:
+     *   - uint16   version            Table version number (Always 0)
+     *   - uint16   numTables          Number of encoding tables
+     *
+     * EncodingRecord :
+     *   - uint16   platformId         Platform ID
+     *   - uint16   encodingId         Platform-specific encoding ID
+     *   - Offset32 subtableOffset     Byte offset from beginning of cmap table to the encoding subtable
+     *
+     * @return void
+     */
     protected function getEncodingTables(): void
     {
-        // get glyphs indexes of chars from cmap table
         $this->offset = $this->fdt['table']['cmap']['offset'] + 2;
         $numEncodingTables = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
@@ -312,7 +366,17 @@ class TrueType
     }
 
     /**
-     * Get encoding tables
+     * Get OS/2 and Windows Metrics Table (TTF OS/2 table)
+     *
+     * The OS/2 table consists of a set of metrics and other data that are required in OpenType fonts
+     *
+     * Six versions of the OS/2 table have been defined: versions 0 to 5. All versions are supported,
+     * but use of version 4 or later is strongly recommended.
+     * @link https://learn.microsoft.com/en-us/typography/opentype/spec/os2
+     *
+     * @return void
+     *
+     * @throws FontException
      */
     protected function getOS2Metrics(): void
     {
@@ -338,6 +402,13 @@ class TrueType
         }
     }
 
+    /**
+     * Get the font name
+     *
+     * @return void
+     *
+     * @throws FontException
+     */
     protected function getFontName(): void
     {
         $this->fdt['name'] = '';
@@ -346,12 +417,33 @@ class TrueType
         // Number of NameRecords that follow n.
         $numNameRecords = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
+
         // Offset to start of string storage (from start of table).
         $stringStorageOffset = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         for ($idx = 0; $idx < $numNameRecords; ++$idx) {
             $this->offset += 6; // skip Platform ID, Platform-specific encoding ID, Language ID.
-            // Name ID.
+
+            /**
+             * List of standard Name IDs:
+             *  -  0: Copyright notice
+             *  -  1: Font Family Name
+             *  -  2: Font Subfamily Name
+             *  -  3: Unique font identifier
+             *  -  4: Full font name reflecting all family and relevant subfamily descriptors
+             *  -  5: Version string beginning with "Version <number>.<number>" case-insensitive
+             *  -  6: Postscript name for the font.
+             *  -  7: Trademark
+             *  -  8: Manufacturer Name
+             *  -  9: Designer Name
+             *  - 10: Description
+             *  - 11: URL of Vendor
+             *  - 12: URL of Designer
+             *  - 13: License Description (can be very long and will be dropped in subsetting)
+             *  - 14: License Info URL
+             *  ...
+             *    25: Variations PostScript Name Prefix
+             */
             $nameID = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
             if ($nameID == 6) {
@@ -376,6 +468,11 @@ class TrueType
         }
     }
 
+    /**
+     * Get the PostScript Table (TTF post table)
+     *
+     * @return void
+     */
     protected function getPostData(): void
     {
         $this->offset = $this->fdt['table']['post']['offset'];
@@ -393,6 +490,30 @@ class TrueType
         }
     }
 
+    /**
+     * Get the Horizontal Header Table (TTF hhea table)
+     *
+     * - uint16 majorVersion                     hhea Major version
+     * - uint16 minorVersion                     hhea Minor version
+     * - FWORD  ascender
+     * - FWORD  descender
+     * - FWORD  lineGap
+     * - UFWORD advanceWidthMax
+     * - FWORD  minLeftSideBearing
+     * - FWORD  minRightSideBearing
+     * - FWORD  xMaxExtent
+     * - int16  caretSlopeRise
+     * - int16  caretSlopeRun
+     * - int16  caretOffset
+     * - int16  reserved (set to 0)
+     * - int16  reserved (set to 0)
+     * - int16  reserved (set to 0)
+     * - int16  reserved (set to 0)
+     * - int16  metricDataFormat (set to 0)
+     * - uint16 numberOfHMetrics (in hmtx table)
+     *
+     * @return void
+     */
     protected function getHheaData(): void
     {
         // ---------- get hhea data ----------
@@ -410,21 +531,34 @@ class TrueType
         // advanceWidthMax
         $this->fdt['MaxWidth'] = (int) \round($this->fbyte->getUFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
-        $this->offset += 22; // skip some values
+
+        // skip several fields...
+        $this->offset += 22;
+
         // get the number of hMetric entries in hmtx table
         $this->fdt['numHMetrics'] = $this->fbyte->getUShort($this->offset);
     }
 
+    /**
+     * Get the Maximum Profile Table (TTF maxp table)
+     *
+     * @return void
+     */
     protected function getMaxpData(): void
     {
         $this->offset = $this->fdt['table']['maxp']['offset'];
-        $this->offset += 4; // skip Table version number
+
+        // Skip the Table version number (Version16Dot16 = 4 bytes).
+        $this->offset += 4;
+
         // get the the number of glyphs in the font.
         $this->fdt['numGlyphs'] = $this->fbyte->getUShort($this->offset);
     }
 
     /**
      * Get font heights
+     *
+     * @return void
      */
     protected function getHeights(): void
     {
@@ -461,6 +595,8 @@ class TrueType
 
     /**
      * Get font widths
+     *
+     * @return void
      */
     protected function getWidths(): void
     {
@@ -502,7 +638,12 @@ class TrueType
     }
 
     /**
-     * Add CTG entry
+     * Add CTG entry to map CID to GID
+     *
+     * @param int  $cid Character Identifier
+     * @param int  $gid Glyph ID (zero-based index of the glyph in the font's glyph collection)
+     *
+     * @return void
      */
     protected function addCtgItem(int $cid, int $gid): void
     {
@@ -513,7 +654,16 @@ class TrueType
     }
 
     /**
-     * Process the  CID To GID Map.
+     * Process the font's cmap encoding table
+     *
+     * A Character Identifier (CID) is an integer matching the character code from a particular encoding.
+     * @link https://www.php.net/mb_ord
+     *
+     * The Glyph ID (GID) is the zero-based index of the glyph in the font's glyph collection.
+     *
+     * @return void
+     *
+     * @throws FontException
      *
      * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      */
@@ -544,6 +694,7 @@ class TrueType
             }
         }
 
+        // Glyph 0 is the .notdef glyph used when the font does not contain a glyph for a character
         if (! isset($this->fdt['ctgdata'][0])) {
             $this->fdt['ctgdata'][0] = 0;
         }

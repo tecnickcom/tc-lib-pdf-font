@@ -410,7 +410,7 @@ abstract class Load
                 }
             }
 
-            // we haven't found the version with style variations
+            // we have not found the version with style variations
             $this->data['fakestyle'] = true;
         }
     }
@@ -432,6 +432,8 @@ abstract class Load
 
     /**
      * Check Font Type
+     *
+     * @throws FontException on unknown font type
      */
     protected function checkType(): void
     {
@@ -439,9 +441,14 @@ abstract class Load
             return;
         }
 
-        throw new FontException('Unknow font type: ' . $this->data['type']);
+        throw new FontException('Unknown font type: ' . $this->data['type']);
     }
 
+    /**
+     * @return void
+     *
+     * @throws FontException on using a CID0 font in a pdfa
+     */
     protected function setName(): void
     {
         if ($this->data['type'] == 'Core') {

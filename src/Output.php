@@ -16,6 +16,7 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
+use Com\Tecnick\File\Exception as FileException;
 use Com\Tecnick\Pdf\Encrypt\Encrypt;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
@@ -50,8 +51,12 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * Initialize font data
      *
      * @param array<string, TFontData> $fonts   Array of imported fonts data
-     * @param int                     $pon     Current PDF Object Number
-     * @param Encrypt                 $encrypt Encrypt object
+     * @param int                      $pon     Current PDF Object Number
+     * @param Encrypt                  $encrypt Encrypt object
+     *
+     * @throws EncException
+     * @throws FileException
+     * @throws FontException
      */
     public function __construct(
         protected array $fonts,
@@ -142,7 +147,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Get the PDF output string for font encoding diffs
      *
-     * return string
+     * @return string
      */
     protected function getEncodingDiffs(): string
     {
@@ -179,7 +184,10 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Get the PDF output string for font files
      *
-     * return string
+     * @return string
+     *
+     * @throws FileException
+     * @throws FontException
      */
     protected function getFontFiles(): string
     {
@@ -237,7 +245,10 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Get the PDF output string for fonts
      *
-     * return string
+     * @return string
+     *
+     * @throws EncException
+     * @throws FontException
      */
     protected function getFontDefinitions(): string
     {
