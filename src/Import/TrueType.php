@@ -184,6 +184,19 @@ class TrueType
 
     /**
      * Get the font tables
+     *
+     *  TableDirectory:
+     *   0 - uint32  sfntVersion    Either 0x00010000 (For TTF font) or 0x4F54544F (which spells OTTO)
+     *   4 - uint16  numTables      Number of tables in font file
+     *   6 - uint16  searchRange    pow(2, floor(log2(numTables))) * 16 OR 1 << (entrySelector+4)
+     *   8 - uint16  entrySelector  floor(log2(numTables))
+     *  10 - uint16  rangeShift     numTables * 16 - searchRange
+     *
+     *  TableRecord (starts at byte-offset 12):
+     *    - uint8[4] tag           4 * ascii characters (range from 0x20 tp 0x7E) right padded with 0x20 (space) if len < 4
+     *    - uint32   checksum      The checksum for this table
+     *    - Offset32 offset        The table offset in bytes from the beginning of the font file
+     *    - uint32   length        The size of a table in bytes (excluding padding bytes)
      */
     protected function getTables(): void
     {
@@ -217,7 +230,7 @@ class TrueType
     }
 
     /**
-     * Check if the font is a valid type
+     * Verify the font file includes the mandatory magicNumber field
      *
      * Valid TTF 1.0 files have the magic number 0x5f0f3cf5 in
      * the "head" table offset 12 bytes from the start of the table.
@@ -287,7 +300,7 @@ class TrueType
     }
 
     /**
-     * Create a glyph index to glyf table byte offset mapping
+     * Map glyph indexes to their corresponding byte-offset in the glyf table data
      *
      * The loca table is an array of values mapping each glyph id to the glyph's symbol in the TTF glyf table.
      * These offsets will be stored using uint16-be values if the indexToLocFormat flag in the header table is 0 and
@@ -374,6 +387,38 @@ class TrueType
      * but use of version 4 or later is strongly recommended.
      * @link https://learn.microsoft.com/en-us/typography/opentype/spec/os2
      *
+     * OS/2 Table Version 0 (FWORD is an int16 in font design units):
+     *   0 - uint16       version         OS/2 table version (0-5)
+     *   2 - FWORD        xAvgCharWidth
+     *   4 - uint16       usWeightClass
+     *   6 - uint16       usWidthClass
+     *   8 - uint16       fsType
+     *  10 - FWORD        ySubscriptXSize
+     *  12 - FWORD        ySubscriptYSize
+     *  14 - FWORD        ySubscriptXOffset
+     *  16 - FWORD        ySubscriptYOffset
+     *  18 - FWORD        ySuperscriptXSize
+     *  20 - FWORD        ySuperscriptYSize
+     *  22 - FWORD        ySuperscriptXOffset
+     *  24 - FWORD        ySuperscriptYOffset
+     *  26 - FWORD        yStrikeoutSize
+     *  28 - FWORD        yStrikeoutPosition
+     *  30 - int16        sFamilyClass
+     *  32 - uint8[10]    panose              (@Link https://learn.microsoft.com/en-us/typography/opentype/spec/os2#pan)
+     *  34 - uint32       ulUnicodeRange1     Unicode Character Range 1
+     *  38 - uint32       ulUnicodeRange2     Unicode Character Range 2
+     *  42 - uint32       ulUnicodeRange3     Unicode Character Range 3
+     *  46 - uint32       ulUnicodeRange4     Unicode Character Range 4
+     *  50 - uint8[4]     tag                 4 * ascii (range from 0x20 tp 0x7E) right padded with 0x20 (space) if len < 4
+     *  54 - uint16       fsSelection
+     *  56 - uint16       usFirstCharIndex
+     *  58 - uint16       usLastCharIndex
+     *  60 - FWORD        sTypoAscender
+     *  62 - FWORD        sTypoDescender
+     *  64 - FWORD        sTypoLineGap
+     *  66 - UFWORD       usWinAscent
+     *  68 - UFWORD       usWinDescent
+     *
      * @return void
      *
      * @throws FontException
@@ -403,7 +448,21 @@ class TrueType
     }
 
     /**
-     * Get the font name
+     * Get the font name (TTF name table)
+     *
+     * NameTable Version 0:
+     *  0 - uint16            version            Table version number (0; would be 1 for Version 1)
+     *  2 - uint16            count              Number of name records
+     *  4 - Offset16          storageOffset      Offset to start of string storage (from start of name table)
+     *  6 - NameRecord[count] nameRecords        The NameRecords
+     *
+     * NameRecord:
+     *  0 - uint16   platformId         Platform ID
+     *  2 - uint16   encodingId         Platform-specific encoding ID
+     *  4 - uint16   languageId         Language ID
+     *  6 - uint16   nameId             Name ID (See list below in function body)
+     *  8 - uint16   length             String length (in bytes)
+     * 10 - Offset16 stringOffset       String offset from start of storage area (in bytes)
      *
      * @return void
      *
@@ -442,7 +501,7 @@ class TrueType
              *  - 13: License Description (can be very long and will be dropped in subsetting)
              *  - 14: License Info URL
              *  ...
-             *    25: Variations PostScript Name Prefix
+             *  - 25: Variations PostScript Name Prefix
              */
             $nameID = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
@@ -493,24 +552,24 @@ class TrueType
     /**
      * Get the Horizontal Header Table (TTF hhea table)
      *
-     * - uint16 majorVersion                     hhea Major version
-     * - uint16 minorVersion                     hhea Minor version
-     * - FWORD  ascender
-     * - FWORD  descender
-     * - FWORD  lineGap
-     * - UFWORD advanceWidthMax
-     * - FWORD  minLeftSideBearing
-     * - FWORD  minRightSideBearing
-     * - FWORD  xMaxExtent
-     * - int16  caretSlopeRise
-     * - int16  caretSlopeRun
-     * - int16  caretOffset
-     * - int16  reserved (set to 0)
-     * - int16  reserved (set to 0)
-     * - int16  reserved (set to 0)
-     * - int16  reserved (set to 0)
-     * - int16  metricDataFormat (set to 0)
-     * - uint16 numberOfHMetrics (in hmtx table)
+     *  0 - uint16      majorVersion                     hhea Major version
+     *  2 - uint16      minorVersion                     hhea Minor version
+     *  4 - FWORD       ascender
+     *  6 - FWORD       descender
+     *  8 - FWORD       lineGap
+     * 10 - UFWORD      advanceWidthMax
+     * 12 - FWORD       minLeftSideBearing
+     * 14 - FWORD       minRightSideBearing
+     * 16 - FWORD       xMaxExtent
+     * 18 - int16       caretSlopeRise
+     * 20 - int16       caretSlopeRun
+     * 22 - int16       caretOffset
+     * 24 - int16       reserved (set to 0)
+     * 26 - int16       reserved (set to 0)
+     * 28 - int16       reserved (set to 0)
+     * 30 - int16       reserved (set to 0)
+     * 32 - int16       metricDataFormat (set to 0)
+     * 34 - uint16      numberOfHMetrics (in hmtx table)
      *
      * @return void
      */
@@ -712,6 +771,10 @@ class TrueType
 
     /**
      * Process Format 0: Byte encoding table
+     *  0 - uint16      format              (unused) Always 0 for subtable format 0
+     *  2 - uint16      length              (unused) The length of the subtable in bytes
+     *  4 - uint16      language            (unused)
+     *  6 - unit8[256]  glyphIdArray        An array that maps character codes to glyph index values.
      */
     protected function processFormat0(): void
     {
@@ -725,6 +788,18 @@ class TrueType
 
     /**
      * Process Format 2: High-byte mapping through table
+     *   0 - uint16          format         (unused) Always 2 for subtable format 2
+     *   2 - uint16          length         (unused) The length of the subtable in bytes
+     *   4 - uint16          language       (unused)
+     *   6 - uint16[256]     subHeaderKeys  Array mapping high bytes into the subHeaders array: value is subHeaders index × 8
+     * 518 - SubHeader[]     subHeaders     Array of SubHeader records
+     *     - unit16[]        glyphIdArray   Array containing sub-arrays used for mapping the low byte of 2-byte character
+     *
+     * SubHeader Record (8 bytes):
+     *   0 - uint16          firstCode      First valid low byte for this SubHeader
+     *   2 - uint16          entryCount     Number of valid low bytes for this SubHeader
+     *   4 - int16           idDelta
+     *   6 - unit16          idRangeOffset
      */
     protected function processFormat2(): void
     {
@@ -790,6 +865,19 @@ class TrueType
 
     /**
      * Process Format 4: Segment mapping to delta values
+     *   0            - uint16              format         (unused) Always 4 for subtable format 4
+     *   2            - uint16              length         The length of the subtable in bytes
+     *   4            - uint16              language       (unused)
+     *   6            - uint16              segCountX2     2 × segCount
+     *   8            - uint16              searchRange    pow(2, floor(log2(segCount))) * 2 OR 1 << (entrySelector+1)
+     *  10            - uint16              entrySelector  floor(log2(segCount)))
+     *  12            - uint16              rangeShift     segCount * 2 - searchRange
+     *  14            - unit16[segCount]    endCode        End characterCode for each segment; last segment = 0xFFFF
+     *  14+2*segCount - uint16              reservedPad    Always 0
+     *  16+2*segCount - uint16[segCount]    startCode      Start characterCode for each segment; last segment = 0xFFFF
+     *  16+4*segCount - int16[segCount]     idDelta        Delta for all character codes in segment
+     *  16+6*segCount - uint16[segCount]    idRangeOffset  Offsets into glyphIdArray or 0
+     *  16+8*segCount - uint16[]            glyphIdArray   Glyph index array (arbitrary length)
      */
     protected function processFormat4(): void
     {
@@ -847,6 +935,12 @@ class TrueType
 
     /**
      * Process Format 6: Trimmed table mapping
+     *   0 - uint16               format         (unused) Always 6 for subtable format 6
+     *   2 - uint16               length         (unused) The length of the subtable in bytes
+     *   4 - uint16               language       (unused)
+     *   6 - uint16               firstCode      First character code of subrange
+     *   8 - uint16               entryCount     Number of character codes in subrange
+     *  10 - uint16[entryCount]   glyphIdArray   Array of glyph index values for character codes in the range
      */
     protected function processFormat6(): void
     {
@@ -865,6 +959,18 @@ class TrueType
 
     /**
      * Process Format 8: Mixed 16-bit and 32-bit coverage
+     *  0      - uint16                format         (unused) Always 8 for subtable format 8
+     *  2      - uint16                reserved       (unused) Always 0
+     *  4      - uint32                length         (unused) The length of the subtable in bytes
+     *  8      - uint32                language       (unused)
+     * 12      - uint8[8192]           is32           Bit array indicating a value is the start of a 32-bit character code
+     * 12+8192 - uint32                numGroups      Number of groupings which follow
+     * 16+8192 - MapGroup[numGroups]   glyphIdArray   Array of glyph index values for character codes in the range
+     *
+     * SequentialMapGroup Record (12 bytes):
+     *  0      - uint32                startCharCode  First character code in this group (high byte set to \0 if ia32=0)
+     *  4      - uint32                startCharCode  Last character code in this group (high byte set to \0 if ia32=0)
+     *  8      - uint32                startGlyphID   Glyph index corresponding to the starting character code
      */
     protected function processFormat8(): void
     {
@@ -904,6 +1010,13 @@ class TrueType
 
     /**
      * Process Format 10: Trimmed array
+     *   0 - uint16     format         (unused) Always 10 for subtable format 10
+     *   2 - uint16     reserved       (unused) Always 0
+     *   4 - uint32     length         (unused) The length of the subtable in bytes
+     *   8 - uint32     language       (unused)
+     *  12 - unit32     startCharCode  First character code covered
+     *  16 - uint32     numChars       Number of character codes covered
+     *  20 - uint16[]   glyphIdArray   Array of glyph index values for character codes in the range
      */
     protected function processFormat10(): void
     {
@@ -922,6 +1035,17 @@ class TrueType
 
     /**
      * Process Format 12: Segmented coverage
+     *   0 - uint16                         format         (unused) Always 12 for subtable format 12
+     *   2 - uint16                         reserved       (unused) Always 0
+     *   4 - uint32                         length         (unused) The length of the subtable in bytes
+     *   8 - uint32                         language       (unused)
+     *  12 - uint32                         numGroups      Number of groupings which follow
+     *  16 - SequentialMapGroup[numGroups]  groups         Array of SequentialMapGroup records
+     *
+     *  SequentialMapGroup Record (12 bytes):
+     *   0 - uint32                         startCharCode  First character code in this group
+     *   4 - uint32                         endCharCode    Last character code in this group
+     *   8 - uint32                         startGlyphID   Glyph index corresponding to the starting character code
      */
     protected function processFormat12(): void
     {
@@ -944,8 +1068,17 @@ class TrueType
 
     /**
      * Process Format 13: Many-to-one range mappings
+     *   0 - uint16                         format         (unused) Always 13 for subtable format 13
+     *   2 - uint16                         reserved       (unused) Always 0
+     *   4 - uint32                         length         (unused) The length of the subtable in bytes
+     *   8 - uint32                         language       (unused)
+     *  12 - uint32                         numGroups      Number of groupings which follow
+     *  16 - ConstantMapGroup[numGroups]    groups         Array of SequentialMapGroup records
      *
-     * @TODO: TO BE IMPLEMENTED
+     * ConstantMapGroup Record (12 bytes):
+     *   0 - uint32                         startCharCode  First character code in this group
+     *   4 - uint32                         endCharCode    Last character code in this group
+     *   8 - uint32                         startGlyphID   Glyph index corresponding to the starting character code
      */
     protected function processFormat13(): void
     {
