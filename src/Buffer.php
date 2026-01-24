@@ -86,7 +86,7 @@ abstract class Buffer
      *                       to have your same font in order to make
      *                       changes to your PDF. The file size of the
      *                       PDF would also be smaller because you are
-     *                       embeding only a subset. NOTE: This
+     *                       embedding only a subset. NOTE: This
      *                       option is computational and memory
      *                       intensive.
      * @param bool  $unicode True if we are in Unicode mode, False otherwhise.
@@ -176,7 +176,7 @@ abstract class Buffer
     /**
      * Add a new font to the fonts buffer
      *
-     * The definition file (and the font file itself when embeding) must be present either in the current directory
+     * The definition file (and the font file itself when embedding) must be present either in the current directory
      * or in the one indicated by K_PATH_FONTS if the constant is defined.
      *
      * @param int    $objnum Current PDF object number
@@ -205,7 +205,7 @@ abstract class Buffer
      *                       your same font in order to make changes
      *                       to your PDF. The file size of the PDF
      *                       would also be smaller because you are
-     *                       embeding only a subset. Set this to
+     *                       embedding only a subset. Set this to
      *                       null to use the default value. NOTE:
      *                       This option is computational and memory
      *                       intensive.

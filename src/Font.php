@@ -37,7 +37,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     /**
      * Load an imported font
      *
-     * The definition file (and the font file itself when embeding) must be present either in the current directory
+     * The definition file (and the font file itself when embedding) must be present either in the current directory
      * or in the one indicated by K_PATH_FONTS if the constant is defined.
      *
      * @param string $font     Font family.
@@ -77,7 +77,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *                         would need to have your same font in
      *                         order to make changes to your PDF. The
      *                         file size of the PDF would also be
-     *                         smaller because you are embeding only a
+     *                         smaller because you are embedding only a
      *                         subset.
      * @param bool   $unicode  True if we are in Unicode mode, False otherwhise.
      * @param bool   $pdfa     True if we are in PDF/A mode.

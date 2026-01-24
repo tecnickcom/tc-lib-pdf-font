@@ -122,7 +122,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Insert a font into the stack
      *
-     * The definition file (and the font file itself when embeding) must be present either in the current directory
+     * The definition file (and the font file itself when embedding) must be present either in the current directory
      * or in the one indicated by K_PATH_FONTS if the constant is defined.
      *
      * @param int    $objnum     Current PDF object number
@@ -153,7 +153,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *                           would need to have your same font in
      *                           order to make changes to your PDF. The
      *                           file size of the PDF would also be
-     *                           smaller because you are embeding only a
+     *                           smaller because you are embedding only a
      *                           subset. Set this to null to use the
      *                           default value. NOTE: This option is
      *                           computational and memory intensive.
