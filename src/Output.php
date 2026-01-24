@@ -54,7 +54,6 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * @param int                      $pon     Current PDF Object Number
      * @param Encrypt                  $encrypt Encrypt object
      *
-     * @throws EncException
      * @throws FileException
      * @throws FontException
      */
@@ -246,9 +245,6 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * Get the PDF output string for fonts
      *
      * @return string
-     *
-     * @throws EncException
-     * @throws FontException
      */
     protected function getFontDefinitions(): string
     {

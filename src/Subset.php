@@ -208,7 +208,6 @@ class Subset
      * @param TFontData        $fdt      Extracted font metrics
      * @param array<int, bool> $subchars Array containing subset chars
      *
-     * @throws FileException in case of error
      * @throws FontException in case of error
      */
     public function __construct(string $font, array $fdt, array $subchars = [])
