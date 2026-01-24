@@ -6,7 +6,7 @@
  * @since       2015-11-30
  * @category    Library
  * @package     PdfFont
- * @author     2026 Nicola Asuni <info@tecnick.com>
+ * @author      Nicola Asuni <info@tecnick.com>
  * @copyright   2011-2026 Nicola Asuni - Tecnick.com LTD
  * @license     https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link        https://github.com/tecnickcom/tc-lib-pdf-font
