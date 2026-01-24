@@ -441,7 +441,7 @@ class TrueType
         $this->offset += 2;
         if ($fsType == 2) {
             throw new FontException(
-                'This Font cannot be modified, embedded or exchanged in any manner'
+                'This Font cannot be modified, embeded or exchanged in any manner'
                 . ' without first obtaining permission of the legal owner.'
             );
         }

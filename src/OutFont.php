@@ -276,9 +276,9 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $out .= (++$this->pon) . ' 0 obj' . "\n";
             // Embed CIDToGIDMap
             // A specification of the mapping from CIDs to glyph indices
-            // search and get CTG font file to embedd
+            // search and get CTG font file to embed
             $ctgfile = \strtolower($font['ctg']);
-            // search and get ctg font file to embedd
+            // search and get ctg font file to embed
             $fontfile = $this->getFontFullPath($font['dir'], $ctgfile);
             $content = \file_get_contents($fontfile);
             if ($content === false) {
