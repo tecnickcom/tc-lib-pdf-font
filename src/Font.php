@@ -147,7 +147,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         }
 
         if ($this->data['pdfa'] && (isset(Core::FONT[$this->data['family']]))) {
-            // core fonts must be embeded in PDF/A
+            // core fonts must be embedded in PDF/A
             $this->data['family'] = 'pdfa' . $this->data['family'];
         }
 

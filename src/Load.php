@@ -459,7 +459,7 @@ abstract class Load
         } elseif ($this->data['type'] == 'TrueTypeUnicode') {
             $this->data['enc'] = 'Identity-H';
         } elseif (($this->data['type'] == 'cidfont0') && ($this->data['pdfa'])) {
-            throw new FontException('CID0 fonts are not supported, all fonts must be embeded in PDF/A mode!');
+            throw new FontException('CID0 fonts are not supported, all fonts must be embedded in PDF/A mode!');
         }
 
         if (empty($this->data['name'])) {
