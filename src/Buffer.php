@@ -6,9 +6,9 @@
  * @since     2011-05-23
  * @category  Library
  * @package   PdfFont
- * @author    Nicola Asuni <info@tecnick.com>
- * @copyright 2011-2024 Nicola Asuni - Tecnick.com LTD
- * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @author   2026 Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
@@ -24,9 +24,9 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @since     2011-05-23
  * @category  Library
  * @package   PdfFont
- * @author    Nicola Asuni <info@tecnick.com>
- * @copyright 2011-2024 Nicola Asuni - Tecnick.com LTD
- * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @author   2026 Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type TFontData from Load
@@ -74,9 +74,9 @@ abstract class Buffer
      * Initialize fonts buffer
      *
      * @param float $kunit   Unit of measure conversion ratio.
-     * @param bool  $subset  If true embedd only a subset of the fonts
+     * @param bool  $subset  If true embed only a subset of the fonts
      *                       (stores only the information related to
-     *                       the used characters); If false embedd
+     *                       the used characters); If false embed
      *                       full font; This option is valid only for
      *                       TrueTypeUnicode fonts and it is disabled
      *                       for PDF/A. If you want to enable users to
@@ -86,7 +86,7 @@ abstract class Buffer
      *                       to have your same font in order to make
      *                       changes to your PDF. The file size of the
      *                       PDF would also be smaller because you are
-     *                       embedding only a subset. NOTE: This
+     *                       embeding only a subset. NOTE: This
      *                       option is computational and memory
      *                       intensive.
      * @param bool  $unicode True if we are in Unicode mode, False otherwhise.
@@ -176,7 +176,7 @@ abstract class Buffer
     /**
      * Add a new font to the fonts buffer
      *
-     * The definition file (and the font file itself when embedding) must be present either in the current directory
+     * The definition file (and the font file itself when embeding) must be present either in the current directory
      * or in the one indicated by K_PATH_FONTS if the constant is defined.
      *
      * @param int    $objnum Current PDF object number
@@ -205,7 +205,7 @@ abstract class Buffer
      *                       your same font in order to make changes
      *                       to your PDF. The file size of the PDF
      *                       would also be smaller because you are
-     *                       embedding only a subset. Set this to
+     *                       embeding only a subset. Set this to
      *                       null to use the default value. NOTE:
      *                       This option is computational and memory
      *                       intensive.

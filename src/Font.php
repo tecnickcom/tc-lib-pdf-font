@@ -6,9 +6,9 @@
  * @since     2011-05-23
  * @category  Library
  * @package   PdfFont
- * @author    Nicola Asuni <info@tecnick.com>
- * @copyright 2011-2024 Nicola Asuni - Tecnick.com LTD
- * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @author   2026 Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
@@ -25,9 +25,9 @@ use Com\Tecnick\File\File;
  * @since     2011-05-23
  * @category  Library
  * @package   PdfFont
- * @author    Nicola Asuni <info@tecnick.com>
- * @copyright 2011-2024 Nicola Asuni - Tecnick.com LTD
- * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @author   2026 Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type TFontData from Load
@@ -37,7 +37,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
     /**
      * Load an imported font
      *
-     * The definition file (and the font file itself when embedding) must be present either in the current directory
+     * The definition file (and the font file itself when embeding) must be present either in the current directory
      * or in the one indicated by K_PATH_FONTS if the constant is defined.
      *
      * @param string $font     Font family.
@@ -65,9 +65,9 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      * @param string $ifile    The font definition file (or empty for autodetect).
      *                         By default, the name is built from the family and
      *                         style, in lower case with no spaces.
-     * @param bool   $subset   If true embedd only a subset of the font
+     * @param bool   $subset   If true embed only a subset of the font
      *                         (stores only the information related to
-     *                         the used characters); If false embedd
+     *                         the used characters); If false embed
      *                         full font; This option is valid only for
      *                         TrueTypeUnicode fonts and it is disabled
      *                         for PDF/A. If you want to enable users
@@ -77,7 +77,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      *                         would need to have your same font in
      *                         order to make changes to your PDF. The
      *                         file size of the PDF would also be
-     *                         smaller because you are embedding only a
+     *                         smaller because you are embeding only a
      *                         subset.
      * @param bool   $unicode  True if we are in Unicode mode, False otherwhise.
      * @param bool   $pdfa     True if we are in PDF/A mode.
@@ -161,7 +161,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         }
 
         if ($this->data['pdfa'] && (isset(Core::FONT[$this->data['family']]))) {
-            // core fonts must be embedded in PDF/A
+            // core fonts must be embeded in PDF/A
             $this->data['family'] = 'pdfa' . $this->data['family'];
         }
 

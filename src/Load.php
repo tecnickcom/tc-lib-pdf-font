@@ -6,9 +6,9 @@
  * @since     2011-05-23
  * @category  Library
  * @package   PdfFont
- * @author    Nicola Asuni <info@tecnick.com>
- * @copyright 2011-2024 Nicola Asuni - Tecnick.com LTD
- * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @author   2026 Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
@@ -25,9 +25,9 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @since     2011-05-23
  * @category  Library
  * @package   PdfFont
- * @author    Nicola Asuni <info@tecnick.com>
- * @copyright 2011-2024 Nicola Asuni - Tecnick.com LTD
- * @license   http://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @author   2026 Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-type TFontDataCidInfo array{
@@ -439,7 +439,7 @@ abstract class Load
             return;
         }
 
-        throw new FontException('Unknow font type: ' . $this->data['type']);
+        throw new FontException('Unknown font type: ' . $this->data['type']);
     }
 
     protected function setName(): void
@@ -452,7 +452,7 @@ abstract class Load
         } elseif ($this->data['type'] == 'TrueTypeUnicode') {
             $this->data['enc'] = 'Identity-H';
         } elseif (($this->data['type'] == 'cidfont0') && ($this->data['pdfa'])) {
-            throw new FontException('CID0 fonts are not supported, all fonts must be embedded in PDF/A mode!');
+            throw new FontException('CID0 fonts are not supported, all fonts must be embeded in PDF/A mode!');
         }
 
         if (empty($this->data['name'])) {
