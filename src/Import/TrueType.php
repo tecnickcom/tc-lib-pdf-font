@@ -456,7 +456,7 @@ class TrueType
      *  4 - Offset16          storageOffset      Offset to start of string storage (from start of name table)
      *  6 - NameRecord[count] nameRecords        The NameRecords
      *
-     * NameRecord:
+     * NameRecord (12 bytes):
      *  0 - uint16   platformId         Platform ID
      *  2 - uint16   encodingId         Platform-specific encoding ID
      *  4 - uint16   languageId         Language ID
@@ -481,7 +481,11 @@ class TrueType
         $stringStorageOffset = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         for ($idx = 0; $idx < $numNameRecords; ++$idx) {
-            $this->offset += 6; // skip Platform ID, Platform-specific encoding ID, Language ID.
+            $platformId = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+            $encodingId = $this->fbyte->getUShort($this->offset);
+            $this->offset += 2;
+            $this->offset += 2; // Skip languageId.
 
             /**
              * List of standard Name IDs:
@@ -513,8 +517,35 @@ class TrueType
                 $stringOffset = $this->fbyte->getUShort($this->offset);
                 $this->offset += 2;
                 $this->offset = ($this->fdt['table']['name']['offset'] + $stringStorageOffset + $stringOffset);
-                $this->fdt['name'] = \substr($this->font, $this->offset, $stringLength);
-                $name = \preg_replace('/[^a-zA-Z0-9_\-]/', '', $this->fdt['name']);
+                $name = \substr($this->font, $this->offset, $stringLength);
+
+                // Convert name string to UTF-8 if iconv or mbstring is available
+                if ($platformId == 1) {
+                    // Legacy Macintosh platform uses 'MacRoman' encoding which is not available in PHP mbstring.
+                    // Convert with iconv (macintosh = MacRoman) if available or mb_convert_encoding using
+                    // Windows-1252 (closest substitute for MacRoman) if available.
+                    $name = \function_exists('\iconv')
+                        ? \iconv('macintosh', 'UTF-8', $name)
+                        : (\function_exists('\mb_convert_encoding')
+                            ? \mb_convert_encoding($name, 'UTF-8', 'Windows-1252')
+                            : $name);
+                } elseif (\function_exists('\mb_convert_encoding')) {
+                    // All Unicode (platformId=0) strings are UTF-16BE
+                    $stringEncoding = 'UTF-16BE';
+
+                    // Windows platform (platformId=3) uses specific string encodings for encodingIds 3, 4, and 5
+                    if ($platformId == 3) {
+                        $stringEncoding = match ($encodingId) {
+                            3 => 'CP936',
+                            4 => 'CP950',
+                            5 => 'CP949',
+                            default => 'UTF-16BE',
+                        };
+                    }
+                    $name = \mb_convert_encoding($name, 'UTF-8', $stringEncoding);
+                }
+
+                $name = \preg_replace('/[^a-zA-Z0-9_\-]/', '', $name);
                 if (($name === null) || ($name === '')) {
                     throw new FontException('Error getting font name.');
                 }
