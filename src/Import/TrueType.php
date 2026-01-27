@@ -562,7 +562,7 @@ class TrueType
 
                 $this->offset = ($this->fdt['table']['name']['offset'] + $stringStorageOffset + $stringOffset);
                 // TTF encoded name string
-                $name = \substr($this->font, $THIS->offset, $stringLength);
+                $name = \substr($this->font, $this->offset, $stringLength);
                 // Convert the string encoding if possible
                 $name = $this->convertStringEncoding($name, $platformId, $encodingId);
 
