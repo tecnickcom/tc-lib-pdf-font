@@ -448,6 +448,49 @@ class TrueType
     }
 
     /**
+     * Convert string encoding based on the platformId and encodingId using the mb_convert_encoding
+     * or iconv functions if they are available.
+     *
+     * @param string    $str           The encoded string from the TTF NameRecord to convert
+     * @param int       $platformId    The platformId from the TTF NameRecord
+     * @param int       $encodingId    The encodingId from the TTF NameRecord
+     *
+     * @return string   Returns the string converted to UTF-8 or the original string if conversion
+     *                  fails or is not  available.
+     */
+    protected function convertStringEncoding(string $str, int $platformId, int $encodingId): string
+    {
+        $original = $str;
+        
+        if ($platformId == 1) {
+            // Legacy Macintosh platform uses 'MacRoman' encoding which is not available in PHP mbstring.
+            // Convert with iconv (macintosh = MacRoman) if available or mb_convert_encoding using
+            // Windows-1252 (closest substitute for MacRoman) if available.
+            $str = \function_exists('\iconv')
+                ? \iconv('macintosh', 'UTF-8', $str)
+                : (\function_exists('\mb_convert_encoding')
+                    ? \mb_convert_encoding($str, 'UTF-8', 'Windows-1252')
+                    : $str);
+        } elseif (\function_exists('\mb_convert_encoding')) {
+            // All Unicode (platformId=0) strings are UTF-16BE
+            $stringEncoding = 'UTF-16BE';
+
+            // Windows platform (platformId=3) uses specific string encodings for encodingIds 3, 4, and 5
+            if ($platformId == 3) {
+                $stringEncoding = match ($encodingId) {
+                    3 => 'CP936',
+                    4 => 'CP950',
+                    5 => 'CP949',
+                    default => 'UTF-16BE',
+                };
+            }
+            $str = \mb_convert_encoding($str, 'UTF-8', $stringEncoding);
+        }
+
+        return is_string($str) ? $str : $original;
+    }
+
+    /**
      * Get the font name (TTF name table)
      *
      * NameTable Version 0:
@@ -516,34 +559,12 @@ class TrueType
                 // String offset from start of storage area (in bytes).
                 $stringOffset = $this->fbyte->getUShort($this->offset);
                 $this->offset += 2;
+
                 $this->offset = ($this->fdt['table']['name']['offset'] + $stringStorageOffset + $stringOffset);
-                $name = \substr($this->font, $this->offset, $stringLength);
-
-                // Convert name string to UTF-8 if iconv or mbstring is available
-                if ($platformId == 1) {
-                    // Legacy Macintosh platform uses 'MacRoman' encoding which is not available in PHP mbstring.
-                    // Convert with iconv (macintosh = MacRoman) if available or mb_convert_encoding using
-                    // Windows-1252 (closest substitute for MacRoman) if available.
-                    $name = \function_exists('\iconv')
-                        ? \iconv('macintosh', 'UTF-8', $name)
-                        : (\function_exists('\mb_convert_encoding')
-                            ? \mb_convert_encoding($name, 'UTF-8', 'Windows-1252')
-                            : $name);
-                } elseif (\function_exists('\mb_convert_encoding')) {
-                    // All Unicode (platformId=0) strings are UTF-16BE
-                    $stringEncoding = 'UTF-16BE';
-
-                    // Windows platform (platformId=3) uses specific string encodings for encodingIds 3, 4, and 5
-                    if ($platformId == 3) {
-                        $stringEncoding = match ($encodingId) {
-                            3 => 'CP936',
-                            4 => 'CP950',
-                            5 => 'CP949',
-                            default => 'UTF-16BE',
-                        };
-                    }
-                    $name = \mb_convert_encoding($name, 'UTF-8', $stringEncoding);
-                }
+                // TTF encoded name string
+                $name = \substr($this->font, $THIS->offset, $stringLength);
+                // Convert the string encoding if possible
+                $name = $this->convertStringEncoding($name, $platformId, $encodingId);
 
                 $name = \preg_replace('/[^a-zA-Z0-9_\-]/', '', $name);
                 if (($name === null) || ($name === '')) {
