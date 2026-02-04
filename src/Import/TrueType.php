@@ -461,7 +461,7 @@ class TrueType
     protected function convertStringEncoding(string $str, int $platformId, int $encodingId): string
     {
         $original = $str;
-        
+
         if ($platformId == 1) {
             // Legacy Macintosh platform uses 'MacRoman' encoding which is not available in PHP mbstring.
             // Convert with iconv (macintosh = MacRoman) if available or mb_convert_encoding using
