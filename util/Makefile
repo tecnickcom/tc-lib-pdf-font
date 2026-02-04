@@ -163,14 +163,14 @@ deb:
 	make install DESTDIR=$(PATHDEBPKG)/$(PKGNAME)-$(VERSION) PKGFONTDIR=$(PKGFONTDIR)
 	tar -zcvf $(PATHDEBPKG)/$(PKGNAME)_$(VERSION).orig.tar.gz -C $(PATHDEBPKG)/ $(PKGNAME)-$(VERSION)
 	cp -rf ../resources/fonts/debian $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian
-	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#DATE#~/`date -R`/" {} \;
-	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#VENDOR#~/$(VENDOR)/" {} \;
-	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#PROJECT#~/$(PROJECT)/" {} \;
-	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#PKGNAME#~/$(PKGNAME)/" {} \;
-	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#VERSION#~/$(VERSION)/" {} \;
-	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#RELEASE#~/$(RELEASE)/" {} \;
-	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#FONT#~/$(PKGFONTDIR)/" {} \;
-	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed -i "s/~#LICENSE#~/$(PKGFONTLICENSE)/" {} \;
+	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed --in-place=.bak "s/~#DATE#~/`date -R`/" {} \;
+	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed --in-place=.bak "s/~#VENDOR#~/$(VENDOR)/" {} \;
+	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed --in-place=.bak "s/~#PROJECT#~/$(PROJECT)/" {} \;
+	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed --in-place=.bak "s/~#PKGNAME#~/$(PKGNAME)/" {} \;
+	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed --in-place=.bak "s/~#VERSION#~/$(VERSION)/" {} \;
+	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed --in-place=.bak "s/~#RELEASE#~/$(RELEASE)/" {} \;
+	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed --in-place=.bak "s/~#FONT#~/$(PKGFONTDIR)/" {} \;
+	find $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/ -type f -exec sed --in-place=.bak "s/~#LICENSE#~/$(PKGFONTLICENSE)/" {} \;
 	echo $(FONTPATH) > $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/$(PKGNAME).dirs
 	echo "$(FONTPATH)* $(FONTPATH)" > $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/install
 	echo $(DOCPATH) >> $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/$(PKGNAME).dirs
