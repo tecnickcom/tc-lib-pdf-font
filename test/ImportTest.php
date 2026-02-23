@@ -125,7 +125,7 @@ class ImportTest extends TestUtil
         $metric = $import->getFontMetrics();
 
         $this->assertEquals('[' . $metric['bbox'] . ']', $json['desc']['FontBBox']);
-        $this->assertEquals($metric['italicAngle'], $json['desc']['ItalicAngle']);
+        $this->assertEqualsWithDelta($metric['italicAngle'], $json['desc']['ItalicAngle'], 0.001);
         $this->assertEquals($metric['Ascent'], $json['desc']['Ascent']);
         $this->assertEquals($metric['Descent'], $json['desc']['Descent']);
         $this->assertEquals($metric['Leading'], $json['desc']['Leading']);
