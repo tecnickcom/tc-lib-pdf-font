@@ -86,41 +86,35 @@ help:
 	@echo "${PROJECT} Makefile."
 	@echo "The following commands are available:"
 	@echo ""
-	@echo "    make clean       : Delete the vendor and target directory"
-	@echo "    make build       : Clean and download the composer dependencies"
-	@echo "    make update      : Update composer dependencies"
-	@echo "    make install     : Install this library"
-	@echo "    make uninstall   : Remove all installed files"
-	@echo "    make rpm         : Build an RPM package"
-	@echo "    make deb         : Build a DEB package"
-	@echo "    make bz2         : Build a tar bz2 (tbz2) compressed archive"
+	@awk '/^## /{desc=substr($$0,4)} /^\.PHONY:/{if(NF>1) {target=$$2; if(desc) printf "  make %-15s: %s\n",target,desc; desc=""}}' Makefile
 	@echo ""
 
 # alias for help target
 .PHONY: all
 all: help
 
-# delete the vendor and target directory
+## delete the vendor and target directory
 .PHONY: clean
 clean:
 	rm -rf ./vendor/
 	rm -rf ../target/fonts
 
+## Download all dependencies
 .PHONY: deps
 deps:
 	($(COMPOSER) install --no-dev --no-interaction)
 
-# clean and download the composer dependencies (all TTF font files)
+## Clean and download the composer dependencies (all TTF font files)
 .PHONY: build
 build: deps
 	./bulk_convert.php
 
-# update composer dependencies
+## Update composer dependencies
 .PHONY: update
 update:
 	($(COMPOSER) update --no-interaction)
 
-# Install this application
+## Install this application
 .PHONY: install
 install: uninstall
 	mkdir -p $(PATHINSTFONT)
@@ -135,14 +129,14 @@ install: uninstall
 	cp -f ../RELEASE $(PATHINSTDOC)
 	chmod -R 644 $(PATHINSTDOC)*
 
-# Remove all installed files
+## Remove all installed files
 .PHONY: uninstall
 uninstall:
 	rm -rf $(PATHINSTFONT)
 
 # --- PACKAGING ---
 
-# Build the RPM package for RedHat-like Linux distributions
+## Build the RPM package for RedHat-like Linux distributions
 .PHONY: rpm
 rpm:
 	rm -rf $(PATHRPMPKG)
@@ -161,7 +155,7 @@ rpm:
 	--define "_license $(PKGFONTLICENSE)" \
 	-bb ../resources/rpm/fonts.spec
 
-# Build the DEB package for Debian-like Linux distributions
+## Build the DEB package for Debian-like Linux distributions
 .PHONY: deb
 deb:
 	echo resources/fonts/control/$(DEBCOPYRIGHT)
@@ -185,7 +179,7 @@ deb:
 	echo "extra-license-file $(DOCPATH)LICENSE.gz" >> $(PATHDEBPKG)/$(PKGNAME)-$(VERSION)/debian/$(PKGNAME).lintian-overrides
 	cd $(PATHDEBPKG)/$(PKGNAME)-$(VERSION) && debuild -us -uc
 
-# build a compressed bz2 archive
+## Build a compressed bz2 archive
 .PHONY: bz2
 bz2:
 	rm -rf $(PATHBZ2PKG)
