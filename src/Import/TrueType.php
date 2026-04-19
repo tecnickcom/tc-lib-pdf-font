@@ -1120,26 +1120,40 @@ class TrueType
 
     /**
      * Process Format 13: Many-to-one range mappings
-     *   0 - uint16                         format         (unused) Always 13 for subtable format 13
-     *   2 - uint16                         reserved       (unused) Always 0
-     *   4 - uint32                         length         (unused) The length of the subtable in bytes
-     *   8 - uint32                         language       (unused)
-     *  12 - uint32                         numGroups      Number of groupings which follow
-     *  16 - ConstantMapGroup[numGroups]    groups         Array of SequentialMapGroup records
+     *   0 - uint16                        format         (unused) Always 13 for subtable format 13
+     *   2 - uint16                        reserved       (unused) Always 0
+     *   4 - uint32                        length         (unused) The length of the subtable in bytes
+     *   8 - uint32                        language       (unused)
+     *  12 - uint32                        numGroups      Number of groupings which follow
+     *  16 - ConstantMapGroup[numGroups]   groups         Array of ConstantMapGroup records
      *
-     * ConstantMapGroup Record (12 bytes):
-     *   0 - uint32                         startCharCode  First character code in this group
-     *   4 - uint32                         endCharCode    Last character code in this group
-     *   8 - uint32                         startGlyphID   Glyph index corresponding to the starting character code
+     *  ConstantMapGroup Record (12 bytes):
+     *   0 - uint32                        startCharCode  First character code in this group
+     *   4 - uint32                        endCharCode    Last character code in this group
+     *   8 - uint32                        glyphID        Glyph index to be used for all characters in the group's range
+     *
+     * @link https://learn.microsoft.com/en-us/typography/opentype/spec/cmap#format-13-many-to-one-range-mappings
      */
     protected function processFormat13(): void
     {
+        $this->offset += 10; // skip reserved, length and language
+        $nGroups = $this->fbyte->getULong($this->offset);
+        $this->offset += 4;
+        for ($kdx = 0; $kdx < $nGroups; ++$kdx) {
+            $startCharCode = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            $endCharCode = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            $glyphID = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+            for ($chr = $startCharCode; $chr <= $endCharCode; ++$chr) {
+                $this->addCtgItem($chr, $glyphID);
+            }
+        }
     }
 
     /**
      * Process Format 14: Unicode Variation Sequences
-     *
-     * @TODO: TO BE IMPLEMENTED
      */
     protected function processFormat14(): void
     {
