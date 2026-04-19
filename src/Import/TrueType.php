@@ -1131,8 +1131,6 @@ class TrueType
      *   0 - uint32                        startCharCode  First character code in this group
      *   4 - uint32                        endCharCode    Last character code in this group
      *   8 - uint32                        glyphID        Glyph index to be used for all characters in the group's range
-     *
-     * @link https://learn.microsoft.com/en-us/typography/opentype/spec/cmap#format-13-many-to-one-range-mappings
      */
     protected function processFormat13(): void
     {
@@ -1154,8 +1152,72 @@ class TrueType
 
     /**
      * Process Format 14: Unicode Variation Sequences
+     *
+     * 'cmap' Subtable Format 14 (format field already consumed, $this->offset points past it):
+     *   0 - uint16                                  format                  (already consumed) Always 14
+     *   2 - uint32                                  length                  Byte length of this subtable (incl. header)
+     *   6 - uint32                                  numVarSelectorRecords   Number of VariationSelector records
+     *  10 - VariationSelector[numVarSelectorRecords] varSelector            Array of VariationSelector records
+     *
+     * VariationSelector Record (11 bytes):
+     *   0 - uint24     varSelector          Variation selector value
+     *   3 - Offset32   defaultUVSOffset     Offset from subtable start to Default UVS table; 0 if absent
+     *   7 - Offset32   nonDefaultUVSOffset  Offset from subtable start to Non-Default UVS table; 0 if absent
+     *
+     * NonDefaultUVS Table:
+     *   0 - uint32        numUVSMappings  Number of UVS Mapping records
+     *   4 - UVSMapping[]  uvsMappings     Array of UVSMapping records
+     *
+     * UVSMapping Record (5 bytes):
+     *   0 - uint24   unicodeValue  Base Unicode code point of the variation sequence
+     *   3 - uint16   glyphID       Glyph ID to use for this variation sequence
+     *
+     * Default UVS sequences reuse the glyph already mapped in the main cmap table; no action required.
      */
     protected function processFormat14(): void
     {
+        // The format field (uint16) was consumed before this method was called,
+        // so the subtable starts 2 bytes before the current offset.
+        $subtableOffset = ($this->offset - 2);
+
+        $this->offset += 4; // skip length (uint32)
+
+        $numVarSelectors = $this->fbyte->getULong($this->offset);
+        $this->offset += 4;
+
+        for ($idx = 0; $idx < $numVarSelectors; ++$idx) {
+            $this->offset += 3; // skip varSelector (uint24)
+
+            $this->offset += 4; // skip defaultUVSOffset — default sequences use the main cmap glyph
+
+            $nonDefaultOffset = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+
+            if ($nonDefaultOffset === 0) {
+                continue;
+            }
+
+            // Process the Non-Default UVS table for this variation selector.
+            $savedOffset = $this->offset;
+            $this->offset = ($subtableOffset + $nonDefaultOffset);
+
+            $numUVSMappings = $this->fbyte->getULong($this->offset);
+            $this->offset += 4;
+
+            for ($jdx = 0; $jdx < $numUVSMappings; ++$jdx) {
+                // unicodeValue: uint24 (3 bytes, big-endian)
+                $unicodeValue = ($this->fbyte->getByte($this->offset) << 16)
+                    | ($this->fbyte->getByte($this->offset + 1) << 8)
+                    | $this->fbyte->getByte($this->offset + 2);
+                $this->offset += 3;
+
+                $glyphID = $this->fbyte->getUShort($this->offset);
+                $this->offset += 2;
+
+                $this->addCtgItem($unicodeValue, $glyphID);
+            }
+
+            $this->offset = $savedOffset;
+        }
     }
 }
