@@ -1,105 +1,113 @@
 # tc-lib-pdf-font
-*PHP library containing PDF font methods and utilities*
+
+> Font import, metrics, and stack management utilities for PDF generation.
 
 [![Latest Stable Version](https://poser.pugx.org/tecnickcom/tc-lib-pdf-font/version)](https://packagist.org/packages/tecnickcom/tc-lib-pdf-font)
-![Build](https://github.com/tecnickcom/tc-lib-pdf-font/actions/workflows/check.yml/badge.svg)
+[![Build](https://github.com/tecnickcom/tc-lib-pdf-font/actions/workflows/check.yml/badge.svg)](https://github.com/tecnickcom/tc-lib-pdf-font/actions/workflows/check.yml)
 [![Coverage](https://codecov.io/gh/tecnickcom/tc-lib-pdf-font/graph/badge.svg?token=wGN6UnOAFo)](https://codecov.io/gh/tecnickcom/tc-lib-pdf-font)
 [![License](https://poser.pugx.org/tecnickcom/tc-lib-pdf-font/license)](https://packagist.org/packages/tecnickcom/tc-lib-pdf-font)
 [![Downloads](https://poser.pugx.org/tecnickcom/tc-lib-pdf-font/downloads)](https://packagist.org/packages/tecnickcom/tc-lib-pdf-font)
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/donate/?hosted_button_id=NZUEC5XS8MFBJ)
-*Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/donate/?hosted_button_id=NZUEC5XS8MFBJ)*
 
-* **category**    Library
-* **package**     \Com\Tecnick\Pdf\Font
-* **author**      Nicola Asuni <info@tecnick.com>
-* **copyright**   2011-2026 Nicola Asuni - Tecnick.com LTD
-* **license**     https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
-* **link**        https://github.com/tecnickcom/tc-lib-pdf-font
-* **SRC DOC**     https://tcpdf.org/docs/srcdoc/tc-lib-pdf-font
+If this library helps your PDF pipeline, please consider [supporting development via PayPal](https://www.paypal.com/donate/?hosted_button_id=NZUEC5XS8MFBJ).
 
-## Description
+---
 
-PHP library containing PDF font methods and utilities.
+## Overview
 
-The initial source code has been derived from [TCPDF](<http://www.tcpdf.org>).
+`tc-lib-pdf-font` provides font import and runtime font-stack services used by PDF composition engines.
 
+| | |
+|---|---|
+| **Namespace** | `\Com\Tecnick\Pdf\Font` |
+| **Author** | Nicola Asuni <info@tecnick.com> |
+| **License** | [GNU LGPL v3](https://www.gnu.org/copyleft/lesser.html) - see [LICENSE](LICENSE) |
+| **API docs** | <https://tcpdf.org/docs/srcdoc/tc-lib-pdf-font> |
+| **Packagist** | <https://packagist.org/packages/tecnickcom/tc-lib-pdf-font> |
 
-## Getting started
+---
 
-First, you need to install all development dependencies using [Composer](https://getcomposer.org/):
+## Features
 
-```bash
-$ curl -sS https://getcomposer.org/installer | php
-$ mv composer.phar /usr/local/bin/composer
-```
+### Font Processing
+- Import support for core, Type1, and TrueType sources
+- Font metadata extraction and normalization
+- Utilities for subset and output dictionary generation
 
-This project include a Makefile that allows you to test and build the project with simple commands.
-To see all available options:
+### Runtime Font Stack
+- Font stack insertion and switching
+- Glyph width/bounding-box helpers
+- Character replacement and fallback handling
 
-```bash
-make help
-```
+---
 
-To install all the development dependencies:
+## Requirements
 
-```bash
-make deps
-```
+- PHP 8.1 or later
+- Extensions: `json`, `pcre`, `zlib`
+- Composer
 
-## Running all tests
-
-Before committing the code, please check if it passes all tests using
-
-```bash
-make qa
-```
-All artifacts are generated in the target directory.
-
-To generate the default fonts you can use the command:
-```bash
-make fonts
-```
-The files are generated inside the `target/fonts` folder.
-Please check the `util/convert.php` and `util/bulk_convert.php` to manually convert fonts.
-
+---
 
 ## Installation
 
-Create a composer.json in your projects root-directory:
-
-```json
-{
-    "require": {
-        "tecnickcom/tc-lib-pdf-font": "^2.0"
-    }
-}
+```bash
+composer require tecnickcom/tc-lib-pdf-font
 ```
 
-Or add to an existing project with: 
+---
+
+## Quick Start
+
+```php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+$font = new \Com\Tecnick\Pdf\Font\Import('/path/to/font.ttf');
+$metrics = $font->getFontMetrics();
+
+var_dump($font->getFontName(), $metrics['type']);
+```
+
+For larger examples, refer to `test/OutputTest.php` and the conversion tooling in this repository.
+
+---
+
+## Development
 
 ```bash
-composer require tecnickcom/tc-lib-pdf-font ^2.0
+make deps
+make help
+make qa
 ```
 
-## Font conversion
+Font generation helpers are also available through Make targets such as `fonts`.
 
-To import fonts in bulk, please check the convert program in resources/cli.
+---
 
 ## Packaging
 
-This library is mainly intended to be used and included in other PHP projects using Composer.
-However, since some production environments dictates the installation of any application as RPM or DEB packages,
-this library includes make targets for building these packages (`make rpm` and `make deb`).
-The packages are generated under the `target` directory.
-
-When this library is installed using an RPM or DEB package, you can use it your code by including the autoloader:
-```
-require_once ('/usr/share/php/Com/Tecnick/Pdf/Font/autoload.php');
+```bash
+make rpm
+make deb
 ```
 
+For system packages, bootstrap with:
 
+```php
+require_once '/usr/share/php/Com/Tecnick/Pdf/Font/autoload.php';
+```
 
-## Developer(s) Contact
+---
 
-*2026 Nicola Asuni <info@tecnick.com>
+## Contributing
+
+Contributions are welcome. Please review [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [SECURITY.md](SECURITY.md).
+
+---
+
+## Contact
+
+Nicola Asuni - <info@tecnick.com>

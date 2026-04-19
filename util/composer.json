@@ -1,6 +1,6 @@
 {
   "name": "tecnickcom/tc-lib-pdf-font",
-  "description": "Import TTF font files to be converted for tc-lib-pdf-font",
+  "description": "Import TTF font files to be converted for tc-lib-pdf",
   "type": "library",
   "homepage": "http://www.tecnick.com",
   "keywords": [
@@ -22,6 +22,13 @@
   "require": {
     "tecnickcom/tc-font-mirror": "^2.1"
   },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
   "require-dev": {},
   "repositories": [
     {
@@ -41,5 +48,15 @@
         }
       }
     }
-  ]
+  ],
+  "support": {
+    "issues": "https://github.com/tecnickcom/tc-lib-pdf-font/issues",
+    "source": "https://github.com/tecnickcom/tc-lib-pdf-font"
+  },
+  "scripts": {
+    "test": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --stderr test",
+    "cs-check": "./vendor/bin/phpcs --standard=phpcs.xml",
+    "cs-fix": "./vendor/bin/phpcbf --ignore=\"./vendor/\" --standard=psr12 src test",
+    "analyse": "./vendor/phpstan.phar analyse"
+  }
 }
