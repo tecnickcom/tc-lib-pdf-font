@@ -1,11 +1,11 @@
 {
-  "name": "tecnickcom/tc-lib-pdf-font-font",
+  "name": "tecnickcom/tc-lib-pdf-font",
   "description": "PHP library containing PDF page formats and definitions",
   "type": "library",
-  "homepage": "http://www.tecnick.com",
+  "homepage": "https://tcpdf.org",
   "license": "LGPL-3.0-or-later",
   "keywords": [
-    "tc-lib-pdf-font-font",
+    "tc-lib-pdf-font",
     "PDF",
     "font",
     "TTF",

@@ -18,6 +18,8 @@ If this library helps your PDF pipeline, please consider [supporting development
 
 `tc-lib-pdf-font` provides font import and runtime font-stack services used by PDF composition engines.
 
+It bridges static font assets and runtime document composition by handling metrics, encodings, and font program references in a PDF-friendly way. This modular design lets applications evolve font workflows independently from the rest of the rendering stack.
+
 | | |
 |---|---|
 | **Namespace** | `\Com\Tecnick\Pdf\Font` |
