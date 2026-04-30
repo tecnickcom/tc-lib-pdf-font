@@ -17,6 +17,7 @@
 namespace Com\Tecnick\Pdf\Font;
 
 use Com\Tecnick\File\Dir;
+use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
@@ -29,6 +30,14 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
  * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-type TFileOptions array{
+ *   allowedHosts?: array<string>,
+ *   maxRemoteSize?: int,
+ *   curlopts?: array<int, bool|int|string>,
+ *   defaultCurlOpts?: array<int, bool|int|string>,
+ *   fixedCurlOpts?: array<int, bool|int|string>
+ * }
  *
  * @phpstan-type TFontDataCidInfo array{
  *            'Ordering': string,
@@ -167,6 +176,11 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 abstract class Load
 {
     /**
+     * File helper used to load font definition files.
+     */
+    protected ObjFile $file;
+
+    /**
      * Valid Font types
      *
      * @var array<string, bool> Font types
@@ -300,6 +314,20 @@ abstract class Load
     ];
 
     /**
+     * @param TFileOptions|null $fileOptions Optional configuration for the font file helper.
+     */
+    public function __construct(?array $fileOptions = null)
+    {
+        $this->file = new ObjFile(
+            $fileOptions['allowedHosts'] ?? [],
+            $fileOptions['maxRemoteSize'] ?? 52428800,
+            $fileOptions['curlopts'] ?? [],
+            $fileOptions['defaultCurlOpts'] ?? null,
+            $fileOptions['fixedCurlOpts'] ?? null
+        );
+    }
+
+    /**
      * Load the font data
      *
      * @throws FontException in case of error
@@ -329,11 +357,7 @@ abstract class Load
         $this->findFontFile();
 
         // read the font definition file
-        if (! @\is_readable($this->data['ifile'])) {
-            throw new FontException('unable to read file: ' . $this->data['ifile']);
-        }
-
-        $fdt = @\file_get_contents($this->data['ifile']);
+        $fdt = $this->file->getFileData($this->data['ifile']);
         if ($fdt === false) {
             throw new FontException('unable to read file: ' . $this->data['ifile']);
         }

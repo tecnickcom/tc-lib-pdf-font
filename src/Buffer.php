@@ -29,6 +29,14 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
+ * @phpstan-type TFileOptions array{
+ *   allowedHosts?: array<string>,
+ *   maxRemoteSize?: int,
+ *   curlopts?: array<int, bool|int|string>,
+ *   defaultCurlOpts?: array<int, bool|int|string>,
+ *   fixedCurlOpts?: array<int, bool|int|string>
+ * }
+ *
  * @phpstan-import-type TFontData from Load
  */
 abstract class Buffer
@@ -71,6 +79,13 @@ abstract class Buffer
     protected array $file = [];
 
     /**
+     * Optional configuration forwarded to the file helper.
+     *
+     * @var TFileOptions|null
+     */
+    protected ?array $fileOptions = null;
+
+    /**
      * Initialize fonts buffer
      *
      * @param float $kunit   Unit of measure conversion ratio.
@@ -91,13 +106,16 @@ abstract class Buffer
      *                       intensive.
      * @param bool  $unicode True if we are in Unicode mode, False otherwise.
      * @param bool  $pdfa    True if we are in PDF/A mode, False otherwise.
+     * @param TFileOptions|null $fileOptions Optional configuration for the font file helper.
      */
     public function __construct(
         protected float $kunit,
         protected bool $subset = false,
         protected bool $unicode = true,
-        protected bool $pdfa = false
+        protected bool $pdfa = false,
+        ?array $fileOptions = null
     ) {
+        $this->fileOptions = $fileOptions;
     }
 
     /**
@@ -225,7 +243,7 @@ abstract class Buffer
             $subset = $this->subset;
         }
 
-        $fobj = new Font($font, $style, $ifile, $subset, $this->unicode, $this->pdfa);
+        $fobj = new Font($font, $style, $ifile, $subset, $this->unicode, $this->pdfa, true, $this->fileOptions);
         $key = $fobj->getFontkey();
 
         if (isset($this->font[$key])) {

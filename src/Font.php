@@ -30,6 +30,8 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
+ * @phpstan-import-type TFileOptions from Load
+ *
  * @phpstan-import-type TFontData from Load
  */
 class Font extends \Com\Tecnick\Pdf\Font\Load
@@ -68,6 +70,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      * @param bool   $unicode  True in Unicode mode, False otherwise.
      * @param bool   $pdfa     True in PDF/A mode, False otherwise.
      * @param bool   $compress Set to false to disable stream compression.
+     * @param TFileOptions|null $fileOptions Optional configuration for the font file helper.
      *
      * @throws FontException in case of error
      */
@@ -78,8 +81,11 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         bool $subset = false,
         bool $unicode = true,
         bool $pdfa = false,
-        bool $compress = true
+        bool $compress = true,
+        ?array $fileOptions = null
     ) {
+        parent::__construct($fileOptions);
+
         if ($font === '') {
             throw new FontException('empty font family name');
         }
