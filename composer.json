@@ -25,9 +25,9 @@
     "ext-json": "*",
     "ext-pcre": "*",
     "ext-zlib": "*",
-    "tecnickcom/tc-lib-file": "^2.3",
+    "tecnickcom/tc-lib-file": "^2.4",
     "tecnickcom/tc-lib-unicode-data": "^2.0",
-    "tecnickcom/tc-lib-pdf-encrypt": "^2.1"
+    "tecnickcom/tc-lib-pdf-encrypt": "^2.2"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
