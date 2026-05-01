@@ -243,10 +243,16 @@ class Subset
     protected function getTableChecksum(string $table, int $length): int
     {
         $sum = 0;
-        $tlen = ($length / 4);
+        $tlen = (int) floor(($length + 3) / 4);
         $offset = 0;
         for ($idx = 0; $idx < $tlen; ++$idx) {
-            $val = \unpack('Ni', \substr($table, $offset, 4));
+            $chunk = \substr($table, $offset, 4);
+            if (\strlen($chunk) < 4) {
+                // OpenType checksums use zero-padding for trailing partial words.
+                $chunk = \str_pad($chunk, 4, "\0", STR_PAD_RIGHT);
+            }
+
+            $val = \unpack('Ni', $chunk);
             if ($val === false) {
                 throw new FontException('Unable to unpack table data');
             }
