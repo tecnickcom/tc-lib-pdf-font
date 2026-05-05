@@ -98,6 +98,7 @@ class Import
         'ctg' => '',
         'ctgdata' => [],
         'cw' => [],
+        'cwu' => [],
         'datafile' => '',
         'desc' => [
             'Ascent' => 0,
@@ -329,6 +330,7 @@ class Import
      *
      * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      * @SuppressWarnings("PHPMD.NPathComplexity")
+    * @SuppressWarnings("PHPMD.ExcessiveMethodLength")
      */
     protected function saveFontData(): void
     {
@@ -415,6 +417,15 @@ class Import
             }
 
             $pfile .= ',"cw":{' . \substr($cwstr, 1) . '}';
+        }
+
+        if (! empty($this->fdt['cwu'])) {
+            $cwustr = '';
+            foreach ($this->fdt['cwu'] as $codepoint => $width) {
+                $cwustr .= ',"' . $codepoint . '":' . $width;
+            }
+
+            $pfile .= ',"cwu":{' . \substr($cwustr, 1) . '}';
         }
 
         $pfile .= '}' . "\n";

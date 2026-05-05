@@ -40,6 +40,29 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 class TrueType
 {
     /**
+     * Minimum byte length of the OS/2 table needed to read through fsType.
+     */
+    private const OS2_MIN_LENGTH = 10;
+
+    /**
+     * Priority-ordered (platformID, encodingID) fallback pairs for cmap subtable selection.
+     * Used when no subtable matching the caller-requested pair is found.
+     *
+     * @var array<int, array{0: int, 1: int}>
+     */
+    private const CMAP_FALLBACK_PRIORITY = [
+        [3, 10], // Windows UCS-4 (full Unicode, format 12)
+        [3,  1], // Windows Unicode BMP
+        [0,  6], // Unicode platform - full repertoire
+        [0,  4], // Unicode platform - 2.0+, BMP + supplementary
+        [0,  3], // Unicode platform - 2.0+, BMP only
+        [0,  2], // Unicode platform - 1.1
+        [0,  1], // Unicode platform - 1.1 (deprecated)
+        [0,  0], // Unicode platform - 1.0 (deprecated)
+        [1,  0], // Macintosh Roman (legacy)
+    ];
+
+    /**
      * Array containing subset chars
      *
      * @var array<int, bool>
@@ -425,6 +448,22 @@ class TrueType
      */
     protected function getOS2Metrics(): void
     {
+        // OS/2 is optional in some older or non-Windows TrueType fonts.
+        if (! isset($this->fdt['table']['OS/2'])) {
+            // No OS/2 table present: use conservative metric defaults.
+            $this->fdt['AvgWidth'] = 0;
+            $this->fdt['StemV'] = 70;
+            $this->fdt['StemH'] = 30;
+            return;
+        }
+
+        if ($this->fdt['table']['OS/2']['length'] < self::OS2_MIN_LENGTH) {
+            throw new FontException(
+                'OS/2 table is too short: expected at least ' . self::OS2_MIN_LENGTH
+                . ' bytes, got ' . $this->fdt['table']['OS/2']['length'] . ' bytes.'
+            );
+        }
+
         $this->offset = $this->fdt['table']['OS/2']['offset'];
         $this->offset += 2; // skip version
         // xAvgCharWidth
@@ -439,11 +478,45 @@ class TrueType
         $this->offset += 2; // usWidthClass
         $fsType = $this->fbyte->getShort($this->offset);
         $this->offset += 2;
-        if ($fsType == 2) {
+        $this->applyEmbeddingPolicy($fsType);
+    }
+
+    /**
+     * Apply OS/2 fsType embedding-restrictions policy.
+     *
+     * fsType bits (OpenType spec §OS/2.fsType):
+     *   bit 1  (0x0002) = Restricted License embedding - cannot embed in any PDF.
+     *   bit 2  (0x0004) = Preview & Print embedding    - allowed.
+     *   bit 3  (0x0008) = Editable embedding           - allowed.
+     *   bit 8  (0x0100) = No Subsetting                - embedding allowed, subsetting must be off.
+     *   bit 9  (0x0200) = Bitmap Embedding Only        - vector PDF embedding not permitted.
+     *
+     * When only the Restricted-License bit is set among bits 1-3 the font cannot be embedded.
+     * A permissive bit (0x0004 or 0x0008) alongside 0x0002 takes precedence (spec §5.8.1).
+     *
+     * @throws FontException if the font's license does not permit embedding.
+     */
+    protected function applyEmbeddingPolicy(int $fsType): void
+    {
+        // Restricted-license: bit 1 set, no permissive override from bits 2 or 3.
+        if (($fsType & 0x000E) === 0x0002) {
             throw new FontException(
                 'This Font cannot be modified, embedded or exchanged in any manner'
                 . ' without first obtaining permission of the legal owner.'
             );
+        }
+
+        // Bitmap-embedding-only: incompatible with vector PDF stream embedding.
+        if (($fsType & 0x0200) !== 0) {
+            throw new FontException(
+                'This font is licensed for bitmap embedding only'
+                . ' and cannot be embedded in a vector PDF document.'
+            );
+        }
+
+        // No-subsetting: embedding is allowed but the font must not be subsetted.
+        if (($fsType & 0x0100) !== 0) {
+            $this->fdt['subset'] = false;
         }
     }
 
@@ -765,6 +838,55 @@ class TrueType
     }
 
     /**
+     * Find the first encoding table record matching the given platformID and encodingID.
+     *
+     * @return array{platformID: int, encodingID: int, offset: int}|null
+     */
+    private function findTableEntry(int $platformID, int $encodingID): ?array
+    {
+        foreach ($this->fdt['encodingTables'] as $enctable) {
+            if ($enctable['platformID'] === $platformID && $enctable['encodingID'] === $encodingID) {
+                return $enctable;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Select the best available cmap encoding subtable.
+     *
+     * Selection priority:
+     *   1. Exact match for the caller-requested (platform_id, encoding_id) pair.
+     *   2. Fallback pairs in CMAP_FALLBACK_PRIORITY order.
+     *
+     * @return array{platformID: int, encodingID: int, offset: int}|null
+     *         The chosen encoding-table record, or null when no usable subtable exists.
+     */
+    protected function selectEncodingTable(): ?array
+    {
+        // 1. Exact match
+        $match = $this->findTableEntry($this->fdt['platform_id'], $this->fdt['encoding_id']);
+        if ($match !== null) {
+            return $match;
+        }
+
+        // 2. Priority fallbacks
+        foreach (self::CMAP_FALLBACK_PRIORITY as [$pid, $eid]) {
+            if ($pid === $this->fdt['platform_id'] && $eid === $this->fdt['encoding_id']) {
+                continue; // already tried as exact match above
+            }
+
+            $match = $this->findTableEntry($pid, $eid);
+            if ($match !== null) {
+                return $match;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Process the font's cmap encoding table
      *
      * A Character Identifier (CID) is an integer matching the character code from a particular encoding.
@@ -781,29 +903,39 @@ class TrueType
     protected function getCIDToGIDMap(): void
     {
         $this->fdt['ctgdata'] = [];
-        foreach ($this->fdt['encodingTables'] as $enctable) {
-            // get only specified Platform ID and Encoding ID
-            if (
-                ($enctable['platformID'] == $this->fdt['platform_id'])
-                && ($enctable['encodingID'] == $this->fdt['encoding_id'])
-            ) {
-                $this->offset = ($this->fdt['table']['cmap']['offset'] + $enctable['offset']);
-                $format = $this->fbyte->getUShort($this->offset);
-                $this->offset += 2;
-                match ($format) {
-                    0 => $this->processFormat0(),
-                    2 => $this->processFormat2(),
-                    4 => $this->processFormat4(),
-                    6 => $this->processFormat6(),
-                    8 => $this->processFormat8(),
-                    10 => $this->processFormat10(),
-                    12 => $this->processFormat12(),
-                    13 => $this->processFormat13(),
-                    14 => $this->processFormat14(),
-                    default => throw new FontException('Unsupported cmap format: ' . $format),
-                };
-            }
+
+        $enctable = $this->selectEncodingTable();
+        if ($enctable === null) {
+            throw new FontException(
+                'No usable cmap subtable found for this font.'
+                . ' Requested platformID=' . $this->fdt['platform_id']
+                . ' encodingID=' . $this->fdt['encoding_id']
+                . '. Available tables: '
+                . \implode(
+                    ', ',
+                    \array_map(
+                        static fn(array $tbl): string => $tbl['platformID'] . '/' . $tbl['encodingID'],
+                        $this->fdt['encodingTables']
+                    )
+                ) . '.'
+            );
         }
+
+        $this->offset = ($this->fdt['table']['cmap']['offset'] + $enctable['offset']);
+        $format = $this->fbyte->getUShort($this->offset);
+        $this->offset += 2;
+        match ($format) {
+            0 => $this->processFormat0(),
+            2 => $this->processFormat2(),
+            4 => $this->processFormat4(),
+            6 => $this->processFormat6(),
+            8 => $this->processFormat8(),
+            10 => $this->processFormat10(),
+            12 => $this->processFormat12(),
+            13 => $this->processFormat13(),
+            14 => $this->processFormat14(),
+            default => throw new FontException('Unsupported cmap format: ' . $format),
+        };
 
         // Glyph 0 is the .notdef glyph used when the font does not contain a glyph for a character
         if (! isset($this->fdt['ctgdata'][0])) {
@@ -1188,7 +1320,7 @@ class TrueType
         for ($idx = 0; $idx < $numVarSelectors; ++$idx) {
             $this->offset += 3; // skip varSelector (uint24)
 
-            $this->offset += 4; // skip defaultUVSOffset — default sequences use the main cmap glyph
+            $this->offset += 4; // skip defaultUVSOffset - default sequences use the main cmap glyph
 
             $nonDefaultOffset = $this->fbyte->getULong($this->offset);
             $this->offset += 4;

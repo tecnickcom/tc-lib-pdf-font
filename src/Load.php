@@ -118,6 +118,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'ctg': string,
  *        'ctgdata': array<int, int>,
  *        'cw':  array<int, int>,
+ *        'cwu': array<int, int>,
  *        'datafile': string,
  *        'desc': TFontDataDesc,
  *        'diff': string,
@@ -238,6 +239,7 @@ abstract class Load
         'ctg' => '',
         'ctgdata' => [],
         'cw' => [],
+        'cwu' => [],
         'datafile' => '',
         'desc' => [
             'Ascent' => 0,

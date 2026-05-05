@@ -68,6 +68,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *     'cbbox': array<int, TBBox>,
  *     'cratio': float,
  *     'cw': array<int, float>,
+ *     'cwu': array<int, float>,
  *     'descent': float,
  *     'dw': float,
  *     'fbbox': array<int, float>,
@@ -431,6 +432,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         }
 
         $font = $this->getFontMetric($this->index);
+        if (isset($font['cwu'][$ord])) {
+            return $font['cwu'][$ord];
+        }
+
         return $font['cw'][$ord] ?? $font['dw'];
     }
 
@@ -576,6 +581,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'cbbox' => [],
             'cratio' => $cratio,
             'cw' => [],
+            'cwu' => [],
             'descent' => ((float) $data['desc']['Descent'] * $cratio),
             'dw' => ((float) $data['dw'] * $cratio * $font['stretching']),
             'fbbox' => [],
@@ -611,6 +617,12 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         //left, bottom, right, and top edges
         foreach ($data['cw'] as $cid => $width) {
             $this->metric[$mkey]['cw'][(int) $cid] = ((float) $width * $wratio);
+        }
+
+        if (! empty($data['cwu'])) {
+            foreach ($data['cwu'] as $codepoint => $width) {
+                $this->metric[$mkey]['cwu'][(int) $codepoint] = ((float) $width * $wratio);
+            }
         }
 
         if (\is_array($data['cbbox'])) {

@@ -88,4 +88,67 @@ class OutputTest extends TestUtil
 
         $this->assertNotEmpty($output->getOutFontDictByKeys($keys));
     }
+
+    public function testOutputWithNoFontsReturnsEmptyStrings(): void
+    {
+        // Empty font array: constructor still runs without error; all output methods
+        // return empty strings because there is nothing to iterate over.
+        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
+        $output  = new \Com\Tecnick\Pdf\Font\Output([], 1, $encrypt);
+
+        $this->assertSame('', $output->getFontsBlock());
+        $this->assertSame('', $output->getOutFontDict());
+        $this->assertSame('', $output->getOutFontDictByKeys([]));
+    }
+
+    public function testOutputGetFontDefinitionsThrowsOnUnknownFontType(): void
+    {
+        // A font entry with an unrecognised type triggers the default branch of the
+        // match expression inside getFontDefinitions, which throws FontException.
+        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+
+        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
+
+        // Build a minimal font array with an unknown type so that getFontDefinitions
+        // reaches the default throw branch.
+        $fonts = [
+            'unknown_key' => [
+                'Ascender' => 0, 'Ascent' => 0, 'AvgWidth' => 0.0, 'CapHeight' => 0,
+                'CharacterSet' => '', 'Descender' => 0, 'Descent' => 0,
+                'EncodingScheme' => '', 'FamilyName' => '', 'Flags' => 0,
+                'FontBBox' => [], 'FontName' => '', 'FullName' => '',
+                'IsFixedPitch' => false, 'ItalicAngle' => 0, 'Leading' => 0,
+                'MaxWidth' => 0, 'MissingWidth' => 0, 'StdHW' => 0, 'StdVW' => 0,
+                'StemH' => 0, 'StemV' => 0, 'UnderlinePosition' => 0,
+                'UnderlineThickness' => 0, 'Version' => '', 'Weight' => '', 'XHeight' => 0,
+                'bbox' => '', 'cbbox' => [],
+                'cidinfo' => ['Ordering' => '', 'Registry' => '', 'Supplement' => 0, 'uni2cid' => []],
+                'compress' => false, 'ctg' => '', 'ctgdata' => [], 'cw' => [], 'cwu' => [],
+                'datafile' => '',
+                'desc' => [
+                    'Ascent' => 0, 'AvgWidth' => 0, 'CapHeight' => 0, 'Descent' => 0,
+                    'Flags' => 0, 'FontBBox' => '', 'ItalicAngle' => 0, 'Leading' => 0,
+                    'MaxWidth' => 0, 'MissingWidth' => 0, 'StemH' => 0, 'StemV' => 0, 'XHeight' => 0,
+                ],
+                'diff' => '', 'diff_n' => 0, 'dir' => '', 'dw' => 0, 'enc' => '',
+                'enc_map' => [], 'encodingTables' => [], 'encoding_id' => 0,
+                'encrypted' => '', 'fakestyle' => false, 'family' => '', 'file' => '',
+                'file_n' => 0, 'file_name' => '', 'i' => 0, 'ifile' => '',
+                'indexToLoc' => [], 'input_file' => '', 'isUnicode' => false,
+                'italicAngle' => 0, 'key' => '', 'lenIV' => 0, 'length1' => 0,
+                'length2' => 0, 'linked' => false,
+                'mode' => ['bold' => false, 'italic' => false, 'linethrough' => false, 'overline' => false, 'underline' => false],
+                'n' => 0, 'name' => '', 'numGlyphs' => 0, 'numHMetrics' => 0,
+                'originalsize' => 0, 'pdfa' => false, 'platform_id' => 0,
+                'settype' => '', 'short_offset' => false, 'size1' => 0, 'size2' => 0,
+                'style' => '', 'subset' => false, 'subsetchars' => [], 'table' => [],
+                'tot_num_glyphs' => 0, 'type' => 'UnknownType',
+                'underlinePosition' => 0, 'underlineThickness' => 0,
+                'unicode' => false, 'unitsPerEm' => 0, 'up' => 0, 'urk' => 0.0, 'ut' => 0,
+                'weight' => '',
+            ],
+        ];
+
+        new \Com\Tecnick\Pdf\Font\Output($fonts, 1, $encrypt);
+    }
 }
