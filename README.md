@@ -77,6 +77,57 @@ For larger examples, refer to `test/OutputTest.php` and the conversion tooling i
 
 ---
 
+## Converting Existing Fonts
+
+Use the CLI utilities in `util/` to convert existing font files into the JSON/Z format consumed by this library.
+
+### Convert One or More Fonts
+
+Run `util/convert.php` and pass one or more input files with `--fonts`:
+
+```bash
+php util/convert.php \
+	--outpath=./target/fonts/custom/ \
+	--type=TrueTypeUnicode \
+	--flags=32 \
+	--encoding_id=1 \
+	--fonts=/path/to/MyFont-Regular.ttf,/path/to/MyFont-Bold.ttf
+```
+
+The command writes generated font definition files to `--outpath`.
+
+Common options:
+
+- `--type`: Explicit font type (`TrueTypeUnicode`, `TrueType`, `Type1`, `CID0JP`, `CID0KR`, `CID0CS`, `CID0CT`). Leave empty for autodetect.
+- `--encoding`: Encoding table (for example `cp1252` for many non-Unicode Type1/Core cases). Omit for Unicode and symbolic fonts.
+- `--flags`: PDF descriptor flags. Default is `32` (non-symbolic).
+- `--platform_id` and `--encoding_id`: CMAP selection for TrueType Unicode imports (defaults: `3` and `1`).
+- `--linked`: Link to system font file instead of embedding/copying it (not transportable).
+
+To see full usage help:
+
+```bash
+php util/convert.php --help
+```
+
+### Bulk Conversion
+
+For batch generation from the mirrored font set:
+
+```bash
+cd util
+make build
+```
+
+This installs `util` dependencies and runs `bulk_convert.php`, which scans the mirror package and writes converted fonts under `target/fonts/`.
+
+Notes:
+
+- `bulk_convert.php` also attempts OTF conversion via FontForge (`fontforge -script otf2ttf.ff ...`) before import.
+- If you run bulk conversion directly, customize destination with `php util/bulk_convert.php --outpath=/your/path/`.
+
+---
+
 ## Development
 
 ```bash

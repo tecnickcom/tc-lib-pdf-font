@@ -213,6 +213,7 @@ class Subset
      */
     public function __construct(string $font, array $fdt, array $subchars = [])
     {
+        $this->font = $font;
         $this->fbyte = new Byte($font);
         $trueType = new TrueType($font, $fdt, $this->fbyte, $subchars);
         $this->fdt = $trueType->getFontMetrics();
@@ -382,15 +383,18 @@ class Subset
                 ];
             }
 
-            $this->fdt['table'][$tag]['data'] = \substr(
-                $this->font,
-                $this->fdt['table'][$tag]['offset'],
-                $this->fdt['table'][$tag]['length']
-            );
-            if ($tag == 'head') {
-                // set the checkSumAdjustment to 0
-                $this->fdt['table'][$tag]['data'] = \substr($this->fdt['table'][$tag]['data'], 0, 8)
-                    . "\x0\x0\x0\x0" . \substr($this->fdt['table'][$tag]['data'], 12);
+            $isSubsetTable = (($tag === 'loca') || ($tag === 'glyf'));
+            if (! $isSubsetTable) {
+                $this->fdt['table'][$tag]['data'] = \substr(
+                    $this->font,
+                    $this->fdt['table'][$tag]['offset'],
+                    $this->fdt['table'][$tag]['length']
+                );
+                if ($tag == 'head') {
+                    // set the checkSumAdjustment to 0
+                    $this->fdt['table'][$tag]['data'] = \substr($this->fdt['table'][$tag]['data'], 0, 8)
+                        . "\x0\x0\x0\x0" . \substr($this->fdt['table'][$tag]['data'], 12);
+                }
             }
 
             $pad = 4 - ((int) $this->fdt['table'][$tag]['length'] % 4);

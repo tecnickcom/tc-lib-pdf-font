@@ -241,8 +241,10 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             . ' /Subtype /CIDFontType2'
             . ' /BaseFont /' . $fontname;
         // A dictionary containing entries that define the character collection of the CIDFont.
-        $cidinfo = '/Registry ' . $this->enc->escapeDataString($font['cidinfo']['Registry'], $this->pon)
-            . ' /Ordering ' . $this->enc->escapeDataString($font['cidinfo']['Ordering'], $this->pon)
+        $cidRegistry = ($font['cidinfo']['Registry'] === '') ? 'Adobe' : $font['cidinfo']['Registry'];
+        $cidOrdering = ($font['cidinfo']['Ordering'] === '') ? 'Identity' : $font['cidinfo']['Ordering'];
+        $cidinfo = '/Registry ' . $this->enc->escapeDataString($cidRegistry, $this->pon)
+            . ' /Ordering ' . $this->enc->escapeDataString($cidOrdering, $this->pon)
             . ' /Supplement ' . $font['cidinfo']['Supplement'];
         $out .= ' /CIDSystemInfo << ' . $cidinfo . ' >>'
             . ' /FontDescriptor ' . ($this->pon + 1) . ' 0 R'

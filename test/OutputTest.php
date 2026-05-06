@@ -151,4 +151,33 @@ class OutputTest extends TestUtil
 
         new \Com\Tecnick\Pdf\Font\Output($fonts, 1, $encrypt);
     }
+
+    public function testSubsetTrueTypeUnicodeOutputUsesValidCidSystemInfoAndFontStream(): void
+    {
+        $this->setupTest();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->add($objnum, 'freesans', '', '', true);
+
+        // Ensure at least a few glyphs are included in the subset.
+        foreach ([32, 65, 66, 67, 937, 960] as $ord) {
+            $stack->addSubsetChar('freesans', $ord);
+        }
+
+        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
+        $output = new \Com\Tecnick\Pdf\Font\Output($stack->getFonts(), $objnum, $encrypt);
+        $out = $output->getFontsBlock();
+
+        $this->assertStringNotContainsString('/Registry () /Ordering ()', $out);
+        $this->assertStringContainsString('/Registry (Adobe) /Ordering (Identity) /Supplement 0', $out);
+
+        $matches = [];
+        \preg_match_all('/\\/Length1\\s+(\\d+)/', $out, $matches);
+        $lengths = \array_map('intval', $matches[1]);
+        $this->assertNotEmpty($lengths);
+        $this->assertGreaterThan(1000, \max($lengths));
+    }
 }
