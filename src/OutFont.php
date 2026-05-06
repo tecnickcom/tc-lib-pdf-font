@@ -154,7 +154,9 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             } // else unknown character
         }
 
-        $font['cw'] = \array_merge($font['cw'], $chw);
+        foreach ($chw as $cid => $width) {
+            $font['cw'][$cid] = $width;
+        }
     }
 
     /**

@@ -191,4 +191,170 @@ class SubsetTest extends TestUtil
         // The checksum must have been computed (non-zero for non-empty data)
         $this->assertNotSame(0, $table['loca']['checkSum'] + $table['glyf']['checkSum']);
     }
+
+    public function testBuildSubsetFontKeepsTableDirectoryOffsetsIntact(): void
+    {
+        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct()
+            {
+            }
+
+            public function run(): void
+            {
+                $this->buildSubsetFont();
+            }
+
+            public function getSubFont(): string
+            {
+                return $this->subfont;
+            }
+        };
+
+        $setProp = static function (object $obj, string $name, mixed $value): void {
+            $prop = new \ReflectionProperty($obj, $name);
+            $prop->setAccessible(true);
+            $prop->setValue($obj, $value);
+        };
+
+        $setProp($subset, 'fdt', array_merge(
+            (function (): array {
+                $ref  = new \ReflectionClass(\Com\Tecnick\Pdf\Font\Subset::class);
+                $prop = $ref->getProperty('fdt');
+                $prop->setAccessible(true);
+                return $prop->getValue($ref->newInstanceWithoutConstructor());
+            })(),
+            [
+                'table' => [
+                    // Offsets in fdt are relative to the 12-byte sfnt header.
+                    'head' => [
+                        'checkSum' => 0,
+                        'data' => str_repeat("\x00", 12),
+                        'length' => 12,
+                        'offset' => 12,
+                    ],
+                ],
+            ]
+        ));
+
+        $subset->run();
+        $subfont = $subset->getSubFont();
+
+        // With a single table, the table directory offset must point to byte 28
+        // (12-byte sfnt header + 16-byte table record).
+        $offset = \unpack('N', \substr($subfont, 20, 4));
+        $this->assertIsArray($offset);
+        $this->assertSame(28, $offset[1]);
+    }
+
+    public function testAddProcessedTablesUsesNextAvailableLocaIndexWhenImmediateIsMissing(): void
+    {
+        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct()
+            {
+            }
+
+            public function run(): void
+            {
+                $this->addProcessedTables();
+            }
+
+            /** @return array<string, mixed> */
+            public function getTable(): array
+            {
+                return $this->fdt['table'];
+            }
+        };
+
+        $setProp = static function (object $obj, string $name, mixed $value): void {
+            $prop = new \ReflectionProperty($obj, $name);
+            $prop->setAccessible(true);
+            $prop->setValue($obj, $value);
+        };
+
+        // 8 bytes for glyph 0 followed by 8 bytes for glyph 1.
+        $font = str_repeat("\xAB", 16);
+        $setProp($subset, 'font', $font);
+        $setProp($subset, 'offset', 0);
+        $setProp($subset, 'subglyphs', [0 => true]);
+
+        // Simulate parser output where index 1 was removed as duplicate-empty marker.
+        // Glyph 0 must still use index 2 as the closing boundary.
+        $setProp($subset, 'fdt', array_merge(
+            (function (): array {
+                $ref  = new \ReflectionClass(\Com\Tecnick\Pdf\Font\Subset::class);
+                $prop = $ref->getProperty('fdt');
+                $prop->setAccessible(true);
+                return $prop->getValue($ref->newInstanceWithoutConstructor());
+            })(),
+            [
+                'tot_num_glyphs' => 3,
+                'short_offset'   => false,
+                'indexToLoc'     => [0 => 0, 2 => 8, 3 => 16],
+                'table'          => [
+                    'glyf' => ['offset' => 0, 'length' => 16, 'checkSum' => 0, 'data' => ''],
+                    'loca' => ['offset' => 0, 'length' => 0, 'checkSum' => 0, 'data' => ''],
+                ],
+            ]
+        ));
+
+        $subset->run();
+        $table = $subset->getTable();
+
+        // Glyph 0 must not be dropped just because index 1 is missing.
+        $this->assertNotEmpty($table['glyf']['data']);
+    }
+
+    public function testAddCompositeGlyphsPreservesNumericGlyphIndexes(): void
+    {
+        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
+            private bool $added = false;
+
+            public function __construct()
+            {
+            }
+
+            public function run(): void
+            {
+                $this->addCompositeGlyphs();
+            }
+
+            /** @return array<int, bool> */
+            public function getSubglyphs(): array
+            {
+                return $this->subglyphs;
+            }
+
+            /**
+             * @param array<int, bool> $new_sga
+             * @param int              $key
+             *
+             * @return array<int, bool>
+             */
+            protected function findCompositeGlyphs(array $new_sga, int $key): array
+            {
+                $key = $key;
+
+                if (! $this->added) {
+                    $this->added = true;
+                    $new_sga[3283] = true;
+                }
+
+                return $new_sga;
+            }
+        };
+
+        $setProp = static function (object $obj, string $name, mixed $value): void {
+            $prop = new \ReflectionProperty($obj, $name);
+            $prop->setAccessible(true);
+            $prop->setValue($obj, $value);
+        };
+
+        $setProp($subset, 'subglyphs', [853 => true]);
+
+        $subset->run();
+        $subglyphs = $subset->getSubglyphs();
+
+        $this->assertArrayHasKey(853, $subglyphs);
+        $this->assertArrayHasKey(3283, $subglyphs);
+    }
 }

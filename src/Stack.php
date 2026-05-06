@@ -470,9 +470,15 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $totspacewidth = 0; // total space width
         $words = 0; // total number of words
         $fact = ($this->stack[$this->index]['spacing'] * $this->stack[$this->index]['stretching']);
+        $fkey = $this->stack[$this->index]['key'];
+        $subset = !empty($this->font[$fkey]['subset']);
         $uniarr[] = 8203; // add null at the end to ensure that the last word is processed
         $split = [];
         foreach ($uniarr as $idx => $ord) {
+            if ($subset) {
+                $this->addSubsetChar($fkey, $ord);
+            }
+
             $unitype = UnicodeType::UNI[$ord];
             $chrwidth = $this->getCharWidth($ord);
             // 'B' Paragraph Separator

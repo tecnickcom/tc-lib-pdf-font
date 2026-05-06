@@ -17,6 +17,33 @@
 namespace Test;
 
 /**
+ * @phpstan-import-type TFontDataCidInfo from \Com\Tecnick\Pdf\Font\Load
+ * @phpstan-import-type TFontDataDesc from \Com\Tecnick\Pdf\Font\Load
+ * @phpstan-type TUniToCidFont array{
+ *     cidinfo: TFontDataCidInfo,
+ *     cw: array<int, int>,
+ *     desc: TFontDataDesc,
+ *     dw: int,
+ *     enc: string,
+ *     i: int,
+ *     n: int,
+ *     name: string,
+ *     subset: bool,
+ *     subsetchars: array<int, bool>
+ * }
+ */
+class OutputTestOutFont extends \Com\Tecnick\Pdf\Font\OutFont
+{
+    /**
+     * @param TUniToCidFont $font
+     */
+    public function runUniToCid(array &$font, int $cidoffset): void
+    {
+        $this->uniToCid($font, $cidoffset);
+    }
+}
+
+/**
  * Output Test
  *
  * @since     2011-05-23
@@ -28,6 +55,8 @@ namespace Test;
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @SuppressWarnings("PHPMD.LongVariable")
+ *
+ * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  */
 class OutputTest extends TestUtil
 {
@@ -179,5 +208,80 @@ class OutputTest extends TestUtil
         $lengths = \array_map('intval', $matches[1]);
         $this->assertNotEmpty($lengths);
         $this->assertGreaterThan(1000, \max($lengths));
+    }
+
+    public function testSubsetCharMergePreservesUnicodeKeys(): void
+    {
+        $this->setupTest();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->add($objnum, 'freesans', '', '', true);
+
+        $fonts = $stack->getFonts();
+        /** @var TFontData $base */
+        $base = $fonts['freesans'];
+        $base['key'] = 'freesans_dup';
+        $base['i'] = $base['i'] + 1000;
+        $base['n'] = $base['n'] + 1000;
+        $base['subsetchars'] = [8776 => true];
+        /** @var TFontData $primary */
+        $primary = $fonts['freesans'];
+        $primary['subsetchars'] = [960 => true];
+
+        /** @var array<string, TFontData> $fonts */
+        $fonts =
+                \array_replace(
+                    $fonts,
+                    [
+                    'freesans' => $primary,
+                    'freesans_dup' => $base,
+                    ]
+                );
+
+        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
+        $output = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt);
+
+        $ref = new \ReflectionClass($output);
+        $prop = $ref->getProperty('subchars');
+        $prop->setAccessible(true);
+        $subchars = $prop->getValue($output);
+
+        $this->assertIsArray($subchars);
+        $this->assertNotEmpty($subchars);
+        $first = \array_values($subchars)[0];
+        $this->assertArrayHasKey(960, $first);
+        $this->assertArrayHasKey(8776, $first);
+    }
+
+    public function testUniToCidPreservesNumericCidKeys(): void
+    {
+        $outfont = new OutputTestOutFont();
+
+        $font = [
+            'cidinfo' => ['Ordering' => 'Identity', 'Registry' => 'Adobe', 'Supplement' => 0, 'uni2cid' => [960 => 853, 8776 => 3283]],
+            'cw' => [32 => 250, 960 => 500, 8776 => 600],
+            'desc' => [
+                'Ascent' => 0, 'AvgWidth' => 0, 'CapHeight' => 0, 'Descent' => 0,
+                'Flags' => 0, 'FontBBox' => '', 'ItalicAngle' => 0, 'Leading' => 0,
+                'MaxWidth' => 0, 'MissingWidth' => 0, 'StemH' => 0, 'StemV' => 0, 'XHeight' => 0,
+            ],
+            'dw' => 0,
+            'enc' => '',
+            'i' => 1,
+            'n' => 1,
+            'name' => 'test',
+            'subset' => true,
+            'subsetchars' => [],
+        ];
+
+        $outfont->runUniToCid($font, 0);
+
+        $this->assertArrayHasKey(853, $font['cw']);
+        $this->assertArrayHasKey(3283, $font['cw']);
+        $this->assertSame(500, $font['cw'][853]);
+        $this->assertSame(600, $font['cw'][3283]);
     }
 }

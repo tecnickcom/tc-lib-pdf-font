@@ -284,7 +284,11 @@ class Subset
                 $new_sga = $this->findCompositeGlyphs($new_sga, $key);
             }
 
-            $this->subglyphs = [...$this->subglyphs, ...$new_sga];
+            foreach ($new_sga as $gid => $enabled) {
+                if ($enabled) {
+                    $this->subglyphs[$gid] = true;
+                }
+            }
         }
 
         // sort glyphs by key
@@ -424,12 +428,9 @@ class Subset
         $this->offset = 0;
         $glyf_offset = $this->fdt['table']['glyf']['offset'];
         for ($i = 0; $i < $this->fdt['tot_num_glyphs']; ++$i) {
-            if (
-                isset($this->subglyphs[$i])
-                && isset($this->fdt['indexToLoc'][$i])
-                && isset($this->fdt['indexToLoc'][($i + 1)])
-            ) {
-                $length = ($this->fdt['indexToLoc'][($i + 1)] - $this->fdt['indexToLoc'][$i]);
+            $nextidx = $this->getNextLocaIndex($i + 1);
+            if (isset($this->subglyphs[$i]) && isset($this->fdt['indexToLoc'][$i]) && ($nextidx !== null)) {
+                $length = ($this->fdt['indexToLoc'][$nextidx] - $this->fdt['indexToLoc'][$i]);
                 $glyf .= \substr($this->font, ($glyf_offset + $this->fdt['indexToLoc'][$i]), $length);
             } else {
                 $length = 0;
@@ -498,6 +499,20 @@ class Subset
     }
 
     /**
+     * Returns the first available loca index from $start, or null if none exists.
+     */
+    protected function getNextLocaIndex(int $start): ?int
+    {
+        for ($idx = $start; $idx <= $this->fdt['tot_num_glyphs']; ++$idx) {
+            if (isset($this->fdt['indexToLoc'][$idx])) {
+                return $idx;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * build new subset font
      *
      * @throws FontException
@@ -514,7 +529,11 @@ class Subset
         $this->subfont .= \pack('n', $searchRange); // searchRange
         $this->subfont .= \pack('n', $entrySelector); // entrySelector
         $this->subfont .= \pack('n', $rangeShift); // rangeShift
-        $this->offset = ($numTables * 16);
+        // Table offsets stored in $this->fdt start after the 12-byte sfnt header.
+        // The full output adds the table directory immediately after that header,
+        // so both directory offsets and in-buffer table positions must include this base.
+        $tableDataBaseOffset = ($numTables * 16);
+        $this->offset = $tableDataBaseOffset;
         foreach ($this->fdt['table'] as $tag => $data) {
             $this->subfont .= $tag; // tag
             $this->subfont .= \pack('N', $data['checkSum']); // checkSum
@@ -528,8 +547,9 @@ class Subset
 
         // set checkSumAdjustment on head table
         $checkSumAdjustment = (0xB1B0AFBA - $this->getTableChecksum($this->subfont, \strlen($this->subfont)));
-        $this->subfont = \substr($this->subfont, 0, $this->fdt['table']['head']['offset'] + 8)
+        $headAdjustmentPos = $tableDataBaseOffset + $this->fdt['table']['head']['offset'] + 8;
+        $this->subfont = \substr($this->subfont, 0, $headAdjustmentPos)
             . \pack('N', $checkSumAdjustment)
-            . \substr($this->subfont, $this->fdt['table']['head']['offset'] + 12);
+            . \substr($this->subfont, $headAdjustmentPos + 4);
     }
 }

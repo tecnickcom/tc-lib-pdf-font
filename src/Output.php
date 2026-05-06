@@ -172,7 +172,11 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                 if (empty($this->subchars[$file_key])) {
                     $this->subchars[$file_key] = $font['subsetchars'];
                 } else {
-                    $this->subchars[$file_key] = \array_merge($this->subchars[$file_key], $font['subsetchars']);
+                    foreach ($font['subsetchars'] as $cid => $enabled) {
+                        if ($enabled) {
+                            $this->subchars[$file_key][(int) $cid] = true;
+                        }
+                    }
                 }
             }
         }

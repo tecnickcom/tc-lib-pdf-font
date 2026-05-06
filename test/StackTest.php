@@ -185,4 +185,23 @@ class StackTest extends TestUtil
         $objnum = 1;
         $stack->insert($objnum, 'missing');
     }
+
+    public function testUnicodeOrdAddedToSubsetChars(): void
+    {
+        $this->setupTest();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+        $objnum = 1;
+
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->insert($objnum, 'freesans', '', 12, 0, 1, '', true);
+
+        // Use pi and almost-equal to ensure non-latin BMP code points are tracked.
+        $stack->getOrdArrDims([960, 8776]);
+
+        $fonts = $stack->getFonts();
+        $fkey = $stack->getCurrentFontKey();
+        $this->assertArrayHasKey(960, $fonts[$fkey]['subsetchars']);
+        $this->assertArrayHasKey(8776, $fonts[$fkey]['subsetchars']);
+    }
 }
