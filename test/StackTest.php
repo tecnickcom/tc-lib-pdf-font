@@ -204,4 +204,24 @@ class StackTest extends TestUtil
         $this->assertArrayHasKey(960, $fonts[$fkey]['subsetchars']);
         $this->assertArrayHasKey(8776, $fonts[$fkey]['subsetchars']);
     }
+
+    public function testFractionalFontSize(): void
+    {
+        $this->setupTest();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
+
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $font = $stack->insert($objnum, 'freesans', '', 10.5);
+
+        $this->bcAssertEqualsWithDelta(10.5, $font['size'], 0.0001);
+        $this->assertEquals("BT /F1 10.500000 Tf ET\r", $font['out']);
+
+        $clone = $stack->cloneFont($objnum, null, null, 11.25);
+
+        $this->bcAssertEqualsWithDelta(11.25, $clone['size'], 0.0001);
+        $this->assertEquals("BT /F1 11.250000 Tf ET\r", $clone['out']);
+    }
 }

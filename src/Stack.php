@@ -137,7 +137,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *                           U: underline
      *                           D: strikeout (linethrough)
      *                           O: overline
-     * @param ?int   $size       Font size in points (set to null to inherit the last font size).
+     * @param ?float $size       Font size in points (set to null to inherit the last font size).
      * @param ?float $spacing    Extra spacing between characters.
      * @param ?float $stretching Horizontal character stretching ratio.
      * @param string $ifile      The font definition file (or empty for autodetect).
@@ -160,7 +160,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         int &$objnum,
         string $font,
         string $style = '',
-        ?int $size = null,
+        ?float $size = null,
         ?float $spacing = null,
         ?float $stretching = null,
         string $ifile = '',
@@ -219,19 +219,19 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
-     * Returns a clone of the specified font with new parameters.
-     *
-     * @param int     $objnum    Current PDF object number.
-     * @param ?int    $idx       Font index. Leave it null to use the current font.
+    * Returns a clone of the specified font with new parameters.
+    *
+    * @param int     $objnum    Current PDF object number.
+    * @param ?int    $idx       Font index. Leave it null to use the current font.
      * @param ?string $style     Font style.
      *                           Possible values are (case-insensitive):
      *                           regular (default)
-     *                           B: bold
-     *                           I: italic
-     *                           U: underline
-     *                           D: strikeout (linethrough)
-     *                           O: overline
-     * @param ?int   $size       Font size in points (set to null to inherit the last font size).
+    *                           B: bold
+    *                           I: italic
+    *                           U: underline
+    *                           D: strikeout (linethrough)
+    *                           O: overline
+    * @param ?float $size       Font size in points (set to null to inherit the last font size).
      * @param ?float $spacing    Extra spacing between characters.
      * @param ?float $stretching Horizontal character stretching ratio.
      *
@@ -243,7 +243,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         int &$objnum,
         ?int $idx = null,
         ?string $style = null,
-        ?int $size = null,
+        ?float $size = null,
         ?float $spacing = null,
         ?float $stretching = null,
     ): array {
@@ -660,11 +660,11 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Normalize the input size (minimum 0)
      *
-     * @param ?int $size Font size in points (set to null to inherit the last font size).
+     * @param ?float $size Font size in points (set to null to inherit the last font size).
      *
      * @return float
      */
-    protected function getInputSize(?int $size = null): float
+    protected function getInputSize(?float $size = null): float
     {
         if (($size === null) || ($size < 0)) {
             if ($this->index >= 0) {
