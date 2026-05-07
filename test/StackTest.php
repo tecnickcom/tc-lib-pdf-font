@@ -186,6 +186,39 @@ class StackTest extends TestUtil
         $stack->insert($objnum, 'missing');
     }
 
+    public function testHasCurrentFont(): void
+    {
+        $this->setupTest();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
+        $this->assertFalse($stack->hasCurrentFont());
+        $this->assertSame(0, $stack->getStackSize());
+        $this->assertSame(-1, $stack->getCurrentFontIndex());
+
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $font = $stack->insert($objnum, 'freesans', '', 12);
+        $this->assertTrue($stack->hasCurrentFont());
+        $this->assertSame(1, $stack->getStackSize());
+        $this->assertSame(0, $stack->getCurrentFontIndex());
+        $this->assertSame($font['out'], $stack->getOutCurrentFont());
+
+        $stack->cloneFont($objnum, null, null, 13);
+        $this->assertSame(2, $stack->getStackSize());
+        $this->assertSame(1, $stack->getCurrentFontIndex());
+
+        $stack->popLastFont();
+        $this->assertTrue($stack->hasCurrentFont());
+        $this->assertSame(1, $stack->getStackSize());
+        $this->assertSame(0, $stack->getCurrentFontIndex());
+
+        $stack->popLastFont();
+        $this->assertFalse($stack->hasCurrentFont());
+        $this->assertSame(0, $stack->getStackSize());
+        $this->assertSame(-1, $stack->getCurrentFontIndex());
+    }
+
     public function testUnicodeOrdAddedToSubsetChars(): void
     {
         $this->setupTest();

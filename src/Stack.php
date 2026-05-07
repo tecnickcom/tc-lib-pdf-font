@@ -223,22 +223,22 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     *
     * @param int     $objnum    Current PDF object number.
     * @param ?int    $idx       Font index. Leave it null to use the current font.
-     * @param ?string $style     Font style.
-     *                           Possible values are (case-insensitive):
-     *                           regular (default)
+    * @param ?string $style     Font style.
+    *                           Possible values are (case-insensitive):
+    *                           regular (default)
     *                           B: bold
     *                           I: italic
     *                           U: underline
     *                           D: strikeout (linethrough)
     *                           O: overline
     * @param ?float $size       Font size in points (set to null to inherit the last font size).
-     * @param ?float $spacing    Extra spacing between characters.
-     * @param ?float $stretching Horizontal character stretching ratio.
-     *
-     * @return TFontMetric
-     *
-     * @throws FontException
-     */
+    * @param ?float $spacing    Extra spacing between characters.
+    * @param ?float $stretching Horizontal character stretching ratio.
+    *
+    * @return TFontMetric
+    *
+    * @throws FontException
+    */
     public function cloneFont(
         int &$objnum,
         ?int $idx = null,
@@ -305,6 +305,36 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public function getCurrentFontType(): string
     {
         return $this->getFont($this->stack[$this->index]['key'])['type'];
+    }
+
+    /**
+     * Returns true if a current font is available on the stack.
+     *
+     * @return bool
+     */
+    public function hasCurrentFont(): bool
+    {
+        return ($this->index >= 0) && ($this->stack !== []);
+    }
+
+    /**
+     * Returns the number of fonts currently stored in the stack.
+     *
+     * @return int
+     */
+    public function getStackSize(): int
+    {
+        return \count($this->stack);
+    }
+
+    /**
+     * Returns the current font index in the stack.
+     *
+     * @return int
+     */
+    public function getCurrentFontIndex(): int
+    {
+        return $this->index;
     }
 
     /**
