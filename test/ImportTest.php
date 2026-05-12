@@ -16,6 +16,8 @@
 
 namespace Test;
 
+use Com\Tecnick\File\Exception as FileException;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
@@ -30,30 +32,57 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @SuppressWarnings("PHPMD.LongVariable")
+ *
+ * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  */
 class ImportTest extends TestUtil
 {
+    private function expectFontException(): void
+    {
+        $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testImportForbiddenProtocol(): void
     {
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->expectFontException();
         new \Com\Tecnick\Pdf\Font\Import('phar://test.txt');
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testImportParentDir(): void
     {
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->expectFontException();
         new \Com\Tecnick\Pdf\Font\Import('/tmp/something/../test.txt');
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testImportEmptyName(): void
     {
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->expectFontException();
         new \Com\Tecnick\Pdf\Font\Import('');
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testImportExist(): void
     {
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->expectFontException();
         $fin = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
         $outdir = \dirname(__DIR__) . '/target/tmptest/';
         \system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
@@ -61,43 +90,69 @@ class ImportTest extends TestUtil
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir);
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testImportWrongFile(): void
     {
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->expectFontException();
         new \Com\Tecnick\Pdf\Font\Import(\dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Missing.afm');
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testImportDefaultOutput(): void
     {
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->expectFontException();
         new \Com\Tecnick\Pdf\Font\Import(\dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Missing.afm');
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testImportUnsupportedType(): void
     {
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->expectFontException();
         $fin = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
         $outdir = \dirname(__DIR__) . '/target/tmptest/core/';
         \system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir, 'ERROR');
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testImportUnsupportedOpenType(): void
     {
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->expectFontException();
         $outdir = \dirname(__DIR__) . '/target/tmptest/core/';
         \system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
         \file_put_contents($outdir . 'test.ttf', 'OTTO 1234');
         new \Com\Tecnick\Pdf\Font\Import($outdir . 'test.ttf', $outdir);
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \JsonException
+     * @throws \RangeException
+     */
     #[DataProvider('importDataProvider')]
     public function testImport(
         string $fontdir,
         string $font,
-        mixed $outname,
+        string $outname,
         string $type = '',
-        string $encoding = ''
+        string $encoding = '',
     ): void {
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/' . $fontdir . '/';
         $outdir = \dirname(__DIR__) . '/target/tmptest/' . $fontdir . '/';
@@ -109,9 +164,32 @@ class ImportTest extends TestUtil
         $file = \file_get_contents($outdir . $outname . '.json');
         $this->assertNotFalse($file);
 
+        /**
+         * @var array{
+         *     type: mixed,
+         *     name: mixed,
+         *     up: mixed,
+         *     ut: mixed,
+         *     dw: mixed,
+         *     diff: mixed,
+         *     desc: array{
+         *         Flags: mixed,
+         *         FontBBox: mixed,
+         *         ItalicAngle: mixed,
+         *         Ascent: mixed,
+         *         Descent: mixed,
+         *         Leading: mixed,
+         *         CapHeight: mixed,
+         *         XHeight: mixed,
+         *         StemV: mixed,
+         *         StemH: mixed,
+         *         AvgWidth: mixed,
+         *         MaxWidth: mixed,
+         *         MissingWidth: mixed
+         *     }
+         * } $json
+         */
         $json = \json_decode($file, true, 512, JSON_THROW_ON_ERROR);
-        $this->assertNotNull($json);
-        $this->assertIsArray($json);
 
         $this->assertArrayHasKey('type', $json);
         $this->assertArrayHasKey('name', $json);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Load.php
  *
@@ -101,7 +103,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'ItalicAngle': int,
  *        'Leading': int,
  *        'MaxWidth': int,
- *        'MissingWidth': int,
+ *        'MissingWidth': int|null,
  *        'StdHW': int,
  *        'StdVW': int,
  *        'StemH': int,
@@ -123,6 +125,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'desc': TFontDataDesc,
  *        'diff': string,
  *        'diff_n': int,
+ *        'diffid'?: int,
  *        'dir': string,
  *        'dw': int,
  *        'enc': string,
@@ -322,10 +325,10 @@ abstract class Load
     {
         $this->file = new ObjFile(
             $fileOptions['allowedHosts'] ?? [],
-            $fileOptions['maxRemoteSize'] ?? 52428800,
+            $fileOptions['maxRemoteSize'] ?? 52_428_800,
             $fileOptions['curlopts'] ?? [],
             $fileOptions['defaultCurlOpts'] ?? null,
-            $fileOptions['fixedCurlOpts'] ?? null
+            $fileOptions['fixedCurlOpts'] ?? null,
         );
     }
 
@@ -364,16 +367,19 @@ abstract class Load
             throw new FontException('unable to read file: ' . $this->data['ifile']);
         }
 
-        $fdtdata = @\json_decode($fdt, true, 5, JSON_OBJECT_AS_ARRAY);
+        /** @var array<string, mixed>|null $fdtdata */
+        $fdtdata = \json_decode($fdt, true, 5, JSON_OBJECT_AS_ARRAY);
         if ($fdtdata === null) {
             throw new FontException('JSON decoding error [' . \json_last_error() . ']');
         }
 
-        if (! \is_array($fdtdata) || (! isset($fdtdata['type']))) {
+        if (!isset($fdtdata['type'])) {
             throw new FontException('fhe font definition file has a bad format: ' . $this->data['ifile']);
         }
 
-        $this->data = \array_replace_recursive($this->data, $fdtdata);
+        $merged = \array_replace_recursive($this->data, $fdtdata);
+        /** @var TFontData $merged */
+        $this->data = $merged;
     }
 
     /**
@@ -386,15 +392,16 @@ abstract class Load
         $dir = new Dir();
         $dirs = [''];
         if (\defined('K_PATH_FONTS')) {
-            $dirs[] = K_PATH_FONTS;
-            $glb = \glob(K_PATH_FONTS . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+            $kpathfonts = (string) \constant('K_PATH_FONTS');
+            $dirs[] = $kpathfonts;
+            $glb = \glob($kpathfonts . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
             if ($glb !== false) {
                 $dirs = [...$dirs, ...$glb];
             }
         }
 
         $parent_font_dir = $dir->findParentDir('fonts', __DIR__);
-        if (($parent_font_dir !== '') && ($parent_font_dir !== '/')) {
+        if ($parent_font_dir !== '' && $parent_font_dir !== '/') {
             $dirs[] = $parent_font_dir;
             $glb = \glob($parent_font_dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
             if ($glb !== false) {
@@ -412,7 +419,7 @@ abstract class Load
      */
     protected function findFontFile(): void
     {
-        if (! empty($this->data['ifile'])) {
+        if ($this->data['ifile'] !== '') {
             $this->data['dir'] = \dirname($this->data['ifile']);
             return;
         }
@@ -420,20 +427,23 @@ abstract class Load
         $this->data['ifile'] = \strtolower($this->data['key']) . '.json';
 
         // find font definition file names
-        $files = \array_unique(
-            [\strtolower($this->data['key']) . '.json', \strtolower($this->data['family']) . '.json']
-        );
+        $files = \array_unique([
+            \strtolower($this->data['key']) . '.json',
+            \strtolower($this->data['family']) . '.json',
+        ]);
 
         // directories where to search for the font definition file
         $dirs = $this->findFontDirectories();
 
         foreach ($files as $file) {
             foreach ($dirs as $dir) {
-                if (@\is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
-                    $this->data['ifile'] = $dir . DIRECTORY_SEPARATOR . $file;
-                    $this->data['dir'] = $dir;
-                    break 2;
+                if (!\is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
+                    continue;
                 }
+
+                $this->data['ifile'] = $dir . DIRECTORY_SEPARATOR . $file;
+                $this->data['dir'] = $dir;
+                break 2;
             }
 
             // we have not found the version with style variations
@@ -443,13 +453,13 @@ abstract class Load
 
     protected function setDefaultWidth(): void
     {
-        if (! empty($this->data['dw'])) {
+        if ($this->data['dw'] !== 0) {
             return;
         }
 
         if ($this->data['desc']['MissingWidth'] > 0) {
             $this->data['dw'] = $this->data['desc']['MissingWidth'];
-        } elseif (! empty($this->data['cw'][32])) {
+        } elseif (isset($this->data['cw'][32]) && $this->data['cw'][32] !== 0) {
             $this->data['dw'] = $this->data['cw'][32];
         } else {
             $this->data['dw'] = 600;
@@ -477,19 +487,19 @@ abstract class Load
      */
     protected function setName(): void
     {
-        if ($this->data['type'] == 'Core') {
-            $this->data['name'] = (string) Core::FONT[$this->data['key']];
+        if ($this->data['type'] === 'Core') {
+            $this->data['name'] = Core::FONT[$this->data['key']];
             $this->data['subset'] = false;
-        } elseif (($this->data['type'] == 'Type1') || ($this->data['type'] == 'TrueType')) {
+        } elseif ($this->data['type'] === 'Type1' || $this->data['type'] === 'TrueType') {
             $this->data['subset'] = false;
-        } elseif ($this->data['type'] == 'TrueTypeUnicode') {
+        } elseif ($this->data['type'] === 'TrueTypeUnicode') {
             $this->data['enc'] = 'Identity-H';
-        } elseif (($this->data['type'] == 'cidfont0') && ($this->data['pdfa'])) {
+        } elseif ($this->data['type'] === 'cidfont0' && $this->data['pdfa']) {
             throw new FontException('CID0 fonts are not supported, all fonts must be embedded in PDF/A mode!');
         }
 
-        if (empty($this->data['name'])) {
-            $this->data['name'] = (string) $this->data['key'];
+        if ($this->data['name'] === '') {
+            $this->data['name'] = $this->data['key'];
         }
     }
 
@@ -501,20 +511,21 @@ abstract class Load
         // artificial bold
         if ($this->data['mode']['bold']) {
             $this->data['name'] .= 'Bold';
-            $this->data['desc']['StemV'] = empty($this->data['desc']['StemV'])
-                ? 123 : (int) \round($this->data['desc']['StemV'] * 1.75);
+            $this->data['desc']['StemV'] = $this->data['desc']['StemV'] === 0
+                ? 123
+                : (int) \round($this->data['desc']['StemV'] * 1.75);
         }
 
         // artificial italic
         if ($this->data['mode']['italic']) {
             $this->data['name'] .= 'Italic';
-            if (! empty($this->data['desc']['ItalicAngle'])) {
+            if ($this->data['desc']['ItalicAngle'] !== 0) {
                 $this->data['desc']['ItalicAngle'] -= 11;
             } else {
                 $this->data['desc']['ItalicAngle'] = -11;
             }
 
-            if (! empty($this->data['desc']['Flags'])) {
+            if ($this->data['desc']['Flags'] !== 0) {
                 $this->data['desc']['Flags'] |= 64; //bit 7
             } else {
                 $this->data['desc']['Flags'] = 64;
@@ -524,14 +535,14 @@ abstract class Load
 
     public function setFileData(): void
     {
-        if (empty($this->data['file'])) {
+        if ($this->data['file'] === '') {
             return;
         }
 
         if (\str_contains($this->data['type'], 'TrueType')) {
             $this->data['length1'] = $this->data['originalsize'];
             $this->data['length2'] = 0;
-        } elseif ($this->data['type'] != 'Core') {
+        } elseif ($this->data['type'] !== 'Core') {
             $this->data['length1'] = $this->data['size1'];
             $this->data['length2'] = $this->data['size2'];
         }

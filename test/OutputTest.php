@@ -16,32 +16,9 @@
 
 namespace Test;
 
-/**
- * @phpstan-import-type TFontDataCidInfo from \Com\Tecnick\Pdf\Font\Load
- * @phpstan-import-type TFontDataDesc from \Com\Tecnick\Pdf\Font\Load
- * @phpstan-type TUniToCidFont array{
- *     cidinfo: TFontDataCidInfo,
- *     cw: array<int, int>,
- *     desc: TFontDataDesc,
- *     dw: int,
- *     enc: string,
- *     i: int,
- *     n: int,
- *     name: string,
- *     subset: bool,
- *     subsetchars: array<int, bool>
- * }
- */
-class OutputTestOutFont extends \Com\Tecnick\Pdf\Font\OutFont
-{
-    /**
-     * @param TUniToCidFont $font
-     */
-    public function runUniToCid(array &$font, int $cidoffset): void
-    {
-        $this->uniToCid($font, $cidoffset);
-    }
-}
+use Com\Tecnick\File\Exception as FileException;
+use Com\Tecnick\Pdf\Encrypt\Encrypt;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
  * Output Test
@@ -60,9 +37,148 @@ class OutputTestOutFont extends \Com\Tecnick\Pdf\Font\OutFont
  */
 class OutputTest extends TestUtil
 {
+    /** @throws \ReflectionException */
+    private function createEncrypt(): Encrypt
+    {
+        $reflector = new \ReflectionClass(Encrypt::class);
+        $encrypt = $reflector->newInstanceWithoutConstructor();
+
+        \assert($encrypt instanceof Encrypt, 'Failed to create Encrypt instance');
+
+        return $encrypt;
+    }
+
+    private function prepareTestEnvironment(): void
+    {
+        parent::setupTest();
+    }
+
+    /**
+     * @return TFontData
+     */
+    private function getFontTemplate(): array
+    {
+        return [
+            'Ascender' => 0,
+            'Ascent' => 0,
+            'AvgWidth' => 0.0,
+            'CapHeight' => 0,
+            'CharacterSet' => '',
+            'Descender' => 0,
+            'Descent' => 0,
+            'EncodingScheme' => '',
+            'FamilyName' => '',
+            'Flags' => 0,
+            'FontBBox' => [],
+            'FontName' => '',
+            'FullName' => '',
+            'IsFixedPitch' => false,
+            'ItalicAngle' => 0,
+            'Leading' => 0,
+            'MaxWidth' => 0,
+            'MissingWidth' => 0,
+            'StdHW' => 0,
+            'StdVW' => 0,
+            'StemH' => 0,
+            'StemV' => 0,
+            'UnderlinePosition' => 0,
+            'UnderlineThickness' => 0,
+            'Version' => '',
+            'Weight' => '',
+            'XHeight' => 0,
+            'bbox' => '',
+            'cbbox' => [],
+            'cidinfo' => ['Ordering' => '', 'Registry' => '', 'Supplement' => 0, 'uni2cid' => []],
+            'compress' => false,
+            'ctg' => '',
+            'ctgdata' => [],
+            'cw' => [],
+            'cwu' => [],
+            'datafile' => '',
+            'desc' => [
+                'Ascent' => 0,
+                'AvgWidth' => 0,
+                'CapHeight' => 0,
+                'Descent' => 0,
+                'Flags' => 0,
+                'FontBBox' => '',
+                'ItalicAngle' => 0,
+                'Leading' => 0,
+                'MaxWidth' => 0,
+                'MissingWidth' => 0,
+                'StemH' => 0,
+                'StemV' => 0,
+                'XHeight' => 0,
+            ],
+            'diff' => '',
+            'diff_n' => 0,
+            'dir' => '',
+            'dw' => 0,
+            'enc' => '',
+            'enc_map' => [],
+            'encodingTables' => [],
+            'encoding_id' => 0,
+            'encrypted' => '',
+            'fakestyle' => false,
+            'family' => '',
+            'file' => '',
+            'file_n' => 0,
+            'file_name' => '',
+            'i' => 0,
+            'ifile' => '',
+            'indexToLoc' => [],
+            'input_file' => '',
+            'isUnicode' => false,
+            'italicAngle' => 0,
+            'key' => '',
+            'lenIV' => 0,
+            'length1' => 0,
+            'length2' => 0,
+            'linked' => false,
+            'mode' => [
+                'bold' => false,
+                'italic' => false,
+                'linethrough' => false,
+                'overline' => false,
+                'underline' => false,
+            ],
+            'n' => 0,
+            'name' => '',
+            'numGlyphs' => 0,
+            'numHMetrics' => 0,
+            'originalsize' => 0,
+            'pdfa' => false,
+            'platform_id' => 0,
+            'settype' => '',
+            'short_offset' => false,
+            'size1' => 0,
+            'size2' => 0,
+            'style' => '',
+            'subset' => false,
+            'subsetchars' => [],
+            'table' => [],
+            'tot_num_glyphs' => 0,
+            'type' => '',
+            'underlinePosition' => 0,
+            'underlineThickness' => 0,
+            'unicode' => false,
+            'unitsPerEm' => 0,
+            'up' => 0,
+            'urk' => 0.0,
+            'ut' => 0,
+            'weight' => '',
+        ];
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     * @throws \ReflectionException
+     */
     public function testOutput(): void
     {
-        $this->setupTest();
+        $this->prepareTestEnvironment();
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
@@ -101,7 +217,7 @@ class OutputTest extends TestUtil
         $fonts = $stack->getFonts();
         $this->assertCount(10, $fonts);
 
-        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
+        $encrypt = $this->createEncrypt();
         $output = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt);
 
         $this->assertEquals(37, $output->getObjectNumber());
@@ -118,72 +234,53 @@ class OutputTest extends TestUtil
         $this->assertNotEmpty($output->getOutFontDictByKeys($keys));
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \ReflectionException
+     */
     public function testOutputWithNoFontsReturnsEmptyStrings(): void
     {
         // Empty font array: constructor still runs without error; all output methods
         // return empty strings because there is nothing to iterate over.
-        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
-        $output  = new \Com\Tecnick\Pdf\Font\Output([], 1, $encrypt);
+        $encrypt = $this->createEncrypt();
+        $output = new \Com\Tecnick\Pdf\Font\Output([], 1, $encrypt);
 
         $this->assertSame('', $output->getFontsBlock());
         $this->assertSame('', $output->getOutFontDict());
         $this->assertSame('', $output->getOutFontDictByKeys([]));
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \ReflectionException
+     */
     public function testOutputGetFontDefinitionsThrowsOnUnknownFontType(): void
     {
         // A font entry with an unrecognised type triggers the default branch of the
         // match expression inside getFontDefinitions, which throws FontException.
-        $this->bcExpectException('\\' . \Com\Tecnick\Pdf\Font\Exception::class);
+        $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
 
-        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
+        $encrypt = $this->createEncrypt();
 
         // Build a minimal font array with an unknown type so that getFontDefinitions
         // reaches the default throw branch.
-        $fonts = [
-            'unknown_key' => [
-                'Ascender' => 0, 'Ascent' => 0, 'AvgWidth' => 0.0, 'CapHeight' => 0,
-                'CharacterSet' => '', 'Descender' => 0, 'Descent' => 0,
-                'EncodingScheme' => '', 'FamilyName' => '', 'Flags' => 0,
-                'FontBBox' => [], 'FontName' => '', 'FullName' => '',
-                'IsFixedPitch' => false, 'ItalicAngle' => 0, 'Leading' => 0,
-                'MaxWidth' => 0, 'MissingWidth' => 0, 'StdHW' => 0, 'StdVW' => 0,
-                'StemH' => 0, 'StemV' => 0, 'UnderlinePosition' => 0,
-                'UnderlineThickness' => 0, 'Version' => '', 'Weight' => '', 'XHeight' => 0,
-                'bbox' => '', 'cbbox' => [],
-                'cidinfo' => ['Ordering' => '', 'Registry' => '', 'Supplement' => 0, 'uni2cid' => []],
-                'compress' => false, 'ctg' => '', 'ctgdata' => [], 'cw' => [], 'cwu' => [],
-                'datafile' => '',
-                'desc' => [
-                    'Ascent' => 0, 'AvgWidth' => 0, 'CapHeight' => 0, 'Descent' => 0,
-                    'Flags' => 0, 'FontBBox' => '', 'ItalicAngle' => 0, 'Leading' => 0,
-                    'MaxWidth' => 0, 'MissingWidth' => 0, 'StemH' => 0, 'StemV' => 0, 'XHeight' => 0,
-                ],
-                'diff' => '', 'diff_n' => 0, 'dir' => '', 'dw' => 0, 'enc' => '',
-                'enc_map' => [], 'encodingTables' => [], 'encoding_id' => 0,
-                'encrypted' => '', 'fakestyle' => false, 'family' => '', 'file' => '',
-                'file_n' => 0, 'file_name' => '', 'i' => 0, 'ifile' => '',
-                'indexToLoc' => [], 'input_file' => '', 'isUnicode' => false,
-                'italicAngle' => 0, 'key' => '', 'lenIV' => 0, 'length1' => 0,
-                'length2' => 0, 'linked' => false,
-                'mode' => ['bold' => false, 'italic' => false, 'linethrough' => false, 'overline' => false, 'underline' => false],
-                'n' => 0, 'name' => '', 'numGlyphs' => 0, 'numHMetrics' => 0,
-                'originalsize' => 0, 'pdfa' => false, 'platform_id' => 0,
-                'settype' => '', 'short_offset' => false, 'size1' => 0, 'size2' => 0,
-                'style' => '', 'subset' => false, 'subsetchars' => [], 'table' => [],
-                'tot_num_glyphs' => 0, 'type' => 'UnknownType',
-                'underlinePosition' => 0, 'underlineThickness' => 0,
-                'unicode' => false, 'unitsPerEm' => 0, 'up' => 0, 'urk' => 0.0, 'ut' => 0,
-                'weight' => '',
-            ],
-        ];
+        $fonts = ['unknown_key' => $this->getFontTemplate()];
+        $fonts['unknown_key']['type'] = 'UnknownType';
 
         new \Com\Tecnick\Pdf\Font\Output($fonts, 1, $encrypt);
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     * @throws \ReflectionException
+     */
     public function testSubsetTrueTypeUnicodeOutputUsesValidCidSystemInfoAndFontStream(): void
     {
-        $this->setupTest();
+        $this->prepareTestEnvironment();
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
@@ -196,7 +293,7 @@ class OutputTest extends TestUtil
             $stack->addSubsetChar('freesans', $ord);
         }
 
-        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
+        $encrypt = $this->createEncrypt();
         $output = new \Com\Tecnick\Pdf\Font\Output($stack->getFonts(), $objnum, $encrypt);
         $out = $output->getFontsBlock();
 
@@ -205,14 +302,21 @@ class OutputTest extends TestUtil
 
         $matches = [];
         \preg_match_all('/\\/Length1\\s+(\\d+)/', $out, $matches);
-        $lengths = \array_map('intval', $matches[1]);
+        $lengthMatches = $matches[1] ?? [];
+        $lengths = \array_map('intval', $lengthMatches);
         $this->assertNotEmpty($lengths);
         $this->assertGreaterThan(1000, \max($lengths));
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     * @throws \ReflectionException
+     */
     public function testSubsetCharMergePreservesUnicodeKeys(): void
     {
-        $this->setupTest();
+        $this->prepareTestEnvironment();
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
 
         $objnum = 1;
@@ -221,37 +325,35 @@ class OutputTest extends TestUtil
         $stack->add($objnum, 'freesans', '', '', true);
 
         $fonts = $stack->getFonts();
-        /** @var TFontData $base */
+        if (!isset($fonts['freesans'])) {
+            $this->fail('Expected freesans font data');
+        }
+
         $base = $fonts['freesans'];
         $base['key'] = 'freesans_dup';
-        $base['i'] = $base['i'] + 1000;
-        $base['n'] = $base['n'] + 1000;
+        $base['i'] += 1000;
+        $base['n'] += 1000;
         $base['subsetchars'] = [8776 => true];
-        /** @var TFontData $primary */
         $primary = $fonts['freesans'];
         $primary['subsetchars'] = [960 => true];
 
-        /** @var array<string, TFontData> $fonts */
-        $fonts =
-                \array_replace(
-                    $fonts,
-                    [
-                    'freesans' => $primary,
-                    'freesans_dup' => $base,
-                    ]
-                );
+        $fonts = \array_replace($fonts, [
+            'freesans' => $primary,
+            'freesans_dup' => $base,
+        ]);
 
-        $encrypt = new \Com\Tecnick\Pdf\Encrypt\Encrypt();
+        $encrypt = $this->createEncrypt();
         $output = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt);
 
         $ref = new \ReflectionClass($output);
         $prop = $ref->getProperty('subchars');
-        $prop->setAccessible(true);
+        /** @var array<int, array<int, bool>> $subchars */
         $subchars = $prop->getValue($output);
 
         $this->assertIsArray($subchars);
         $this->assertNotEmpty($subchars);
-        $first = \array_values($subchars)[0];
+        $first = \array_values($subchars)[0] ?? null;
+        $this->assertIsArray($first);
         $this->assertArrayHasKey(960, $first);
         $this->assertArrayHasKey(8776, $first);
     }
@@ -260,28 +362,24 @@ class OutputTest extends TestUtil
     {
         $outfont = new OutputTestOutFont();
 
-        $font = [
-            'cidinfo' => ['Ordering' => 'Identity', 'Registry' => 'Adobe', 'Supplement' => 0, 'uni2cid' => [960 => 853, 8776 => 3283]],
-            'cw' => [32 => 250, 960 => 500, 8776 => 600],
-            'desc' => [
-                'Ascent' => 0, 'AvgWidth' => 0, 'CapHeight' => 0, 'Descent' => 0,
-                'Flags' => 0, 'FontBBox' => '', 'ItalicAngle' => 0, 'Leading' => 0,
-                'MaxWidth' => 0, 'MissingWidth' => 0, 'StemH' => 0, 'StemV' => 0, 'XHeight' => 0,
-            ],
-            'dw' => 0,
-            'enc' => '',
-            'i' => 1,
-            'n' => 1,
-            'name' => 'test',
-            'subset' => true,
-            'subsetchars' => [],
+        $font = $this->getFontTemplate();
+        $font['cidinfo'] = [
+            'Ordering' => 'Identity',
+            'Registry' => 'Adobe',
+            'Supplement' => 0,
+            'uni2cid' => [960 => 853, 8776 => 3283],
         ];
+        $font['cw'] = [32 => 250, 960 => 500, 8776 => 600];
+        $font['i'] = 1;
+        $font['n'] = 1;
+        $font['name'] = 'test';
+        $font['subset'] = true;
 
         $outfont->runUniToCid($font, 0);
 
         $this->assertArrayHasKey(853, $font['cw']);
         $this->assertArrayHasKey(3283, $font['cw']);
-        $this->assertSame(500, $font['cw'][853]);
-        $this->assertSame(600, $font['cw'][3283]);
+        $this->assertSame(500, $font['cw'][853] ?? null);
+        $this->assertSame(600, $font['cw'][3283] ?? null);
     }
 }

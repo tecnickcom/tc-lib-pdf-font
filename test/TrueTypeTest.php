@@ -30,17 +30,20 @@ use Com\Tecnick\Pdf\Font\Import\TrueType;
  * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
  * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  */
 class TrueTypeTest extends TestUtil
 {
     public function testGetCIDToGIDMapFormat13SetsNotDefGlyph(): void
     {
         // Format 13 subtable with numGroups=0: maps nothing, only .notdef fallback is added.
-        $font = "\x00\x0d"           // format = 13
-            . "\x00\x00"             // reserved
-            . "\x00\x00\x00\x10"    // length = 16
-            . "\x00\x00\x00\x00"    // language
-            . "\x00\x00\x00\x00";   // numGroups = 0
+        $font =
+            "\x00\x0d" // format = 13
+            . "\x00\x00" // reserved
+            . "\x00\x00\x00\x10" // length = 16
+            . "\x00\x00\x00\x00" // language
+            . "\x00\x00\x00\x00"; // numGroups = 0
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -63,8 +66,8 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame([0 => 0], $fontData['ctgdata']);
-        $this->assertSame('TrueTypeUnicode', $fontData['type']);
+        $this->assertSame([0 => 0], $this->getCtgData($fontData));
+        $this->assertSame('TrueTypeUnicode', $this->getFontDataString($fontData, 'type'));
     }
 
     public function testProcessFormat13MapsCharsToSingleGlyph(): void
@@ -77,14 +80,15 @@ class TrueTypeTest extends TestUtil
         //   startChar   : \x00\x00\x00\x41   (4 bytes → 65 = 'A')
         //   endChar     : \x00\x00\x00\x43   (4 bytes → 67 = 'C')
         //   glyphID     : \x00\x00\x00\x05   (4 bytes → glyph 5)
-        $font = "\x00\x0d"               // format = 13
-            . "\x00\x00"                 // reserved
-            . "\x00\x00\x00\x1c"        // length
-            . "\x00\x00\x00\x00"        // language
-            . "\x00\x00\x00\x01"        // numGroups = 1
-            . "\x00\x00\x00\x41"        // startCharCode = 65
-            . "\x00\x00\x00\x43"        // endCharCode   = 67
-            . "\x00\x00\x00\x05";       // glyphID       = 5
+        $font =
+            "\x00\x0d" // format = 13
+            . "\x00\x00" // reserved
+            . "\x00\x00\x00\x1c" // length
+            . "\x00\x00\x00\x00" // language
+            . "\x00\x00\x00\x01" // numGroups = 1
+            . "\x00\x00\x00\x41" // startCharCode = 65
+            . "\x00\x00\x00\x43" // endCharCode   = 67
+            . "\x00\x00\x00\x05"; // glyphID       = 5
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -108,23 +112,24 @@ class TrueTypeTest extends TestUtil
         $fontData = $this->getFontData($instance);
 
         // Characters 65, 66 and 67 must all map to glyph 5 (many-to-one)
-        $this->assertSame(5, $fontData['ctgdata'][65]);
-        $this->assertSame(5, $fontData['ctgdata'][66]);
-        $this->assertSame(5, $fontData['ctgdata'][67]);
+        $this->assertSame(5, $this->getCtgGlyph($fontData, 65));
+        $this->assertSame(5, $this->getCtgGlyph($fontData, 66));
+        $this->assertSame(5, $this->getCtgGlyph($fontData, 67));
         // .notdef fallback must be present
-        $this->assertSame(0, $fontData['ctgdata'][0]);
+        $this->assertSame(0, $this->getCtgGlyph($fontData, 0));
     }
 
     public function testProcessFormat13AddsGlyphsToSubset(): void
     {
-        $font = "\x00\x0d"
+        $font =
+            "\x00\x0d"
             . "\x00\x00"
             . "\x00\x00\x00\x1c"
             . "\x00\x00\x00\x00"
             . "\x00\x00\x00\x01"
-            . "\x00\x00\x00\x41"        // startCharCode = 65
-            . "\x00\x00\x00\x41"        // endCharCode   = 65
-            . "\x00\x00\x00\x07";       // glyphID       = 7
+            . "\x00\x00\x00\x41" // startCharCode = 65
+            . "\x00\x00\x00\x41" // endCharCode   = 65
+            . "\x00\x00\x00\x07"; // glyphID       = 7
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -149,13 +154,12 @@ class TrueTypeTest extends TestUtil
 
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
-        $subGlyphs = $this->getProperty($instance, 'subglyphs');
+        $subGlyphs = $this->getSubglyphs($instance);
 
-        $this->assertSame(7, $fontData['ctgdata'][65]);
+        $this->assertSame(7, $this->getCtgGlyph($fontData, 65));
         $this->assertArrayHasKey(7, $subGlyphs);
-        $this->assertTrue($subGlyphs[7]);
+        $this->assertTrue($subGlyphs[7] ?? false);
     }
-
 
     public function testProcessFormat14NonDefaultUVSMapsGlyphs(): void
     {
@@ -171,15 +175,16 @@ class TrueTypeTest extends TestUtil
         //  21-24: numUVSMappings      =  1  (0x00,0x00,0x00,0x01)
         //  25-27: unicodeValue        = U+0082A6 (0x00,0x82,0xA6)
         //  28-29: glyphID             = 1142 (0x04,0x76)
-        $font = "\x00\x0e"               // format = 14
-            . "\x00\x00\x00\x1e"         // length = 30
-            . "\x00\x00\x00\x01"         // numVarSelectorRecords = 1
-            . "\x0e\x01\x00"             // varSelector = U+E0100 (uint24)
-            . "\x00\x00\x00\x00"         // defaultUVSOffset = 0 (absent)
-            . "\x00\x00\x00\x15"         // nonDefaultUVSOffset = 21
-            . "\x00\x00\x00\x01"         // numUVSMappings = 1
-            . "\x00\x82\xa6"             // unicodeValue = U+0082A6 (uint24)
-            . "\x04\x76";                // glyphID = 1142
+        $font =
+            "\x00\x0e" // format = 14
+            . "\x00\x00\x00\x1e" // length = 30
+            . "\x00\x00\x00\x01" // numVarSelectorRecords = 1
+            . "\x0e\x01\x00" // varSelector = U+E0100 (uint24)
+            . "\x00\x00\x00\x00" // defaultUVSOffset = 0 (absent)
+            . "\x00\x00\x00\x15" // nonDefaultUVSOffset = 21
+            . "\x00\x00\x00\x01" // numUVSMappings = 1
+            . "\x00\x82\xa6" // unicodeValue = U+0082A6 (uint24)
+            . "\x04\x76"; // glyphID = 1142
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -203,9 +208,9 @@ class TrueTypeTest extends TestUtil
         $fontData = $this->getFontData($instance);
 
         // Non-default UVS mapping: U+0082A6 → glyph 1142
-        $this->assertSame(1142, $fontData['ctgdata'][0x0082A6]);
+        $this->assertSame(1142, $this->getCtgGlyph($fontData, 0x0082A6));
         // .notdef fallback must still be set
-        $this->assertSame(0, $fontData['ctgdata'][0]);
+        $this->assertSame(0, $this->getCtgGlyph($fontData, 0));
     }
 
     public function testProcessFormat14NonDefaultUVSTracksSubglyphs(): void
@@ -222,17 +227,18 @@ class TrueTypeTest extends TestUtil
         //  21-24: numUVSMappings      =  2
         //  25-27: unicodeValue[0]     = U+0082A6 → glyphID 7961  (0x00,0x82,0xA6 + 0x1F,0x19)
         //  30-32: unicodeValue[1]     = U+004E4D → glyphID 42    (0x00,0x4E,0x4D + 0x00,0x2A)
-        $font = "\x00\x0e"               // format = 14
-            . "\x00\x00\x00\x25"         // length = 37
-            . "\x00\x00\x00\x01"         // numVarSelectorRecords = 1
-            . "\x0e\x01\x01"             // varSelector = U+E0101 (uint24)
-            . "\x00\x00\x00\x00"         // defaultUVSOffset = 0
-            . "\x00\x00\x00\x15"         // nonDefaultUVSOffset = 21
-            . "\x00\x00\x00\x02"         // numUVSMappings = 2
-            . "\x00\x82\xa6"             // unicodeValue[0] = U+0082A6
-            . "\x1f\x19"                 // glyphID[0] = 7961
-            . "\x00\x4e\x4d"             // unicodeValue[1] = U+004E4D
-            . "\x00\x2a";                // glyphID[1] = 42
+        $font =
+            "\x00\x0e" // format = 14
+            . "\x00\x00\x00\x25" // length = 37
+            . "\x00\x00\x00\x01" // numVarSelectorRecords = 1
+            . "\x0e\x01\x01" // varSelector = U+E0101 (uint24)
+            . "\x00\x00\x00\x00" // defaultUVSOffset = 0
+            . "\x00\x00\x00\x15" // nonDefaultUVSOffset = 21
+            . "\x00\x00\x00\x02" // numUVSMappings = 2
+            . "\x00\x82\xa6" // unicodeValue[0] = U+0082A6
+            . "\x1f\x19" // glyphID[0] = 7961
+            . "\x00\x4e\x4d" // unicodeValue[1] = U+004E4D
+            . "\x00\x2a"; // glyphID[1] = 42
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -257,13 +263,13 @@ class TrueTypeTest extends TestUtil
 
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
-        $subGlyphs = $this->getProperty($instance, 'subglyphs');
+        $subGlyphs = $this->getSubglyphs($instance);
 
-        $this->assertSame(7961, $fontData['ctgdata'][0x0082A6]);
-        $this->assertSame(42, $fontData['ctgdata'][0x004E4D]);
+        $this->assertSame(7961, $this->getCtgGlyph($fontData, 0x0082A6));
+        $this->assertSame(42, $this->getCtgGlyph($fontData, 0x004E4D));
         // Glyph 7961 must be in the subset (0x0082A6 was a subchar)
         $this->assertArrayHasKey(7961, $subGlyphs);
-        $this->assertTrue($subGlyphs[7961]);
+        $this->assertTrue($subGlyphs[7961] ?? false);
         // Glyph 42 must NOT be in the subset (U+004E4D was not a subchar)
         $this->assertArrayNotHasKey(42, $subGlyphs);
     }
@@ -283,15 +289,16 @@ class TrueTypeTest extends TestUtil
         //  21-24: numUnicodeValueRanges = 1
         //  25-27: startUnicodeValue   = U+004E4D (uint24)
         //  28:    additionalCount     = 2
-        $font = "\x00\x0e"               // format = 14
-            . "\x00\x00\x00\x1d"         // length = 29
-            . "\x00\x00\x00\x01"         // numVarSelectorRecords = 1
-            . "\x0e\x01\x00"             // varSelector = U+E0100 (uint24)
-            . "\x00\x00\x00\x15"         // defaultUVSOffset = 21
-            . "\x00\x00\x00\x00"         // nonDefaultUVSOffset = 0 (absent)
-            . "\x00\x00\x00\x01"         // numUnicodeValueRanges = 1
-            . "\x00\x4e\x4d"             // startUnicodeValue = U+004E4D (uint24)
-            . "\x02";                    // additionalCount = 2
+        $font =
+            "\x00\x0e" // format = 14
+            . "\x00\x00\x00\x1d" // length = 29
+            . "\x00\x00\x00\x01" // numVarSelectorRecords = 1
+            . "\x0e\x01\x00" // varSelector = U+E0100 (uint24)
+            . "\x00\x00\x00\x15" // defaultUVSOffset = 21
+            . "\x00\x00\x00\x00" // nonDefaultUVSOffset = 0 (absent)
+            . "\x00\x00\x00\x01" // numUnicodeValueRanges = 1
+            . "\x00\x4e\x4d" // startUnicodeValue = U+004E4D (uint24)
+            . "\x02"; // additionalCount = 2
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -315,15 +322,16 @@ class TrueTypeTest extends TestUtil
         $fontData = $this->getFontData($instance);
 
         // Default UVS adds no explicit ctgdata entries beyond .notdef
-        $this->assertSame([0 => 0], $fontData['ctgdata']);
+        $this->assertSame([0 => 0], $this->getCtgData($fontData));
     }
 
     public function testGetCIDToGIDMapFormat14SetsNotDefGlyph(): void
     {
         // Format 14 subtable with numVarSelectorRecords=0: no mappings → only .notdef fallback added.
-        $font = "\x00\x0e"               // format = 14
-            . "\x00\x00\x00\x0a"         // length = 10
-            . "\x00\x00\x00\x00";        // numVarSelectorRecords = 0
+        $font =
+            "\x00\x0e" // format = 14
+            . "\x00\x00\x00\x0a" // length = 10
+            . "\x00\x00\x00\x00"; // numVarSelectorRecords = 0
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -346,7 +354,7 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame([0 => 0], $fontData['ctgdata']);
+        $this->assertSame([0 => 0], $this->getCtgData($fontData));
     }
 
     public function testGetCIDToGIDMapThrowsOnUnsupportedFormat(): void
@@ -369,7 +377,7 @@ class TrueTypeTest extends TestUtil
             'type' => 'TrueTypeUnicode',
         ]);
 
-        $this->bcExpectException('\\' . FontException::class);
+        $this->bcExpectException(FontException::class);
         $this->invokeMethod($instance, 'getCIDToGIDMap');
     }
 
@@ -383,11 +391,11 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'addCtgItem', [65, 7]);
 
         $fontData = $this->getFontData($instance);
-        $subGlyphs = $this->getProperty($instance, 'subglyphs');
+        $subGlyphs = $this->getSubglyphs($instance);
 
-        $this->assertSame(7, $fontData['ctgdata'][65]);
+        $this->assertSame(7, $this->getCtgGlyph($fontData, 65));
         $this->assertArrayHasKey(7, $subGlyphs);
-        $this->assertTrue($subGlyphs[7]);
+        $this->assertTrue($subGlyphs[7] ?? false);
     }
 
     // -------------------------------------------------------------------------
@@ -402,11 +410,12 @@ class TrueTypeTest extends TestUtil
         ];
         $instance = $this->buildTrueType('', [
             'encodingTables' => $tables,
-            'platform_id'    => 3,
-            'encoding_id'    => 1,
+            'platform_id' => 3,
+            'encoding_id' => 1,
         ]);
 
-        $result = $this->invokeMethod($instance, 'selectEncodingTable');
+        $result = $this->selectEncodingTable($instance);
+        $this->assertNotNull($result);
 
         $this->assertSame(42, $result['offset']);
         $this->assertSame(3, $result['platformID']);
@@ -424,7 +433,8 @@ class TrueTypeTest extends TestUtil
             'encoding_id' => 1,
         ]);
 
-        $result = $this->invokeMethod($instance, 'selectEncodingTable');
+        $result = $this->selectEncodingTable($instance);
+        $this->assertNotNull($result);
 
         $this->assertSame(3, $result['platformID']);
         $this->assertSame(10, $result['encodingID']);
@@ -442,7 +452,8 @@ class TrueTypeTest extends TestUtil
             'encoding_id' => 0,
         ]);
 
-        $result = $this->invokeMethod($instance, 'selectEncodingTable');
+        $result = $this->selectEncodingTable($instance);
+        $this->assertNotNull($result);
 
         $this->assertSame(3, $result['platformID']);
         $this->assertSame(1, $result['encodingID']);
@@ -459,7 +470,8 @@ class TrueTypeTest extends TestUtil
             'encoding_id' => 1,
         ]);
 
-        $result = $this->invokeMethod($instance, 'selectEncodingTable');
+        $result = $this->selectEncodingTable($instance);
+        $this->assertNotNull($result);
 
         $this->assertSame(0, $result['platformID']);
         $this->assertSame(3, $result['encodingID']);
@@ -475,7 +487,7 @@ class TrueTypeTest extends TestUtil
             'encoding_id' => 1,
         ]);
 
-        $result = $this->invokeMethod($instance, 'selectEncodingTable');
+        $result = $this->selectEncodingTable($instance);
 
         $this->assertNull($result);
     }
@@ -495,7 +507,7 @@ class TrueTypeTest extends TestUtil
             'type' => 'TrueTypeUnicode',
         ]);
 
-        $this->bcExpectException('\\' . FontException::class);
+        $this->bcExpectException(FontException::class);
         $this->invokeMethod($instance, 'getCIDToGIDMap');
     }
 
@@ -503,24 +515,25 @@ class TrueTypeTest extends TestUtil
     {
         $instance = $this->buildTrueType('', [
             'encodingTables' => [],
-            'platform_id'    => 3,
-            'encoding_id'    => 1,
-            'table'          => ['cmap' => ['offset' => 0]],
-            'type'           => 'TrueTypeUnicode',
+            'platform_id' => 3,
+            'encoding_id' => 1,
+            'table' => ['cmap' => ['offset' => 0]],
+            'type' => 'TrueTypeUnicode',
         ]);
 
-        $this->bcExpectException('\\' . FontException::class);
+        $this->bcExpectException(FontException::class);
         $this->invokeMethod($instance, 'getCIDToGIDMap');
     }
 
     public function testGetCIDToGIDMapUsesFallbackTable(): void
     {
         // Requested 3/1 is absent; 3/10 is present with format 13, 0 groups.
-        $font = "\x00\x0d"           // format = 13
-            . "\x00\x00"             // reserved
-            . "\x00\x00\x00\x10"    // length = 16
-            . "\x00\x00\x00\x00"    // language
-            . "\x00\x00\x00\x00";   // numGroups = 0
+        $font =
+            "\x00\x0d" // format = 13
+            . "\x00\x00" // reserved
+            . "\x00\x00\x00\x10" // length = 16
+            . "\x00\x00\x00\x00" // language
+            . "\x00\x00\x00\x00"; // numGroups = 0
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -535,7 +548,7 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
         // Only .notdef should be present (0 groups → nothing mapped)
-        $this->assertSame([0 => 0], $fontData['ctgdata']);
+        $this->assertSame([0 => 0], $this->getCtgData($fontData));
     }
 
     // -------------------------------------------------------------------------
@@ -545,7 +558,7 @@ class TrueTypeTest extends TestUtil
     public function testApplyEmbeddingPolicyThrowsOnRestrictedLicense(): void
     {
         $instance = $this->buildTrueType('', []);
-        $this->bcExpectException('\\' . FontException::class);
+        $this->bcExpectException(FontException::class);
         // 0x0002 = Restricted License only
         $this->invokeMethod($instance, 'applyEmbeddingPolicy', [0x0002]);
     }
@@ -557,7 +570,7 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'applyEmbeddingPolicy', [0x0004]);
         // No exception means the policy passed; subset should be unchanged
         $fontData = $this->getFontData($instance);
-        $this->assertTrue($fontData['subset']);
+        $this->assertTrue($this->getFontDataBool($fontData, 'subset'));
     }
 
     public function testApplyEmbeddingPolicyPermissiveBitOverridesRestricted(): void
@@ -566,13 +579,13 @@ class TrueTypeTest extends TestUtil
         // 0x0006 = 0x0002 | 0x0004: permissive override, should not throw
         $this->invokeMethod($instance, 'applyEmbeddingPolicy', [0x0006]);
         $fontData = $this->getFontData($instance);
-        $this->assertTrue($fontData['subset']);
+        $this->assertTrue($this->getFontDataBool($fontData, 'subset'));
     }
 
     public function testApplyEmbeddingPolicyThrowsOnBitmapOnly(): void
     {
         $instance = $this->buildTrueType('', []);
-        $this->bcExpectException('\\' . FontException::class);
+        $this->bcExpectException(FontException::class);
         // 0x0200 = Bitmap Embedding Only
         $this->invokeMethod($instance, 'applyEmbeddingPolicy', [0x0200]);
     }
@@ -580,7 +593,7 @@ class TrueTypeTest extends TestUtil
     public function testApplyEmbeddingPolicyThrowsOnBitmapOnlyWithEditable(): void
     {
         $instance = $this->buildTrueType('', []);
-        $this->bcExpectException('\\' . FontException::class);
+        $this->bcExpectException(FontException::class);
         // 0x0208 = Bitmap Only | Editable — bitmap restriction still applies
         $this->invokeMethod($instance, 'applyEmbeddingPolicy', [0x0208]);
     }
@@ -591,7 +604,7 @@ class TrueTypeTest extends TestUtil
         // 0x0100 = No Subsetting
         $this->invokeMethod($instance, 'applyEmbeddingPolicy', [0x0100]);
         $fontData = $this->getFontData($instance);
-        $this->assertFalse($fontData['subset']);
+        $this->assertFalse($this->getFontDataBool($fontData, 'subset'));
     }
 
     public function testApplyEmbeddingPolicyNoSubsettingWithEditableAllowed(): void
@@ -600,7 +613,7 @@ class TrueTypeTest extends TestUtil
         // 0x0108 = Editable | No Subsetting: embed allowed but no subset
         $this->invokeMethod($instance, 'applyEmbeddingPolicy', [0x0108]);
         $fontData = $this->getFontData($instance);
-        $this->assertFalse($fontData['subset']);
+        $this->assertFalse($this->getFontDataBool($fontData, 'subset'));
     }
 
     public function testApplyEmbeddingPolicyInstallableAllowsSubset(): void
@@ -609,7 +622,7 @@ class TrueTypeTest extends TestUtil
         // 0x0000 = Installable — no restrictions
         $this->invokeMethod($instance, 'applyEmbeddingPolicy', [0x0000]);
         $fontData = $this->getFontData($instance);
-        $this->assertTrue($fontData['subset']);
+        $this->assertTrue($this->getFontDataBool($fontData, 'subset'));
     }
 
     // -------------------------------------------------------------------------
@@ -621,15 +634,15 @@ class TrueTypeTest extends TestUtil
         // 'table' has no 'OS/2' entry at all.
         $instance = $this->buildTrueType('', [
             'table' => [],
-            'urk'   => 1.0,
+            'urk' => 1.0,
         ]);
 
         $this->invokeMethod($instance, 'getOS2Metrics');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame(0, $fontData['AvgWidth']);
-        $this->assertSame(70, $fontData['StemV']);
-        $this->assertSame(30, $fontData['StemH']);
+        $this->assertSame(0, $this->getFontDataInt($fontData, 'AvgWidth'));
+        $this->assertSame(70, $this->getFontDataInt($fontData, 'StemV'));
+        $this->assertSame(30, $this->getFontDataInt($fontData, 'StemH'));
     }
 
     public function testGetOS2MetricsThrowsWhenTableTooShort(): void
@@ -641,7 +654,7 @@ class TrueTypeTest extends TestUtil
             'urk' => 1.0,
         ]);
 
-        $this->bcExpectException('\\' . FontException::class);
+        $this->bcExpectException(FontException::class);
         $this->invokeMethod($instance, 'getOS2Metrics');
     }
 
@@ -649,17 +662,18 @@ class TrueTypeTest extends TestUtil
     {
         // Minimal valid OS/2 blob: 10 bytes.
         // version(2) + xAvgCharWidth(2) + usWeightClass(2) + usWidthClass(2) + fsType(2)
-        $font = "\x00\x04"       // version = 4
-            . "\x04\x00"         // xAvgCharWidth = 1024 raw units
-            . "\x01\x90"         // usWeightClass = 400
-            . "\x00\x05"         // usWidthClass  = 5 (unused)
-            . "\x00\x08";        // fsType = 0x0008 (Editable — allowed)
+        $font =
+            "\x00\x04" // version = 4
+            . "\x04\x00" // xAvgCharWidth = 1024 raw units
+            . "\x01\x90" // usWeightClass = 400
+            . "\x00\x05" // usWidthClass  = 5 (unused)
+            . "\x00\x08"; // fsType = 0x0008 (Editable — allowed)
 
         $instance = $this->buildTrueType($font, [
             'table' => [
                 'OS/2' => ['offset' => 0, 'length' => 10],
             ],
-            'urk'    => 1.0,
+            'urk' => 1.0,
             'subset' => true,
         ]);
 
@@ -667,34 +681,156 @@ class TrueTypeTest extends TestUtil
         $fontData = $this->getFontData($instance);
 
         // xAvgCharWidth 0x0400 = 1024 raw, * urk 1.0 = 1024
-        $this->assertSame(1024, $fontData['AvgWidth']);
+        $this->assertSame(1024, $this->getFontDataInt($fontData, 'AvgWidth'));
         // usWeightClass 0x0190 = 400; StemV = round(70*400/400) = 70
-        $this->assertSame(70, $fontData['StemV']);
+        $this->assertSame(70, $this->getFontDataInt($fontData, 'StemV'));
         // StemH = round(30*400/400) = 30
-        $this->assertSame(30, $fontData['StemH']);
+        $this->assertSame(30, $this->getFontDataInt($fontData, 'StemH'));
         // Editable flag: subset must remain true (no restriction)
-        $this->assertTrue($fontData['subset']);
+        $this->assertTrue($this->getFontDataBool($fontData, 'subset'));
     }
 
     public function testGetOS2MetricsNoSubsettingFlagDisablesSubset(): void
     {
         // fsType = 0x0100 (No Subsetting)
-        $font = "\x00\x04"       // version
-            . "\x02\x00"         // xAvgCharWidth
-            . "\x01\x90"         // usWeightClass = 400
-            . "\x00\x05"         // usWidthClass
-            . "\x01\x00";        // fsType = 0x0100
+        $font =
+            "\x00\x04" // version
+            . "\x02\x00" // xAvgCharWidth
+            . "\x01\x90" // usWeightClass = 400
+            . "\x00\x05" // usWidthClass
+            . "\x01\x00"; // fsType = 0x0100
 
         $instance = $this->buildTrueType($font, [
-            'table'  => ['OS/2' => ['offset' => 0, 'length' => 10]],
-            'urk'    => 1.0,
+            'table' => ['OS/2' => ['offset' => 0, 'length' => 10]],
+            'urk' => 1.0,
             'subset' => true,
         ]);
 
         $this->invokeMethod($instance, 'getOS2Metrics');
         $fontData = $this->getFontData($instance);
 
-        $this->assertFalse($fontData['subset']);
+        $this->assertFalse($this->getFontDataBool($fontData, 'subset'));
+    }
+
+    /**
+     * @param array<string, mixed> $fdt
+     *
+     * @return array<string, mixed>
+     */
+    protected function getFontDefaults(array $fdt = []): array
+    {
+        $defaults = [
+            'Ascender' => 0,
+            'Ascent' => 0,
+            'AvgWidth' => 0.0,
+            'CapHeight' => 0,
+            'CharacterSet' => '',
+            'Descender' => 0,
+            'Descent' => 0,
+            'EncodingScheme' => '',
+            'FamilyName' => '',
+            'Flags' => 0,
+            'FontBBox' => [],
+            'FontName' => '',
+            'FullName' => '',
+            'IsFixedPitch' => false,
+            'ItalicAngle' => 0,
+            'Leading' => 0,
+            'MaxWidth' => 0,
+            'MissingWidth' => 0,
+            'StdHW' => 0,
+            'StdVW' => 0,
+            'StemH' => 0,
+            'StemV' => 0,
+            'UnderlinePosition' => 0,
+            'UnderlineThickness' => 0,
+            'Version' => '',
+            'Weight' => '',
+            'XHeight' => 0,
+            'bbox' => '',
+            'cbbox' => [],
+            'cidinfo' => ['Ordering' => '', 'Registry' => '', 'Supplement' => 0, 'uni2cid' => []],
+            'compress' => false,
+            'ctg' => '',
+            'ctgdata' => [],
+            'cw' => [],
+            'cwu' => [],
+            'datafile' => '',
+            'desc' => [
+                'Ascent' => 0,
+                'AvgWidth' => 0,
+                'CapHeight' => 0,
+                'Descent' => 0,
+                'Flags' => 0,
+                'FontBBox' => '',
+                'ItalicAngle' => 0,
+                'Leading' => 0,
+                'MaxWidth' => 0,
+                'MissingWidth' => 0,
+                'StemH' => 0,
+                'StemV' => 0,
+                'XHeight' => 0,
+            ],
+            'diff' => '',
+            'diff_n' => 0,
+            'dir' => '',
+            'dw' => 0,
+            'enc' => '',
+            'enc_map' => [],
+            'encodingTables' => [],
+            'encoding_id' => 0,
+            'encrypted' => '',
+            'fakestyle' => false,
+            'family' => '',
+            'file' => '',
+            'file_n' => 0,
+            'file_name' => '',
+            'i' => 0,
+            'ifile' => '',
+            'indexToLoc' => [],
+            'input_file' => '',
+            'isUnicode' => false,
+            'italicAngle' => 0,
+            'key' => '',
+            'lenIV' => 0,
+            'length1' => 0,
+            'length2' => 0,
+            'linked' => false,
+            'mode' => [
+                'bold' => false,
+                'italic' => false,
+                'linethrough' => false,
+                'overline' => false,
+                'underline' => false,
+            ],
+            'n' => 0,
+            'name' => '',
+            'numGlyphs' => 0,
+            'numHMetrics' => 0,
+            'originalsize' => 0,
+            'pdfa' => false,
+            'platform_id' => 0,
+            'settype' => '',
+            'short_offset' => false,
+            'size1' => 0,
+            'size2' => 0,
+            'style' => '',
+            'subset' => false,
+            'subsetchars' => [],
+            'table' => [],
+            'tot_num_glyphs' => 0,
+            'type' => '',
+            'underlinePosition' => 0,
+            'underlineThickness' => 0,
+            'unicode' => false,
+            'unitsPerEm' => 0,
+            'up' => 0,
+            'urk' => 0.0,
+            'ut' => 0,
+            'weight' => '',
+        ];
+
+        return \array_replace_recursive($defaults, $fdt);
     }
 
     /**
@@ -704,10 +840,15 @@ class TrueTypeTest extends TestUtil
     {
         $class = new \ReflectionClass(TrueType::class);
         $instance = $class->newInstanceWithoutConstructor();
+        try {
+            $byte = new Byte($font);
+        } catch (\RangeException $exception) {
+            $this->fail($exception->getMessage());
+        }
 
         $this->setProperty($instance, 'font', $font);
-        $this->setProperty($instance, 'fdt', $fdt);
-        $this->setProperty($instance, 'fbyte', new Byte($font));
+        $this->setProperty($instance, 'fdt', $this->getFontDefaults($fdt));
+        $this->setProperty($instance, 'fbyte', $byte);
         $this->setProperty($instance, 'offset', 0);
 
         return $instance;
@@ -719,26 +860,102 @@ class TrueTypeTest extends TestUtil
     protected function invokeMethod(TrueType $instance, string $method, array $args = []): mixed
     {
         $reflection = new \ReflectionMethod(TrueType::class, $method);
-        $reflection->setAccessible(true);
 
         return $reflection->invokeArgs($instance, $args);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     protected function getFontData(TrueType $instance): array
     {
-        $fontData = $this->getProperty($instance, 'fdt');
-        $this->assertIsArray($fontData);
+        return $this->expectFontData($this->getProperty($instance, 'fdt'));
+    }
 
-        return $fontData;
+    /** @param array<string, mixed> $fontData */
+    protected function getCtgGlyph(array $fontData, int $char): ?int
+    {
+        $ctgData = $this->getCtgData($fontData);
+        $glyph = $ctgData[$char] ?? null;
+
+        if ($glyph !== null) {
+            $this->assertIsInt($glyph);
+        }
+
+        return $glyph;
+    }
+
+    /**
+     * @param array<string, mixed> $fontData
+     *
+     * @return array<int, int>
+     */
+    protected function getCtgData(array $fontData): array
+    {
+        if (!isset($fontData['ctgdata']) || !\is_array($fontData['ctgdata'])) {
+            $this->fail('Expected ctgdata map.');
+        }
+
+        /** @var array<int, int> $ctgData */
+        $ctgData = $fontData['ctgdata'];
+        return $ctgData;
+    }
+
+    /** @param array<string, mixed> $fontData */
+    protected function getFontDataString(array $fontData, string $key): string
+    {
+        if (!isset($fontData[$key]) || !\is_string($fontData[$key])) {
+            $this->fail('Expected string font field: ' . $key);
+        }
+
+        return $fontData[$key];
+    }
+
+    /** @param array<string, mixed> $fontData */
+    protected function getFontDataBool(array $fontData, string $key): bool
+    {
+        if (!isset($fontData[$key]) || !\is_bool($fontData[$key])) {
+            $this->fail('Expected bool font field: ' . $key);
+        }
+
+        return $fontData[$key];
+    }
+
+    /** @param array<string, mixed> $fontData */
+    protected function getFontDataInt(array $fontData, string $key): int
+    {
+        if (!isset($fontData[$key]) || !\is_int($fontData[$key])) {
+            $this->fail('Expected int font field: ' . $key);
+        }
+
+        return $fontData[$key];
+    }
+
+    /**
+     * @return array<int, bool>
+     */
+    protected function getSubglyphs(TrueType $instance): array
+    {
+        return $this->expectSubglyphs($this->getProperty($instance, 'subglyphs'));
+    }
+
+    /**
+     * @return array{platformID: int, encodingID: int, offset: int}|null
+     */
+    protected function selectEncodingTable(TrueType $instance): ?array
+    {
+        return $this->expectEncodingTable($this->invokeMethod($instance, 'selectEncodingTable'));
+    }
+
+    protected function convertStringEncoding(TrueType $instance, string $str, int $platformId, int $encodingId): string
+    {
+        return $this->expectString(
+            $this->invokeMethod($instance, 'convertStringEncoding', [$str, $platformId, $encodingId]),
+            'Expected converted string.',
+        );
     }
 
     protected function getProperty(TrueType $instance, string $name): mixed
     {
         $property = new \ReflectionProperty(TrueType::class, $name);
-        $property->setAccessible(true);
 
         return $property->getValue($instance);
     }
@@ -746,8 +963,68 @@ class TrueTypeTest extends TestUtil
     protected function setProperty(TrueType $instance, string $name, mixed $value): void
     {
         $property = new \ReflectionProperty(TrueType::class, $name);
-        $property->setAccessible(true);
         $property->setValue($instance, $value);
+    }
+
+    /** @return array<string, mixed> */
+    protected function expectFontData(mixed $value): array
+    {
+        if (!\is_array($value)) {
+            $this->fail('Expected font data array.');
+        }
+
+        /** @var array<string, mixed> $value */
+        return $value;
+    }
+
+    /** @return array<int, bool> */
+    protected function expectSubglyphs(mixed $value): array
+    {
+        if (!\is_array($value)) {
+            $this->fail('Expected subglyph map.');
+        }
+
+        /** @var array<int, bool> $value */
+        return $value;
+    }
+
+    /** @return array{platformID: int, encodingID: int, offset: int}|null */
+    protected function expectEncodingTable(mixed $value): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (!\is_array($value)) {
+            $this->fail('Expected encoding table array.');
+        }
+
+        if (!isset($value['platformID']) || !\is_int($value['platformID'])) {
+            $this->fail('Expected platformID.');
+        }
+
+        if (!isset($value['encodingID']) || !\is_int($value['encodingID'])) {
+            $this->fail('Expected encodingID.');
+        }
+
+        if (!isset($value['offset']) || !\is_int($value['offset'])) {
+            $this->fail('Expected offset.');
+        }
+
+        return [
+            'platformID' => $value['platformID'],
+            'encodingID' => $value['encodingID'],
+            'offset' => $value['offset'],
+        ];
+    }
+
+    protected function expectString(mixed $value, string $message): string
+    {
+        if (!\is_string($value)) {
+            $this->fail($message);
+        }
+
+        return $value;
     }
 
     // -------------------------------------------------------------------------
@@ -763,9 +1040,10 @@ class TrueTypeTest extends TestUtil
         $glyphs[65] = "\x63"; // chr 65 → glyph 99
         $glyphs[90] = "\x0A"; // chr 90 → glyph 10
 
-        $font = "\x00\x00"        // format = 0
-            . "\x01\x06"          // length (unused)
-            . "\x00\x00"          // language (unused)
+        $font =
+            "\x00\x00" // format = 0
+            . "\x01\x06" // length (unused)
+            . "\x00\x00" // language (unused)
             . $glyphs;
 
         $instance = $this->buildTrueType($font, [
@@ -781,10 +1059,10 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame(99, $fontData['ctgdata'][65]);
-        $this->assertSame(10, $fontData['ctgdata'][90]);
+        $this->assertSame(99, $this->getCtgGlyph($fontData, 65));
+        $this->assertSame(10, $this->getCtgGlyph($fontData, 90));
         // All 256 slots populated and type was TrueTypeUnicode → converted to TrueType
-        $this->assertSame('TrueType', $fontData['type']);
+        $this->assertSame('TrueType', $this->getFontDataString($fontData, 'type'));
     }
 
     // -------------------------------------------------------------------------
@@ -797,13 +1075,14 @@ class TrueTypeTest extends TestUtil
         // subHeaders[0]: firstCode=0, entryCount=1, idDelta=0, idRangeOffset=2
         //   Adjusted idRangeOffset = 2 − (2 + (1−0−1)×8) = 0  →  /2 = 0
         // glyphIdArray[0] = 99  →  every single-byte char maps to glyph 99.
-        $subHeaderKeys = str_repeat("\x00\x00", 256);          // 512 bytes
-        $subHeader     = "\x00\x00" . "\x00\x01" . "\x00\x00" . "\x00\x02";
-        $glyphIdArray  = "\x00\x63";   // glyph 99
+        $subHeaderKeys = str_repeat("\x00\x00", 256); // 512 bytes
+        $subHeader = "\x00\x00\x00\x01\x00\x00\x00\x02";
+        $glyphIdArray = "\x00\x63"; // glyph 99
 
-        $font = "\x00\x02"    // format = 2
-            . "\x02\x18"      // length (unused)
-            . "\x00\x00"      // language (unused)
+        $font =
+            "\x00\x02" // format = 2
+            . "\x02\x18" // length (unused)
+            . "\x00\x00" // language (unused)
             . $subHeaderKeys
             . $subHeader
             . $glyphIdArray;
@@ -821,10 +1100,10 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame(99, $fontData['ctgdata'][65]);
-        $this->assertSame(99, $fontData['ctgdata'][0]);
+        $this->assertSame(99, $this->getCtgGlyph($fontData, 65));
+        $this->assertSame(99, $this->getCtgGlyph($fontData, 0));
         // 256 entries with TrueTypeUnicode → converted to TrueType
-        $this->assertSame('TrueType', $fontData['type']);
+        $this->assertSame('TrueType', $this->getFontDataString($fontData, 'type'));
     }
 
     // -------------------------------------------------------------------------
@@ -834,14 +1113,15 @@ class TrueTypeTest extends TestUtil
     public function testProcessFormat6MapsCharRange(): void
     {
         // firstCode=65, entryCount=3, glyphs=[10,11,12]
-        $font = "\x00\x06"    // format = 6
-            . "\x00\x0F"      // length (unused)
-            . "\x00\x00"      // language (unused)
-            . "\x00\x41"      // firstCode = 65
-            . "\x00\x03"      // entryCount = 3
-            . "\x00\x0A"      // glyph for chr 65 = 10
-            . "\x00\x0B"      // glyph for chr 66 = 11
-            . "\x00\x0C";     // glyph for chr 67 = 12
+        $font =
+            "\x00\x06" // format = 6
+            . "\x00\x0F" // length (unused)
+            . "\x00\x00" // language (unused)
+            . "\x00\x41" // firstCode = 65
+            . "\x00\x03" // entryCount = 3
+            . "\x00\x0A" // glyph for chr 65 = 10
+            . "\x00\x0B" // glyph for chr 66 = 11
+            . "\x00\x0C"; // glyph for chr 67 = 12
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -856,11 +1136,11 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame(10, $fontData['ctgdata'][65]);
-        $this->assertSame(11, $fontData['ctgdata'][66]);
-        $this->assertSame(12, $fontData['ctgdata'][67]);
+        $this->assertSame(10, $this->getCtgGlyph($fontData, 65));
+        $this->assertSame(11, $this->getCtgGlyph($fontData, 66));
+        $this->assertSame(12, $this->getCtgGlyph($fontData, 67));
         // Only 4 ctgdata entries → not 256 → type stays TrueTypeUnicode
-        $this->assertSame('TrueTypeUnicode', $fontData['type']);
+        $this->assertSame('TrueTypeUnicode', $this->getFontDataString($fontData, 'type'));
     }
 
     // -------------------------------------------------------------------------
@@ -871,12 +1151,13 @@ class TrueTypeTest extends TestUtil
     {
         // numGroups = 0 → no character mappings; only the .notdef fallback is present.
         $is32 = str_repeat("\x00", 8192);
-        $font = "\x00\x08"           // format = 8
-            . "\x00\x00"             // reserved (uint16)
-            . "\x00\x00\x20\x14"    // length (uint32, unused)
-            . "\x00\x00\x00\x00"    // language (uint32, unused)
-            . $is32                  // is32[8192]
-            . "\x00\x00\x00\x00";   // numGroups = 0
+        $font =
+            "\x00\x08" // format = 8
+            . "\x00\x00" // reserved (uint16)
+            . "\x00\x00\x20\x14" // length (uint32, unused)
+            . "\x00\x00\x00\x00" // language (uint32, unused)
+            . $is32 // is32[8192]
+            . "\x00\x00\x00\x00"; // numGroups = 0
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -891,7 +1172,7 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame([0 => 0], $fontData['ctgdata']);
+        $this->assertSame([0 => 0], $this->getCtgData($fontData));
     }
 
     public function testProcessFormat8MapsSingleByteChar(): void
@@ -900,15 +1181,16 @@ class TrueTypeTest extends TestUtil
         // After addCtgItem the code overwrites ctgdata[chr] = 0, so the final
         // stored glyph ID is 0, but subglyphs contains glyph 5 when subchars[65] is set.
         $is32 = str_repeat("\x00", 8192);
-        $font = "\x00\x08"           // format = 8
-            . "\x00\x00"             // reserved
-            . "\x00\x00\x20\x26"    // length (unused)
-            . "\x00\x00\x00\x00"    // language (unused)
-            . $is32                  // is32[8192] all zeros
-            . "\x00\x00\x00\x01"    // numGroups = 1
-            . "\x00\x00\x00\x41"    // startCharCode = 65
-            . "\x00\x00\x00\x41"    // endCharCode   = 65
-            . "\x00\x00\x00\x05";   // startGlyphID  = 5
+        $font =
+            "\x00\x08" // format = 8
+            . "\x00\x00" // reserved
+            . "\x00\x00\x20\x26" // length (unused)
+            . "\x00\x00\x00\x00" // language (unused)
+            . $is32 // is32[8192] all zeros
+            . "\x00\x00\x00\x01" // numGroups = 1
+            . "\x00\x00\x00\x41" // startCharCode = 65
+            . "\x00\x00\x00\x41" // endCharCode   = 65
+            . "\x00\x00\x00\x05"; // startGlyphID  = 5
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -922,11 +1204,11 @@ class TrueTypeTest extends TestUtil
         $this->setProperty($instance, 'subchars', [65 => true]);
 
         $this->invokeMethod($instance, 'getCIDToGIDMap');
-        $fontData   = $this->getFontData($instance);
-        $subGlyphs  = $this->getProperty($instance, 'subglyphs');
+        $fontData = $this->getFontData($instance);
+        $subGlyphs = $this->getSubglyphs($instance);
 
         // The overwrite sets ctgdata[65] = 0 (format 8 spec)
-        $this->assertSame(0, $fontData['ctgdata'][65]);
+        $this->assertSame(0, $this->getCtgGlyph($fontData, 65));
         // But addCtgItem ran first and recorded glyph 5 in subglyphs
         $this->assertArrayHasKey(5, $subGlyphs);
     }
@@ -938,15 +1220,16 @@ class TrueTypeTest extends TestUtil
     public function testProcessFormat10MapsCharRange(): void
     {
         // startCharCode=65, numChars=3, glyphs=[10,11,12]
-        $font = "\x00\x0A"           // format = 10
-            . "\x00\x00"             // reserved (uint16)
-            . "\x00\x00\x00\x1C"    // length (uint32, unused)
-            . "\x00\x00\x00\x00"    // language (uint32, unused)
-            . "\x00\x00\x00\x41"    // startCharCode = 65 (uint32)
-            . "\x00\x00\x00\x03"    // numChars = 3 (uint32)
-            . "\x00\x0A"            // glyph for chr 65 = 10
-            . "\x00\x0B"            // glyph for chr 66 = 11
-            . "\x00\x0C";           // glyph for chr 67 = 12
+        $font =
+            "\x00\x0A" // format = 10
+            . "\x00\x00" // reserved (uint16)
+            . "\x00\x00\x00\x1C" // length (uint32, unused)
+            . "\x00\x00\x00\x00" // language (uint32, unused)
+            . "\x00\x00\x00\x41" // startCharCode = 65 (uint32)
+            . "\x00\x00\x00\x03" // numChars = 3 (uint32)
+            . "\x00\x0A" // glyph for chr 65 = 10
+            . "\x00\x0B" // glyph for chr 66 = 11
+            . "\x00\x0C"; // glyph for chr 67 = 12
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -961,10 +1244,10 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame(10, $fontData['ctgdata'][65]);
-        $this->assertSame(11, $fontData['ctgdata'][66]);
-        $this->assertSame(12, $fontData['ctgdata'][67]);
-        $this->assertSame(0, $fontData['ctgdata'][0]);
+        $this->assertSame(10, $this->getCtgGlyph($fontData, 65));
+        $this->assertSame(11, $this->getCtgGlyph($fontData, 66));
+        $this->assertSame(12, $this->getCtgGlyph($fontData, 67));
+        $this->assertSame(0, $this->getCtgGlyph($fontData, 0));
     }
 
     // -------------------------------------------------------------------------
@@ -975,14 +1258,15 @@ class TrueTypeTest extends TestUtil
     {
         // 1 group: startCharCode=65, endCharCode=67, startGlyphID=100
         // → ctgdata[65]=100, ctgdata[66]=101, ctgdata[67]=102
-        $font = "\x00\x0C"           // format = 12
-            . "\x00\x00"             // reserved (uint16)
-            . "\x00\x00\x00\x22"    // length (uint32, unused)
-            . "\x00\x00\x00\x00"    // language (uint32, unused)
-            . "\x00\x00\x00\x01"    // nGroups = 1
-            . "\x00\x00\x00\x41"    // startCharCode = 65
-            . "\x00\x00\x00\x43"    // endCharCode   = 67
-            . "\x00\x00\x00\x64";   // startGlyphID  = 100
+        $font =
+            "\x00\x0C" // format = 12
+            . "\x00\x00" // reserved (uint16)
+            . "\x00\x00\x00\x22" // length (uint32, unused)
+            . "\x00\x00\x00\x00" // language (uint32, unused)
+            . "\x00\x00\x00\x01" // nGroups = 1
+            . "\x00\x00\x00\x41" // startCharCode = 65
+            . "\x00\x00\x00\x43" // endCharCode   = 67
+            . "\x00\x00\x00\x64"; // startGlyphID  = 100
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -997,19 +1281,20 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame(100, $fontData['ctgdata'][65]);
-        $this->assertSame(101, $fontData['ctgdata'][66]);
-        $this->assertSame(102, $fontData['ctgdata'][67]);
-        $this->assertSame(0, $fontData['ctgdata'][0]);
+        $this->assertSame(100, $this->getCtgGlyph($fontData, 65));
+        $this->assertSame(101, $this->getCtgGlyph($fontData, 66));
+        $this->assertSame(102, $this->getCtgGlyph($fontData, 67));
+        $this->assertSame(0, $this->getCtgGlyph($fontData, 0));
     }
 
     public function testProcessFormat12WithZeroGroupsAddsOnlyNotdef(): void
     {
-        $font = "\x00\x0C"           // format = 12
-            . "\x00\x00"             // reserved
-            . "\x00\x00\x00\x16"    // length (unused)
-            . "\x00\x00\x00\x00"    // language (unused)
-            . "\x00\x00\x00\x00";   // nGroups = 0
+        $font =
+            "\x00\x0C" // format = 12
+            . "\x00\x00" // reserved
+            . "\x00\x00\x00\x16" // length (unused)
+            . "\x00\x00\x00\x00" // language (unused)
+            . "\x00\x00\x00\x00"; // nGroups = 0
 
         $instance = $this->buildTrueType($font, [
             'encodingTables' => [
@@ -1024,7 +1309,7 @@ class TrueTypeTest extends TestUtil
         $this->invokeMethod($instance, 'getCIDToGIDMap');
         $fontData = $this->getFontData($instance);
 
-        $this->assertSame([0 => 0], $fontData['ctgdata']);
+        $this->assertSame([0 => 0], $this->getCtgData($fontData));
     }
 
     // -------------------------------------------------------------------------
@@ -1035,7 +1320,7 @@ class TrueTypeTest extends TestUtil
     {
         $instance = $this->buildTrueType('', []);
         // platformId=0 (Unicode) → UTF-16BE. "\x00\x41" = 'A'
-        $result = $this->invokeMethod($instance, 'convertStringEncoding', ["\x00\x41", 0, 0]);
+        $result = $this->convertStringEncoding($instance, "\x00\x41", 0, 0);
         $this->assertSame('A', $result);
     }
 
@@ -1043,7 +1328,7 @@ class TrueTypeTest extends TestUtil
     {
         $instance = $this->buildTrueType('', []);
         // platformId=3, encodingId=0 → default UTF-16BE. "\x00\x42" = 'B'
-        $result = $this->invokeMethod($instance, 'convertStringEncoding', ["\x00\x42", 3, 0]);
+        $result = $this->convertStringEncoding($instance, "\x00\x42", 3, 0);
         $this->assertSame('B', $result);
     }
 
@@ -1051,7 +1336,7 @@ class TrueTypeTest extends TestUtil
     {
         $instance = $this->buildTrueType('', []);
         // platformId=3, encodingId=1 → default UTF-16BE. "\x00\x43" = 'C'
-        $result = $this->invokeMethod($instance, 'convertStringEncoding', ["\x00\x43", 3, 1]);
+        $result = $this->convertStringEncoding($instance, "\x00\x43", 3, 1);
         $this->assertSame('C', $result);
     }
 
@@ -1059,7 +1344,7 @@ class TrueTypeTest extends TestUtil
     {
         $instance = $this->buildTrueType('', []);
         // platformId=1 (Macintosh/MacRoman). ASCII 0x41 = 'A' in both MacRoman and UTF-8.
-        $result = $this->invokeMethod($instance, 'convertStringEncoding', ["\x41", 1, 0]);
+        $result = $this->convertStringEncoding($instance, "\x41", 1, 0);
         $this->assertSame('A', $result);
     }
 
@@ -1068,7 +1353,7 @@ class TrueTypeTest extends TestUtil
         $instance = $this->buildTrueType('', []);
         // platformId=3, encodingId=3 → CP936.
         // CP936/GBK 0x41 (single-byte ASCII-compatible) = 'A'
-        $result = $this->invokeMethod($instance, 'convertStringEncoding', ["\x41", 3, 3]);
+        $result = $this->convertStringEncoding($instance, "\x41", 3, 3);
         $this->assertSame('A', $result);
     }
 }

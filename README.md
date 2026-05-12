@@ -46,7 +46,7 @@ It bridges static font assets and runtime document composition by handling metri
 
 ## Requirements
 
-- PHP 8.1 or later
+- PHP 8.2 or later
 - Extensions: `json`, `pcre`, `zlib`
 - Composer
 

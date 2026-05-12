@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Stack.php
  *
@@ -16,8 +18,8 @@
 
 namespace Com\Tecnick\Pdf\Font;
 
-use Com\Tecnick\Unicode\Data\Type as UnicodeType;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Unicode\Data\Type as UnicodeType;
 
 /**
  * Com\Tecnick\Pdf\Font\Stack
@@ -164,7 +166,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         ?float $spacing = null,
         ?float $stretching = null,
         string $ifile = '',
-        ?bool $subset = null
+        ?bool $subset = null,
     ): array {
         if ($subset === null) {
             $subset = $this->subset;
@@ -175,6 +177,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $stretching = $this->getInputStretching($stretching);
 
         // try to load the corresponding imported font
+        /** @var ?FontException $err */
         $err = null;
         $keys = $this->getNormalizedFontKeys($font);
         $fontkey = '';
@@ -188,7 +191,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             }
         }
 
-        if ($err instanceof \Com\Tecnick\Pdf\Font\Exception) {
+        if ($err !== null) {
             throw new FontException($err->getMessage());
         }
 
@@ -219,26 +222,26 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
-    * Returns a clone of the specified font with new parameters.
-    *
-    * @param int     $objnum    Current PDF object number.
-    * @param ?int    $idx       Font index. Leave it null to use the current font.
-    * @param ?string $style     Font style.
-    *                           Possible values are (case-insensitive):
-    *                           regular (default)
-    *                           B: bold
-    *                           I: italic
-    *                           U: underline
-    *                           D: strikeout (linethrough)
-    *                           O: overline
-    * @param ?float $size       Font size in points (set to null to inherit the last font size).
-    * @param ?float $spacing    Extra spacing between characters.
-    * @param ?float $stretching Horizontal character stretching ratio.
-    *
-    * @return TFontMetric
-    *
-    * @throws FontException
-    */
+     * Returns a clone of the specified font with new parameters.
+     *
+     * @param int     $objnum    Current PDF object number.
+     * @param ?int    $idx       Font index. Leave it null to use the current font.
+     * @param ?string $style     Font style.
+     *                           Possible values are (case-insensitive):
+     *                           regular (default)
+     *                           B: bold
+     *                           I: italic
+     *                           U: underline
+     *                           D: strikeout (linethrough)
+     *                           O: overline
+     * @param ?float $size       Font size in points (set to null to inherit the last font size).
+     * @param ?float $spacing    Extra spacing between characters.
+     * @param ?float $stretching Horizontal character stretching ratio.
+     *
+     * @return TFontMetric
+     *
+     * @throws FontException
+     */
     public function cloneFont(
         int &$objnum,
         ?int $idx = null,
@@ -249,13 +252,13 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     ): array {
         if ($idx === null) {
             $idx = $this->index;
-        } elseif (($idx < 0) || ($idx > $this->index)) {
+        } elseif ($idx < 0 || $idx > $this->index) {
             throw new FontException('Invalid font index');
         }
 
-        $curfont = $this->stack[$idx];
+        $curfont = $this->getStackItem($idx);
 
-        if (($style === null) || ($style == $curfont['style'])) {
+        if ($style === null || $style === $curfont['style']) {
             $size = $this->getInputSize($size);
             $spacing = $this->getInputSpacing($spacing);
             $stretching = $this->getInputStretching($stretching);
@@ -289,10 +292,12 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Returns the current font key.
      *
      * @return string
+     *
+     * @throws FontException
      */
     public function getCurrentFontKey(): string
     {
-        return $this->stack[$this->index]['key'];
+        return $this->getCurrentStackItem()['key'];
     }
 
     /**
@@ -304,7 +309,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getCurrentFontType(): string
     {
-        return $this->getFont($this->stack[$this->index]['key'])['type'];
+        return $this->getFont($this->getCurrentStackItem()['key'])['type'];
     }
 
     /**
@@ -314,7 +319,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function hasCurrentFont(): bool
     {
-        return ($this->index >= 0) && ($this->stack !== []);
+        return $this->index >= 0 && $this->stack !== [];
     }
 
     /**
@@ -359,7 +364,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public function isCurrentByteFont(): bool
     {
         $currentFontType = $this->getCurrentFontType();
-        return (($currentFontType == 'Core') || ($currentFontType == 'TrueType') || ($currentFontType == 'Type1'));
+        return $currentFontType === 'Core' || $currentFontType === 'TrueType' || $currentFontType === 'Type1';
     }
 
     /**
@@ -372,7 +377,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public function isCurrentUnicodeFont(): bool
     {
         $currentFontType = $this->getCurrentFontType();
-        return (($currentFontType == 'TrueTypeUnicode') || ($currentFontType == 'cidfont0'));
+        return $currentFontType === 'TrueTypeUnicode' || $currentFontType === 'cidfont0';
     }
 
     /**
@@ -384,7 +389,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function popLastFont(): array
     {
-        if (($this->index < 0) || ($this->stack === [])) {
+        if ($this->index < 0 || $this->stack === []) {
             throw new FontException('The font stack is empty');
         }
 
@@ -414,15 +419,18 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 continue;
             }
 
-            if (! isset($subs[$uni])) {
+            $alts = $subs[$uni] ?? null;
+            if ($alts === null) {
                 continue;
             }
 
-            foreach ($subs[$uni] as $alt) {
-                if (isset($font['cw'][$alt])) {
-                    $uniarr[$pos] = $alt;
-                    break;
+            foreach ($alts as $alt) {
+                if (!isset($font['cw'][$alt])) {
+                    continue;
                 }
+
+                $uniarr[$pos] = $alt;
+                break;
             }
         }
 
@@ -455,7 +463,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getCharWidth(int $ord): float
     {
-        if (($ord == 173) || ($ord == 8203)) {
+        if ($ord === 173 || $ord === 8203) {
             // 173 = SHY character is not printed, as it is used for text hyphenation
             // 8203 = ZWSP character
             return 0;
@@ -499,45 +507,54 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $totwidth = 0; // total string width
         $totspacewidth = 0; // total space width
         $words = 0; // total number of words
-        $fact = ($this->stack[$this->index]['spacing'] * $this->stack[$this->index]['stretching']);
-        $fkey = $this->stack[$this->index]['key'];
-        $subset = !empty($this->font[$fkey]['subset']);
+        $curfont = $this->getFontMetric($this->index);
+        $fact = $curfont['spacing'] * $curfont['stretching'];
+        $fkey = $curfont['key'];
+        $subset = false;
+        if (
+            isset($this->font[$fkey])
+            && \is_array($this->font[$fkey])
+            && \array_key_exists('subset', $this->font[$fkey])
+            && $this->font[$fkey]['subset'] === true
+        ) {
+            $subset = true;
+        }
         $uniarr[] = 8203; // add null at the end to ensure that the last word is processed
         $split = [];
+        $prevtotwidth = 0.0;
         foreach ($uniarr as $idx => $ord) {
             if ($subset) {
                 $this->addSubsetChar($fkey, $ord);
             }
 
-            $unitype = UnicodeType::UNI[$ord];
+            $unitype = UnicodeType::UNI[$ord] ?? '';
             $chrwidth = $this->getCharWidth($ord);
             // 'B' Paragraph Separator
             // 'S' Segment Separator
             // 'WS' Whitespace
             // 'BN' Boundary Neutral
-            if (($unitype == 'B') || ($unitype == 'S') || ($unitype == 'WS') || ($unitype == 'BN')) {
+            if ($unitype === 'B' || $unitype === 'S' || $unitype === 'WS' || $unitype === 'BN') {
+                $currenttotwidth = $totwidth + ($fact * ($idx - 1));
                 $split[$words] = [
                     'pos' => $idx,
                     'ord' => $ord,
                     'spaces' => $spaces,
                     'septype' => $unitype,
-                    'wordwidth' => 0,
-                    'totwidth' => ($totwidth + ($fact * ($idx - 1))),
-                    'totspacewidth' => ($totspacewidth + ($fact * ($spaces - 1))),
+                    'wordwidth' => $words > 0 ? $currenttotwidth - $prevtotwidth : 0,
+                    'totwidth' => $currenttotwidth,
+                    'totspacewidth' => $totspacewidth + ($fact * ($spaces - 1)),
                 ];
-                if ($words > 0) {
-                    $split[$words]['wordwidth'] = ($split[$words]['totwidth'] - $split[($words - 1)]['totwidth']);
-                }
+                $prevtotwidth = $currenttotwidth;
                 $words++;
-                if ($unitype == 'WS') {
+                if ($unitype === 'WS') {
                     ++$spaces;
                     $totspacewidth += $chrwidth;
                 }
             }
             $totwidth += $chrwidth;
         }
-        $totwidth += ($fact * ($chars - 1));
-        $totspacewidth += ($fact * ($spaces - 1));
+        $totwidth += $fact * ($chars - 1);
+        $totspacewidth += $fact * ($spaces - 1);
         return [
             'chars' => $chars,
             'spaces' => $spaces,
@@ -577,7 +594,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     {
         if ($this->isCharDefined($newchar)) {
             // add the new char on the subset list
-            $this->addSubsetChar($this->stack[$this->index]['key'], $newchar);
+            $this->addSubsetChar($this->getFontMetric($this->index)['key'], $newchar);
             // return the new character
             return $newchar;
         }
@@ -597,91 +614,118 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     protected function getFontMetric(int $idx): array
     {
-        $font = $this->stack[$idx];
+        $font = $this->getStackItem($idx);
         $mkey = \md5(\serialize($font));
-        if (! empty($this->metric[$mkey])) {
+        if (isset($this->metric[$mkey])) {
             return $this->metric[$mkey];
         }
 
-        $size = $font['size'];
-        $usize = ((float) $size / $this->kunit);
-        $cratio = ((float) $size / 1000);
-        $wratio = ($cratio * $font['stretching']); // horizontal ratio
-        $data = $this->getFont($font['key']);
-        $outfont = \sprintf('/F%d %F Tf', $data['i'], $font['size']); // PDF output string
+        $fontkey = $font['key'];
+        $fontsize = $font['size'];
+        $fontspacing = $font['spacing'];
+        $fontstretching = $font['stretching'];
+        $fontstyle = $font['style'];
+
+        $usize = $fontsize / $this->kunit;
+        $cratio = $fontsize / 1000;
+        $wratio = $cratio * $fontstretching; // horizontal ratio
+        $data = $this->getFont($fontkey);
+        $desc = $data['desc'];
+        $cwraw = $data['cw'];
+        $cw = [];
+        foreach ($cwraw as $cid => $width) {
+            $cw[(int) $cid] = (float) $width;
+        }
+
+        $cwuraw = $data['cwu'];
+        $cwu = [];
+        foreach ($cwuraw as $codepoint => $width) {
+            $cwu[(int) $codepoint] = (float) $width;
+        }
+
+        $cbboxraw = $data['cbbox'];
+        $cbbox = [];
+        foreach ($cbboxraw as $cid => $val) {
+            if (\count($val) !== 4) {
+                continue;
+            }
+
+            $bbox = \array_pad(\array_values($val), 4, 0);
+            $cbbox[(int) $cid] = [
+                0 => (float) $bbox[0],
+                1 => (float) $bbox[1],
+                2 => (float) $bbox[2],
+                3 => (float) $bbox[3],
+            ];
+        }
+
+        $ascent = (float) $desc['Ascent'];
+        $descent = (float) $desc['Descent'];
+        $avgwidth = (float) $desc['AvgWidth'];
+        $capheight = (float) $desc['CapHeight'];
+        $maxwidth = (float) $desc['MaxWidth'];
+        $missingwidth = (float) $desc['MissingWidth'];
+        $xheight = (float) $desc['XHeight'];
+        $fontbbox = $desc['FontBBox'];
+        $dw = (float) $data['dw'];
+        $up = (float) $data['up'];
+        $ut = (float) $data['ut'];
+        $fonttype = $data['type'];
+        $outfont = \sprintf('/F%d %F Tf', (int) $data['i'], $fontsize); // PDF output string
+        $tbox = \array_pad(\explode(' ', \substr($fontbbox, 1, -1)), 4, '0');
         // add this font in the stack wit metrics in internal units
         $this->metric[$mkey] = [
-            'ascent' => ((float) $data['desc']['Ascent'] * $cratio),
-            'avgwidth' => ((float) $data['desc']['AvgWidth'] * $cratio * $font['stretching']),
-            'capheight' => ((float) $data['desc']['CapHeight'] * $cratio),
+            'ascent' => $ascent * $cratio,
+            'avgwidth' => $avgwidth * $cratio * $fontstretching,
+            'capheight' => $capheight * $cratio,
             'cbbox' => [],
             'cratio' => $cratio,
             'cw' => [],
             'cwu' => [],
-            'descent' => ((float) $data['desc']['Descent'] * $cratio),
-            'dw' => ((float) $data['dw'] * $cratio * $font['stretching']),
-            'fbbox' => [],
-            'height' => ((float) ($data['desc']['Ascent'] - $data['desc']['Descent']) * $cratio),
+            'descent' => $descent * $cratio,
+            'dw' => $dw * $cratio * $fontstretching,
+            'fbbox' => [
+                0 => (\is_numeric($tbox[0]) ? (float) $tbox[0] : 0.0) * $wratio, // left
+                1 => (\is_numeric($tbox[1]) ? (float) $tbox[1] : 0.0) * $cratio, // bottom
+                2 => (\is_numeric($tbox[2]) ? (float) $tbox[2] : 0.0) * $wratio, // right
+                3 => (\is_numeric($tbox[3]) ? (float) $tbox[3] : 0.0) * $cratio, // top
+            ],
+            'height' => ($ascent - $descent) * $cratio,
             'idx' => $idx,
-            'key' => $font['key'],
-            'maxwidth' => ((float) $data['desc']['MaxWidth'] * $cratio * $font['stretching']),
-            'midpoint' => ((float) ($data['desc']['Ascent'] + $data['desc']['Descent']) * $cratio / 2),
-            'missingwidth' => ((float) $data['desc']['MissingWidth'] * $cratio * $font['stretching']),
+            'key' => $fontkey,
+            'maxwidth' => $maxwidth * $cratio * $fontstretching,
+            'midpoint' => (($ascent + $descent) * $cratio) / 2,
+            'missingwidth' => $missingwidth * $cratio * $fontstretching,
             'out' => 'BT ' . $outfont . ' ET' . "\r",
             'outraw' => $outfont,
-            'size' => $size,
-            'spacing' => $font['spacing'],
-            'stretching' => $font['stretching'],
-            'style' => $font['style'],
-            'type' => $data['type'],
-            'up' => ((float) $data['up'] * $cratio),
+            'size' => $fontsize,
+            'spacing' => $fontspacing,
+            'stretching' => $fontstretching,
+            'style' => $fontstyle,
+            'type' => $fonttype,
+            'up' => $up * $cratio,
             'usize' => $usize,
-            'ut' => ((float) $data['ut'] * $cratio),
-            'xheight' => ((float) $data['desc']['XHeight'] * $cratio),
-        ];
-        $tbox = \explode(' ', \substr($data['desc']['FontBBox'], 1, -1));
-        $this->metric[$mkey]['fbbox'] = [
-            // left
-            ((float) $tbox[0] * $wratio),
-            // bottom
-            ((float) $tbox[1] * $cratio),
-            // right
-            ((float) $tbox[2] * $wratio),
-            // top
-            ((float) $tbox[3] * $cratio),
+            'ut' => $ut * $cratio,
+            'xheight' => $xheight * $cratio,
         ];
         //left, bottom, right, and top edges
-        foreach ($data['cw'] as $cid => $width) {
-            $this->metric[$mkey]['cw'][(int) $cid] = ((float) $width * $wratio);
+        foreach ($cw as $cid => $width) {
+            $this->metric[$mkey]['cw'][(int) $cid] = $width * $wratio;
         }
 
-        if (! empty($data['cwu'])) {
-            foreach ($data['cwu'] as $codepoint => $width) {
-                $this->metric[$mkey]['cwu'][(int) $codepoint] = ((float) $width * $wratio);
+        if ($cwu !== []) {
+            foreach ($cwu as $codepoint => $width) {
+                $this->metric[$mkey]['cwu'][(int) $codepoint] = $width * $wratio;
             }
         }
 
-        if (\is_array($data['cbbox'])) {
-            foreach ($data['cbbox'] as $cid => $val) {
-                if (! \is_array($val)) {
-                    continue;
-                }
-
-                if (\count($val) != 4) {
-                    continue;
-                }
-
-                $this->metric[$mkey]['cbbox'][(int) $cid] = [
-                    // left
-                    ((float) $val[0] * $wratio),
-                    // bottom
-                    ((float) $val[1] * $cratio),
-                    // right
-                    ((float) $val[2] * $wratio),
-                    // top
-                    ((float) $val[3] * $cratio),
-                ];
-            }
+        foreach ($cbbox as $cid => $bbox) {
+            $this->metric[$mkey]['cbbox'][(int) $cid] = [
+                0 => $bbox[0] * $wratio,
+                1 => $bbox[1] * $cratio,
+                2 => $bbox[2] * $wratio,
+                3 => $bbox[3] * $cratio,
+            ];
         }
 
         return $this->metric[$mkey];
@@ -693,19 +737,21 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * @param ?float $size Font size in points (set to null to inherit the last font size).
      *
      * @return float
+     *
+     * @throws FontException
      */
     protected function getInputSize(?float $size = null): float
     {
-        if (($size === null) || ($size < 0)) {
+        if ($size === null || $size < 0) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
-                return $this->stack[$this->index]['size'] ?? 0;
+                return $this->getCurrentStackItem()['size'];
             }
 
             return self::DEFAULT_SIZE;
         }
 
-        return \max(0, (float) $size);
+        return \max(0, $size);
     }
 
     /**
@@ -714,19 +760,21 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * @param ?float $spacing Extra spacing between characters.
      *
      * @return float
+     *
+     * @throws FontException
      */
     protected function getInputSpacing(?float $spacing = null): float
     {
         if ($spacing === null) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
-                return $this->stack[$this->index]['spacing'] ?? 0;
+                return $this->getCurrentStackItem()['spacing'];
             }
 
             return 0;
         }
 
-        return ($spacing);
+        return $spacing;
     }
 
     /**
@@ -735,19 +783,52 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * @param ?float $stretching Horizontal character stretching ratio.
      *
      * @return float
+     *
+     * @throws FontException
      */
     protected function getInputStretching(?float $stretching = null): float
     {
         if ($stretching === null) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
-                return $this->stack[$this->index]['stretching'] ?? 0;
+                return $this->getCurrentStackItem()['stretching'];
             }
 
             return 1;
         }
 
-        return ($stretching);
+        return $stretching;
+    }
+
+    /**
+     * Returns the stack item at the given index.
+     *
+     * @param int $idx Font index in the stack.
+     *
+     * @return TStackItem
+     *
+     * @throws FontException
+     */
+    protected function getStackItem(int $idx): array
+    {
+        $item = $this->stack[$idx] ?? null;
+        if ($item === null) {
+            throw new FontException('Invalid font index');
+        }
+
+        return $item;
+    }
+
+    /**
+     * Returns the current stack item.
+     *
+     * @return TStackItem
+     *
+     * @throws FontException
+     */
+    protected function getCurrentStackItem(): array
+    {
+        return $this->getStackItem($this->index);
     }
 
     /**
@@ -768,8 +849,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $keys = [];
         // remove spaces and symbols
         $fontfamily = \preg_replace('/[^a-z0-9_\,]/', '', \strtolower($fontfamily));
-        if (($fontfamily === null) || (! \is_string($fontfamily))) {
-            throw new FontException('Invalid font family name: ' . $fontfamily);
+        if ($fontfamily === null) {
+            throw new FontException('Invalid font family name');
         }
 
         // extract all font names

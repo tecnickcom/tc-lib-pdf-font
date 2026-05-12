@@ -29,13 +29,65 @@ namespace Test;
  */
 class SubsetTest extends TestUtil
 {
+    private function setProp(object $obj, string $name, mixed $value): void
+    {
+        $prop = new \ReflectionProperty($obj, $name);
+        $prop->setValue($obj, $value);
+    }
+
+    /** @return array<array-key, mixed> */
+    private function getDefaultFdt(): array
+    {
+        $ref = new \ReflectionClass(\Com\Tecnick\Pdf\Font\Subset::class);
+        $prop = $ref->getProperty('fdt');
+        $instance = $ref->newInstanceWithoutConstructor();
+
+        return (static fn(mixed $value): array => \is_array($value) ? $value : [])($prop->getValue($instance));
+    }
+
+    /**
+     * @param array<array-key, mixed> $table
+     *
+     * @return array<array-key, mixed>
+     */
+    private function getTableRecord(array $table, string $tag): array
+    {
+        if (!isset($table[$tag]) || !\is_array($table[$tag])) {
+            $this->fail('Missing or invalid table record: ' . $tag);
+        }
+
+        return $table[$tag];
+    }
+
+    /** @param array<array-key, mixed> $table */
+    private function getTableRecordString(array $table, string $tag, string $field): string
+    {
+        $record = $this->getTableRecord($table, $tag);
+        if (!isset($record[$field]) || !\is_string($record[$field])) {
+            $this->fail('Missing or invalid table string field: ' . $tag . '.' . $field);
+        }
+
+        return $record[$field];
+    }
+
+    /** @param array<array-key, mixed> $table */
+    private function getTableRecordInt(array $table, string $tag, string $field): int
+    {
+        $record = $this->getTableRecord($table, $tag);
+        if (!isset($record[$field]) || !\is_int($record[$field])) {
+            $this->fail('Missing or invalid table int field: ' . $tag . '.' . $field);
+        }
+
+        return $record[$field];
+    }
+
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testTableChecksumPadsTrailingBytes(): void
     {
-        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
-            public function __construct()
-            {
-            }
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
 
+            /** @throws \Com\Tecnick\Pdf\Font\Exception */
             public function checksum(string $table, int $length): int
             {
                 return $this->getTableChecksum($table, $length);
@@ -46,13 +98,13 @@ class SubsetTest extends TestUtil
         $this->assertSame(0x01020300, $subset->checksum("\x01\x02\x03", 3));
     }
 
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testTableChecksumHandlesMixedFullAndPartialWords(): void
     {
-        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
-            public function __construct()
-            {
-            }
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
 
+            /** @throws \Com\Tecnick\Pdf\Font\Exception */
             public function checksum(string $table, int $length): int
             {
                 return $this->getTableChecksum($table, $length);
@@ -72,10 +124,8 @@ class SubsetTest extends TestUtil
     {
         // Build an anonymous subclass that exposes removeUnusedTables and lets us
         // inspect the resulting fdt without running the full constructor chain.
-        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
-            public function __construct()
-            {
-            }
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
 
             public function run(): void
             {
@@ -89,33 +139,18 @@ class SubsetTest extends TestUtil
             }
         };
 
-        // Use reflection to inject the minimum state the method needs.
-        $setProp = static function (object $obj, string $name, mixed $value): void {
-            $prop = new \ReflectionProperty($obj, $name);
-            $prop->setAccessible(true);
-            $prop->setValue($obj, $value);
-        };
-
         // A font binary with 8 bytes of head data (for substr to not be empty)
         $font = str_repeat("\x00", 64);
-        $setProp($subset, 'font', $font);
-        $setProp($subset, 'offset', 12);
+        $this->setProp($subset, 'font', $font);
+        $this->setProp($subset, 'offset', 12);
 
         // Provide two tables: 'head' (known → kept) and 'xxxx' (unknown → removed)
-        $setProp($subset, 'fdt', array_merge(
-            (function (): array {
-                $ref  = new \ReflectionClass(\Com\Tecnick\Pdf\Font\Subset::class);
-                $prop = $ref->getProperty('fdt');
-                $prop->setAccessible(true);
-                return $prop->getValue($ref->newInstanceWithoutConstructor());
-            })(),
-            [
-                'table' => [
-                    'head' => ['offset' => 0, 'length' => 8, 'checkSum' => 0, 'data' => ''],
-                    'xxxx' => ['offset' => 0, 'length' => 8, 'checkSum' => 0, 'data' => ''],
-                ],
-            ]
-        ));
+        $this->setProp($subset, 'fdt', array_merge($this->getDefaultFdt(), [
+            'table' => [
+                'head' => ['offset' => 0, 'length' => 8, 'checkSum' => 0, 'data' => ''],
+                'xxxx' => ['offset' => 0, 'length' => 8, 'checkSum' => 0, 'data' => ''],
+            ],
+        ]));
 
         $subset->run();
 
@@ -130,10 +165,8 @@ class SubsetTest extends TestUtil
 
     public function testAddProcessedTablesBuildsLocaAndGlyfFromSubsetGlyphs(): void
     {
-        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
-            public function __construct()
-            {
-            }
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
 
             public function run(): void
             {
@@ -147,58 +180,47 @@ class SubsetTest extends TestUtil
             }
         };
 
-        $setProp = static function (object $obj, string $name, mixed $value): void {
-            $prop = new \ReflectionProperty($obj, $name);
-            $prop->setAccessible(true);
-            $prop->setValue($obj, $value);
-        };
-
         // Font data: 12 bytes (glyf table at offset 0, 12 bytes of raw glyph data)
         $font = str_repeat("\xAB", 12);
-        $setProp($subset, 'font', $font);
-        $setProp($subset, 'offset', 0);
+        $this->setProp($subset, 'font', $font);
+        $this->setProp($subset, 'offset', 0);
 
         // subglyphs: only glyph 0 is in the subset
-        $setProp($subset, 'subglyphs', [0 => true]);
+        $this->setProp($subset, 'subglyphs', [0 => true]);
 
         // Inject the fdt state the method needs
-        $setProp($subset, 'fdt', array_merge(
-            (function (): array {
-                $ref  = new \ReflectionClass(\Com\Tecnick\Pdf\Font\Subset::class);
-                $prop = $ref->getProperty('fdt');
-                $prop->setAccessible(true);
-                return $prop->getValue($ref->newInstanceWithoutConstructor());
-            })(),
-            [
-                'tot_num_glyphs' => 2,
-                'short_offset'   => false,  // long (Offset32) loca entries
-                'indexToLoc'     => [0 => 0, 1 => 8],  // glyph 0 is 8 bytes
-                'table'          => [
-                    'glyf' => ['offset' => 0, 'length' => 12, 'checkSum' => 0, 'data' => ''],
-                    'loca' => ['offset' => 0, 'length' => 0,  'checkSum' => 0, 'data' => ''],
-                ],
-            ]
-        ));
+        $this->setProp($subset, 'fdt', array_merge($this->getDefaultFdt(), [
+            'tot_num_glyphs' => 2,
+            'short_offset' => false, // long (Offset32) loca entries
+            'indexToLoc' => [0 => 0, 1 => 8], // glyph 0 is 8 bytes
+            'table' => [
+                'glyf' => ['offset' => 0, 'length' => 12, 'checkSum' => 0, 'data' => ''],
+                'loca' => ['offset' => 0, 'length' => 0, 'checkSum' => 0, 'data' => ''],
+            ],
+        ]));
 
         $subset->run();
 
         $table = $subset->getTable();
 
         // loca must have been rebuilt
-        $this->assertNotEmpty($table['loca']['data']);
+        $this->assertNotEmpty($this->getTableRecordString($table, 'loca', 'data'));
         // glyf must contain the extracted glyph bytes (8 bytes for glyph 0, padded to multiple of 4)
-        $this->assertNotEmpty($table['glyf']['data']);
+        $this->assertNotEmpty($this->getTableRecordString($table, 'glyf', 'data'));
         // The checksum must have been computed (non-zero for non-empty data)
-        $this->assertNotSame(0, $table['loca']['checkSum'] + $table['glyf']['checkSum']);
+        $this->assertNotSame(
+            0,
+            $this->getTableRecordInt($table, 'loca', 'checkSum') + $this->getTableRecordInt($table, 'glyf', 'checkSum'),
+        );
     }
 
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testBuildSubsetFontKeepsTableDirectoryOffsetsIntact(): void
     {
-        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
-            public function __construct()
-            {
-            }
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
 
+            /** @throws \Com\Tecnick\Pdf\Font\Exception */
             public function run(): void
             {
                 $this->buildSubsetFont();
@@ -210,31 +232,17 @@ class SubsetTest extends TestUtil
             }
         };
 
-        $setProp = static function (object $obj, string $name, mixed $value): void {
-            $prop = new \ReflectionProperty($obj, $name);
-            $prop->setAccessible(true);
-            $prop->setValue($obj, $value);
-        };
-
-        $setProp($subset, 'fdt', array_merge(
-            (function (): array {
-                $ref  = new \ReflectionClass(\Com\Tecnick\Pdf\Font\Subset::class);
-                $prop = $ref->getProperty('fdt');
-                $prop->setAccessible(true);
-                return $prop->getValue($ref->newInstanceWithoutConstructor());
-            })(),
-            [
-                'table' => [
-                    // Offsets in fdt are relative to the 12-byte sfnt header.
-                    'head' => [
-                        'checkSum' => 0,
-                        'data' => str_repeat("\x00", 12),
-                        'length' => 12,
-                        'offset' => 12,
-                    ],
+        $this->setProp($subset, 'fdt', array_merge($this->getDefaultFdt(), [
+            'table' => [
+                // Offsets in fdt are relative to the 12-byte sfnt header.
+                'head' => [
+                    'checkSum' => 0,
+                    'data' => str_repeat("\x00", 12),
+                    'length' => 12,
+                    'offset' => 12,
                 ],
-            ]
-        ));
+            ],
+        ]));
 
         $subset->run();
         $subfont = $subset->getSubFont();
@@ -248,10 +256,8 @@ class SubsetTest extends TestUtil
 
     public function testAddProcessedTablesUsesNextAvailableLocaIndexWhenImmediateIsMissing(): void
     {
-        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
-            public function __construct()
-            {
-            }
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
 
             public function run(): void
             {
@@ -265,53 +271,37 @@ class SubsetTest extends TestUtil
             }
         };
 
-        $setProp = static function (object $obj, string $name, mixed $value): void {
-            $prop = new \ReflectionProperty($obj, $name);
-            $prop->setAccessible(true);
-            $prop->setValue($obj, $value);
-        };
-
         // 8 bytes for glyph 0 followed by 8 bytes for glyph 1.
         $font = str_repeat("\xAB", 16);
-        $setProp($subset, 'font', $font);
-        $setProp($subset, 'offset', 0);
-        $setProp($subset, 'subglyphs', [0 => true]);
+        $this->setProp($subset, 'font', $font);
+        $this->setProp($subset, 'offset', 0);
+        $this->setProp($subset, 'subglyphs', [0 => true]);
 
         // Simulate parser output where index 1 was removed as duplicate-empty marker.
         // Glyph 0 must still use index 2 as the closing boundary.
-        $setProp($subset, 'fdt', array_merge(
-            (function (): array {
-                $ref  = new \ReflectionClass(\Com\Tecnick\Pdf\Font\Subset::class);
-                $prop = $ref->getProperty('fdt');
-                $prop->setAccessible(true);
-                return $prop->getValue($ref->newInstanceWithoutConstructor());
-            })(),
-            [
-                'tot_num_glyphs' => 3,
-                'short_offset'   => false,
-                'indexToLoc'     => [0 => 0, 2 => 8, 3 => 16],
-                'table'          => [
-                    'glyf' => ['offset' => 0, 'length' => 16, 'checkSum' => 0, 'data' => ''],
-                    'loca' => ['offset' => 0, 'length' => 0, 'checkSum' => 0, 'data' => ''],
-                ],
-            ]
-        ));
+        $this->setProp($subset, 'fdt', array_merge($this->getDefaultFdt(), [
+            'tot_num_glyphs' => 3,
+            'short_offset' => false,
+            'indexToLoc' => [0 => 0, 2 => 8, 3 => 16],
+            'table' => [
+                'glyf' => ['offset' => 0, 'length' => 16, 'checkSum' => 0, 'data' => ''],
+                'loca' => ['offset' => 0, 'length' => 0, 'checkSum' => 0, 'data' => ''],
+            ],
+        ]));
 
         $subset->run();
         $table = $subset->getTable();
 
         // Glyph 0 must not be dropped just because index 1 is missing.
-        $this->assertNotEmpty($table['glyf']['data']);
+        $this->assertNotEmpty($this->getTableRecordString($table, 'glyf', 'data'));
     }
 
     public function testAddCompositeGlyphsPreservesNumericGlyphIndexes(): void
     {
-        $subset = new class () extends \Com\Tecnick\Pdf\Font\Subset {
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
             private bool $added = false;
 
-            public function __construct()
-            {
-            }
+            public function __construct() {}
 
             public function run(): void
             {
@@ -332,9 +322,7 @@ class SubsetTest extends TestUtil
              */
             protected function findCompositeGlyphs(array $new_sga, int $key): array
             {
-                $key = $key;
-
-                if (! $this->added) {
+                if (!$this->added) {
                     $this->added = true;
                     $new_sga[3283] = true;
                 }
@@ -343,13 +331,7 @@ class SubsetTest extends TestUtil
             }
         };
 
-        $setProp = static function (object $obj, string $name, mixed $value): void {
-            $prop = new \ReflectionProperty($obj, $name);
-            $prop->setAccessible(true);
-            $prop->setValue($obj, $value);
-        };
-
-        $setProp($subset, 'subglyphs', [853 => true]);
+        $this->setProp($subset, 'subglyphs', [853 => true]);
 
         $subset->run();
         $subglyphs = $subset->getSubglyphs();

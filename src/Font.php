@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Font.php
  *
@@ -82,7 +84,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         bool $unicode = true,
         bool $pdfa = false,
         bool $compress = true,
-        ?array $fileOptions = null
+        ?array $fileOptions = null,
     ) {
         parent::__construct($fileOptions);
 
@@ -144,15 +146,15 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
 
         // normalize family name
         $this->data['family'] = \strtolower($this->data['family']);
-        if ((! $this->data['unicode']) && ($this->data['family'] == 'arial')) {
+        if (!$this->data['unicode'] && $this->data['family'] === 'arial') {
             $this->data['family'] = 'helvetica';
         }
 
-        if (($this->data['family'] == 'symbol') || ($this->data['family'] == 'zapfdingbats')) {
+        if ($this->data['family'] === 'symbol' || $this->data['family'] === 'zapfdingbats') {
             $style = '';
         }
 
-        if ($this->data['pdfa'] && (isset(Core::FONT[$this->data['family']]))) {
+        if ($this->data['pdfa'] && isset(Core::FONT[$this->data['family']])) {
             // core fonts must be embedded in PDF/A
             $this->data['family'] = 'pdfa' . $this->data['family'];
         }
@@ -178,7 +180,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
             $suffix .= 'I';
         }
 
-        $this->data['style'] = (string) $suffix;
+        $this->data['style'] = $suffix;
         if (\str_contains($style, 'U')) {
             $this->data['style'] .= 'U';
             $this->data['mode']['underline'] = true;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * TrueType.php
  *
@@ -52,14 +54,14 @@ class TrueType
      */
     private const CMAP_FALLBACK_PRIORITY = [
         [3, 10], // Windows UCS-4 (full Unicode, format 12)
-        [3,  1], // Windows Unicode BMP
-        [0,  6], // Unicode platform - full repertoire
-        [0,  4], // Unicode platform - 2.0+, BMP + supplementary
-        [0,  3], // Unicode platform - 2.0+, BMP only
-        [0,  2], // Unicode platform - 1.1
-        [0,  1], // Unicode platform - 1.1 (deprecated)
-        [0,  0], // Unicode platform - 1.0 (deprecated)
-        [1,  0], // Macintosh Roman (legacy)
+        [3, 1], // Windows Unicode BMP
+        [0, 6], // Unicode platform - full repertoire
+        [0, 4], // Unicode platform - 2.0+, BMP + supplementary
+        [0, 3], // Unicode platform - 2.0+, BMP only
+        [0, 2], // Unicode platform - 1.1
+        [0, 1], // Unicode platform - 1.1 (deprecated)
+        [0, 0], // Unicode platform - 1.0 (deprecated)
+        [1, 0], // Macintosh Roman (legacy)
     ];
 
     /**
@@ -98,7 +100,7 @@ class TrueType
         protected string $font,
         protected array $fdt,
         protected Byte $fbyte,
-        array $subchars = []
+        array $subchars = [],
     ) {
         \ksort($subchars);
         $this->subchars = $subchars;
@@ -160,7 +162,7 @@ class TrueType
      */
     protected function isValidType(): void
     {
-        if ($this->fbyte->getULong($this->offset) != 0x00010000) {
+        if ($this->fbyte->getULong($this->offset) !== 0x0001_0000) {
             throw new FontException('sfnt version must be 0x00010000 for TrueType version 1.0.');
         }
 
@@ -175,13 +177,13 @@ class TrueType
      */
     protected function setFontFile(): void
     {
-        if (! empty($this->fdt['desc']['MaxWidth'])) {
+        if ($this->fdt['desc']['MaxWidth'] !== 0) {
             // subsetting mode
             $this->fdt['Flags'] = $this->fdt['desc']['Flags'];
             return;
         }
 
-        if ($this->fdt['type'] == 'cidfont0') {
+        if ($this->fdt['type'] === 'cidfont0') {
             return;
         }
 
@@ -262,8 +264,8 @@ class TrueType
      */
     protected function checkMagickNumber(): void
     {
-        $this->offset = ($this->fdt['table']['head']['offset'] + 12);
-        if ($this->fbyte->getULong($this->offset) != 0x5f0f3cf5) {
+        $this->offset = $this->fdt['table']['head']['offset'] + 12;
+        if ($this->fbyte->getULong($this->offset) !== 0x5f0f_3cf5) {
             // magicNumber must be 0x5f0f3cf5
             throw new FontException('magicNumber must be 0x5f0f3cf5');
         }
@@ -300,7 +302,7 @@ class TrueType
         $this->fdt['unitsPerEm'] = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         // units ratio constant
-        $this->fdt['urk'] = (1000 / $this->fdt['unitsPerEm']);
+        $this->fdt['urk'] = 1000 / $this->fdt['unitsPerEm'];
         // skip field: created: (LONGDATETIME int64)
         // skip field: modified: (LONGDATETIME int64)
         $this->offset += 16;
@@ -316,7 +318,7 @@ class TrueType
         $macStyle = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         // PDF font flags
-        if (($macStyle & 2) == 2) {
+        if (($macStyle & 2) === 2) {
             // italic flag
             $this->fdt['Flags'] |= 64;
         }
@@ -332,8 +334,8 @@ class TrueType
     protected function getIndexToLoc(): void
     {
         // indexToLocFormat flag in the head table (indexToLocFormat : 0 = short, 1 = long)
-        $this->offset = ($this->fdt['table']['head']['offset'] + 50);
-        $this->fdt['short_offset'] = ($this->fbyte->getShort($this->offset) == 0);
+        $this->offset = $this->fdt['table']['head']['offset'] + 50;
+        $this->fdt['short_offset'] = $this->fbyte->getShort($this->offset) === 0;
         $this->offset += 2;
         // get the offsets to the locations of the glyphs in the font, relative to the beginning of the glyphData table
         $this->fdt['indexToLoc'] = [];
@@ -344,11 +346,11 @@ class TrueType
             for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getUShort($this->offset) * 2;
                 if (
-                    isset($this->fdt['indexToLoc'][($idx - 1)])
-                    && ($this->fdt['indexToLoc'][$idx] === $this->fdt['indexToLoc'][($idx - 1)])
+                    isset($this->fdt['indexToLoc'][$idx - 1])
+                    && $this->fdt['indexToLoc'][$idx] === $this->fdt['indexToLoc'][$idx - 1]
                 ) {
                     // the last glyph didn't have an outline
-                    unset($this->fdt['indexToLoc'][($idx - 1)]);
+                    unset($this->fdt['indexToLoc'][$idx - 1]);
                 }
 
                 $this->offset += 2;
@@ -359,11 +361,11 @@ class TrueType
             for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
                 $this->fdt['indexToLoc'][$idx] = $this->fbyte->getULong($this->offset);
                 if (
-                    isset($this->fdt['indexToLoc'][($idx - 1)])
-                    && ($this->fdt['indexToLoc'][$idx] === $this->fdt['indexToLoc'][($idx - 1)])
+                    isset($this->fdt['indexToLoc'][$idx - 1])
+                    && $this->fdt['indexToLoc'][$idx] === $this->fdt['indexToLoc'][$idx - 1]
                 ) {
                     // the last glyph didn't have an outline
-                    unset($this->fdt['indexToLoc'][($idx - 1)]);
+                    unset($this->fdt['indexToLoc'][$idx - 1]);
                 }
 
                 $this->offset += 4;
@@ -449,7 +451,7 @@ class TrueType
     protected function getOS2Metrics(): void
     {
         // OS/2 is optional in some older or non-Windows TrueType fonts.
-        if (! isset($this->fdt['table']['OS/2'])) {
+        if (!isset($this->fdt['table']['OS/2'])) {
             // No OS/2 table present: use conservative metric defaults.
             $this->fdt['AvgWidth'] = 0;
             $this->fdt['StemV'] = 70;
@@ -459,8 +461,11 @@ class TrueType
 
         if ($this->fdt['table']['OS/2']['length'] < self::OS2_MIN_LENGTH) {
             throw new FontException(
-                'OS/2 table is too short: expected at least ' . self::OS2_MIN_LENGTH
-                . ' bytes, got ' . $this->fdt['table']['OS/2']['length'] . ' bytes.'
+                'OS/2 table is too short: expected at least '
+                . self::OS2_MIN_LENGTH
+                . ' bytes, got '
+                . $this->fdt['table']['OS/2']['length']
+                . ' bytes.',
             );
         }
 
@@ -502,16 +507,14 @@ class TrueType
         if (($fsType & 0x000E) === 0x0002) {
             throw new FontException(
                 'This Font cannot be modified, embedded or exchanged in any manner'
-                . ' without first obtaining permission of the legal owner.'
+                . ' without first obtaining permission of the legal owner.',
             );
         }
 
         // Bitmap-embedding-only: incompatible with vector PDF stream embedding.
         if (($fsType & 0x0200) !== 0) {
-            throw new FontException(
-                'This font is licensed for bitmap embedding only'
-                . ' and cannot be embedded in a vector PDF document.'
-            );
+            throw new FontException('This font is licensed for bitmap embedding only'
+            . ' and cannot be embedded in a vector PDF document.');
         }
 
         // No-subsetting: embedding is allowed but the font must not be subsetted.
@@ -535,21 +538,21 @@ class TrueType
     {
         $original = $str;
 
-        if ($platformId == 1) {
+        if ($platformId === 1) {
             // Legacy Macintosh platform uses 'MacRoman' encoding which is not available in PHP mbstring.
             // Convert with iconv (macintosh = MacRoman) if available or mb_convert_encoding using
             // Windows-1252 (closest substitute for MacRoman) if available.
-            $str = \function_exists('\iconv')
-                ? \iconv('macintosh', 'UTF-8', $str)
-                : (\function_exists('\mb_convert_encoding')
-                    ? \mb_convert_encoding($str, 'UTF-8', 'Windows-1252')
-                    : $str);
+            if (\function_exists('\iconv')) {
+                $str = \iconv('macintosh', 'UTF-8', $str);
+            } elseif (\function_exists('\mb_convert_encoding')) {
+                $str = \mb_convert_encoding($str, 'UTF-8', 'Windows-1252');
+            }
         } elseif (\function_exists('\mb_convert_encoding')) {
             // All Unicode (platformId=0) strings are UTF-16BE
             $stringEncoding = 'UTF-16BE';
 
             // Windows platform (platformId=3) uses specific string encodings for encodingIds 3, 4, and 5
-            if ($platformId == 3) {
+            if ($platformId === 3) {
                 $stringEncoding = match ($encodingId) {
                     3 => 'CP936',
                     4 => 'CP950',
@@ -625,7 +628,7 @@ class TrueType
              */
             $nameID = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
-            if ($nameID == 6) {
+            if ($nameID === 6) {
                 // String length (in bytes).
                 $stringLength = $this->fbyte->getUShort($this->offset);
                 $this->offset += 2;
@@ -633,14 +636,14 @@ class TrueType
                 $stringOffset = $this->fbyte->getUShort($this->offset);
                 $this->offset += 2;
 
-                $this->offset = ($this->fdt['table']['name']['offset'] + $stringStorageOffset + $stringOffset);
+                $this->offset = $this->fdt['table']['name']['offset'] + $stringStorageOffset + $stringOffset;
                 // TTF encoded name string
                 $name = \substr($this->font, $this->offset, $stringLength);
                 // Convert the string encoding if possible
                 $name = $this->convertStringEncoding($name, $platformId, $encodingId);
 
                 $name = \preg_replace('/[^a-zA-Z0-9_\-]/', '', $name);
-                if (($name === null) || ($name === '')) {
+                if ($name === null || $name === '') {
                     throw new FontException('Error getting font name.');
                 }
 
@@ -667,7 +670,7 @@ class TrueType
         $this->offset += 2;
         $this->fdt['underlineThickness'] = (int) \round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']);
         $this->offset += 2;
-        $isFixedPitch = ($this->fbyte->getULong($this->offset) != 0);
+        $isFixedPitch = $this->fbyte->getULong($this->offset) !== 0;
         $this->offset += 2;
         if ($isFixedPitch) {
             $this->fdt['Flags'] |= 1;
@@ -747,13 +750,10 @@ class TrueType
     protected function getHeights(): void
     {
         // get xHeight (height of x)
-        $this->fdt['XHeight'] = ($this->fdt['Ascent'] + $this->fdt['Descent']);
-        if (! empty($this->fdt['ctgdata'][120])) {
-            $this->offset = (
-                $this->fdt['table']['glyf']['offset']
-                + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][120]]
-                + 4
-            );
+        $this->fdt['XHeight'] = $this->fdt['Ascent'] + $this->fdt['Descent'];
+        if (isset($this->fdt['ctgdata'][120]) && $this->fdt['ctgdata'][120] !== 0) {
+            $this->offset =
+                $this->fdt['table']['glyf']['offset'] + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][120]] + 4;
             $yMin = $this->fbyte->getFWord($this->offset);
             $this->offset += 4;
             $yMax = $this->fbyte->getFWord($this->offset);
@@ -763,12 +763,9 @@ class TrueType
 
         // get CapHeight (height of H)
         $this->fdt['CapHeight'] = (int) $this->fdt['Ascent'];
-        if (! empty($this->fdt['ctgdata'][72])) {
-            $this->offset = (
-                $this->fdt['table']['glyf']['offset']
-                + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][72]]
-                + 4
-            );
+        if (isset($this->fdt['ctgdata'][72]) && $this->fdt['ctgdata'][72] !== 0) {
+            $this->offset =
+                $this->fdt['table']['glyf']['offset'] + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][72]] + 4;
             $yMin = $this->fbyte->getFWord($this->offset);
             $this->offset += 4;
             $yMax = $this->fbyte->getFWord($this->offset);
@@ -794,29 +791,29 @@ class TrueType
 
         if ($this->fdt['numHMetrics'] < $this->fdt['numGlyphs']) {
             // fill missing widths with the last value
-            $chw = \array_pad($chw, $this->fdt['numGlyphs'], $chw[($this->fdt['numHMetrics'] - 1)]);
+            $chw = \array_pad($chw, $this->fdt['numGlyphs'], $chw[$this->fdt['numHMetrics'] - 1]);
         }
 
-        $this->fdt['MissingWidth'] = $chw[0];
+        $this->fdt['MissingWidth'] = $chw[0] ?? 0;
         $this->fdt['cw'] = [];
         $this->fdt['cbbox'] = [];
-        for ($cid = 0; $cid <= 65535; ++$cid) {
-            if (isset($this->fdt['ctgdata'][$cid])) {
-                if (isset($chw[$this->fdt['ctgdata'][$cid]])) {
-                    $this->fdt['cw'][$cid] = $chw[$this->fdt['ctgdata'][$cid]];
-                }
+        for ($cid = 0; $cid <= 65_535; ++$cid) {
+            if (!isset($this->fdt['ctgdata'][$cid])) {
+                continue;
+            }
 
-                if (isset($this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]])) {
-                    $this->offset = (
-                        $this->fdt['table']['glyf']['offset']
-                        + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]]
-                    );
-                    $xMin = (int) \round($this->fbyte->getFWord($this->offset + 2) * $this->fdt['urk']);
-                    $yMin = (int) \round($this->fbyte->getFWord($this->offset + 4) * $this->fdt['urk']);
-                    $xMax = (int) \round($this->fbyte->getFWord($this->offset + 6) * $this->fdt['urk']);
-                    $yMax = (int) \round($this->fbyte->getFWord($this->offset + 8) * $this->fdt['urk']);
-                    $this->fdt['cbbox'][$cid] = [$xMin, $yMin, $xMax, $yMax];
-                }
+            if (isset($chw[$this->fdt['ctgdata'][$cid]])) {
+                $this->fdt['cw'][$cid] = $chw[$this->fdt['ctgdata'][$cid]];
+            }
+
+            if (isset($this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]])) {
+                $this->offset =
+                    $this->fdt['table']['glyf']['offset'] + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]];
+                $xMin = (int) \round($this->fbyte->getFWord($this->offset + 2) * $this->fdt['urk']);
+                $yMin = (int) \round($this->fbyte->getFWord($this->offset + 4) * $this->fdt['urk']);
+                $xMax = (int) \round($this->fbyte->getFWord($this->offset + 6) * $this->fdt['urk']);
+                $yMax = (int) \round($this->fbyte->getFWord($this->offset + 8) * $this->fdt['urk']);
+                $this->fdt['cbbox'][$cid] = [$xMin, $yMin, $xMax, $yMax];
             }
         }
     }
@@ -908,20 +905,20 @@ class TrueType
         if ($enctable === null) {
             throw new FontException(
                 'No usable cmap subtable found for this font.'
-                . ' Requested platformID=' . $this->fdt['platform_id']
-                . ' encodingID=' . $this->fdt['encoding_id']
+                . ' Requested platformID='
+                . $this->fdt['platform_id']
+                . ' encodingID='
+                . $this->fdt['encoding_id']
                 . '. Available tables: '
-                . \implode(
-                    ', ',
-                    \array_map(
-                        static fn(array $tbl): string => $tbl['platformID'] . '/' . $tbl['encodingID'],
-                        $this->fdt['encodingTables']
-                    )
-                ) . '.'
+                . \implode(', ', \array_map(
+                    static fn(array $tbl): string => $tbl['platformID'] . '/' . $tbl['encodingID'],
+                    $this->fdt['encodingTables'],
+                ))
+                . '.',
             );
         }
 
-        $this->offset = ($this->fdt['table']['cmap']['offset'] + $enctable['offset']);
+        $this->offset = $this->fdt['table']['cmap']['offset'] + $enctable['offset'];
         $format = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         match ($format) {
@@ -938,15 +935,15 @@ class TrueType
         };
 
         // Glyph 0 is the .notdef glyph used when the font does not contain a glyph for a character
-        if (! isset($this->fdt['ctgdata'][0])) {
+        if (!isset($this->fdt['ctgdata'][0])) {
             $this->fdt['ctgdata'][0] = 0;
         }
 
-        if ($this->fdt['type'] != 'TrueTypeUnicode') {
+        if ($this->fdt['type'] !== 'TrueTypeUnicode') {
             return;
         }
 
-        if (\count($this->fdt['ctgdata']) != 256) {
+        if (\count($this->fdt['ctgdata']) !== 256) {
             return;
         }
 
@@ -988,10 +985,11 @@ class TrueType
     protected function processFormat2(): void
     {
         $this->offset += 4; // skip length and version/language
+        $subHeaderKeys = [];
         $numSubHeaders = 0;
         for ($chr = 0; $chr < 256; ++$chr) {
             // Array that maps high bytes to subHeaders: value is subHeader index * 8.
-            $subHeaderKeys[$chr] = ($this->fbyte->getUShort($this->offset) / 8);
+            $subHeaderKeys[$chr] = $this->fbyte->getUShort($this->offset) / 8;
             $this->offset += 2;
             if ($numSubHeaders < $subHeaderKeys[$chr]) {
                 $numSubHeaders = $subHeaderKeys[$chr];
@@ -1012,7 +1010,7 @@ class TrueType
             $this->offset += 2;
             $subHeaders[$ish]['idRangeOffset'] = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
-            $subHeaders[$ish]['idRangeOffset'] -= (2 + (($numSubHeaders - $ish - 1) * 8));
+            $subHeaders[$ish]['idRangeOffset'] -= 2 + (($numSubHeaders - $ish - 1) * 8);
             $subHeaders[$ish]['idRangeOffset'] /= 2;
             $numGlyphIndexArray += $subHeaders[$ish]['entryCount'];
         }
@@ -1027,7 +1025,7 @@ class TrueType
 
         for ($chr = 0; $chr < 256; ++$chr) {
             $shk = $subHeaderKeys[$chr];
-            if ($shk == 0) {
+            if ($shk === 0) {
                 // one byte code
                 $cdx = $chr;
                 $gid = $glyphIndexArray[0];
@@ -1038,9 +1036,9 @@ class TrueType
                 $end_byte = $start_byte + $subHeaders[$shk]['entryCount'];
                 for ($jdx = $start_byte; $jdx < $end_byte; ++$jdx) {
                     // combine high and low bytes
-                    $cdx = (($chr << 8) + $jdx);
-                    $idRangeOffset = ($subHeaders[$shk]['idRangeOffset'] + $jdx - $subHeaders[$shk]['firstCode']);
-                    $gid = \max(0, (($glyphIndexArray[$idRangeOffset] + $subHeaders[$shk]['idDelta']) % 65536));
+                    $cdx = ($chr << 8) + $jdx;
+                    $idRangeOffset = $subHeaders[$shk]['idRangeOffset'] + $jdx - $subHeaders[$shk]['firstCode'];
+                    $gid = \max(0, ($glyphIndexArray[$idRangeOffset] + $subHeaders[$shk]['idDelta']) % 65_536);
                     $this->addCtgItem($cdx, $gid);
                 }
             }
@@ -1096,7 +1094,7 @@ class TrueType
             $this->offset += 2;
         }
 
-        $gidlen = (\floor($length / 2) - 8 - (4 * $segCount));
+        $gidlen = \floor($length / 2) - 8 - (4 * $segCount);
         $glyphIdArray = []; // glyph index array
         for ($kdx = 0; $kdx < $gidlen; ++$kdx) {
             $glyphIdArray[$kdx] = $this->fbyte->getUShort($this->offset);
@@ -1105,11 +1103,11 @@ class TrueType
 
         for ($kdx = 0; $kdx < $segCount; ++$kdx) {
             for ($chr = $startCount[$kdx]; $chr <= $endCount[$kdx]; ++$chr) {
-                if ($idRangeOffset[$kdx] == 0) {
-                    $gid = \max(0, (($idDelta[$kdx] + $chr) % 65536));
+                if ($idRangeOffset[$kdx] === 0) {
+                    $gid = \max(0, ($idDelta[$kdx] + $chr) % 65_536);
                 } else {
                     $gid = (int) (\floor($idRangeOffset[$kdx] / 2) + ($chr - $startCount[$kdx]) - ($segCount - $kdx));
-                    $gid = \max(0, (($glyphIdArray[$gid] + $idDelta[$kdx]) % 65536));
+                    $gid = \max(0, ($glyphIdArray[$gid] + $idDelta[$kdx]) % 65_536);
                 }
 
                 $this->addCtgItem($chr, $gid);
@@ -1134,7 +1132,7 @@ class TrueType
         $entryCount = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         for ($kdx = 0; $kdx < $entryCount; ++$kdx) {
-            $chr = ($kdx + $firstCode);
+            $chr = $kdx + $firstCode;
             $gid = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
             $this->addCtgItem($chr, $gid);
@@ -1159,6 +1157,7 @@ class TrueType
     protected function processFormat8(): void
     {
         $this->offset += 10; // skip reserved, length and version/language
+        $is32 = [];
         for ($kdx = 0; $kdx < 8192; ++$kdx) {
             $is32[$kdx] = $this->fbyte->getByte($this->offset);
             ++$this->offset;
@@ -1175,14 +1174,14 @@ class TrueType
             $this->offset += 4;
             for ($cpw = $startCharCode; $cpw <= $endCharCode; ++$cpw) {
                 $is32idx = (int) \floor($cpw / 8);
-                if ((isset($is32[$is32idx])) && (($is32[$is32idx] & (1 << (7 - ($cpw % 8)))) == 0)) {
+                if (isset($is32[$is32idx]) && ($is32[$is32idx] & (1 << (7 - ($cpw % 8)))) === 0) {
                     $chr = $cpw;
                 } else {
                     // 32 bit format
                     // convert to decimal (http://www.unicode.org/faq//utf_bom.html#utf16-4)
                     //LEAD_OFFSET = (0xD800 - (0x10000 >> 10)) = 55232
                     //SURROGATE_OFFSET = (0x10000 - (0xD800 << 10) - 0xDC00) = -56613888
-                    $chr = (((55232 + ($cpw >> 10)) << 10) + (0xDC00 + ($cpw & 0x3FF)) - 56_613_888);
+                    $chr = ((55_232 + ($cpw >> 10)) << 10) + (0xDC00 + ($cpw & 0x3FF)) - 56_613_888;
                 }
 
                 $this->addCtgItem($chr, $startGlyphID);
@@ -1210,7 +1209,7 @@ class TrueType
         $numChars = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
         for ($kdx = 0; $kdx < $numChars; ++$kdx) {
-            $chr = ($kdx + $startCharCode);
+            $chr = $kdx + $startCharCode;
             $gid = $this->fbyte->getUShort($this->offset);
             $this->addCtgItem($chr, $gid);
             $this->offset += 2;
@@ -1310,7 +1309,7 @@ class TrueType
     {
         // The format field (uint16) was consumed before this method was called,
         // so the subtable starts 2 bytes before the current offset.
-        $subtableOffset = ($this->offset - 2);
+        $subtableOffset = $this->offset - 2;
 
         $this->offset += 4; // skip length (uint32)
 
@@ -1331,14 +1330,15 @@ class TrueType
 
             // Process the Non-Default UVS table for this variation selector.
             $savedOffset = $this->offset;
-            $this->offset = ($subtableOffset + $nonDefaultOffset);
+            $this->offset = $subtableOffset + $nonDefaultOffset;
 
             $numUVSMappings = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
 
             for ($jdx = 0; $jdx < $numUVSMappings; ++$jdx) {
                 // unicodeValue: uint24 (3 bytes, big-endian)
-                $unicodeValue = ($this->fbyte->getByte($this->offset) << 16)
+                $unicodeValue =
+                    ($this->fbyte->getByte($this->offset) << 16)
                     | ($this->fbyte->getByte($this->offset + 1) << 8)
                     | $this->fbyte->getByte($this->offset + 2);
                 $this->offset += 3;

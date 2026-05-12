@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Buffer.php
  *
@@ -113,7 +115,7 @@ abstract class Buffer
         protected bool $subset = false,
         protected bool $unicode = true,
         protected bool $pdfa = false,
-        ?array $fileOptions = null
+        ?array $fileOptions = null,
     ) {
         $this->fileOptions = $fileOptions;
     }
@@ -167,7 +169,7 @@ abstract class Buffer
      */
     public function getFont(string $key): array
     {
-        if (! isset($this->font[$key])) {
+        if (!isset($this->font[$key])) {
             throw new FontException('The font ' . $key . ' has not been loaded');
         }
 
@@ -184,7 +186,7 @@ abstract class Buffer
      */
     public function addSubsetChar(string $key, int $char): void
     {
-        if (! isset($this->font[$key])) {
+        if (!isset($this->font[$key])) {
             throw new FontException('The font ' . $key . ' has not been loaded');
         }
 
@@ -237,8 +239,8 @@ abstract class Buffer
         string $font,
         string $style = '',
         string $ifile = '',
-        ?bool $subset = null
-    ) {
+        ?bool $subset = null,
+    ): string {
         if ($subset === null) {
             $subset = $this->subset;
         }
@@ -269,12 +271,12 @@ abstract class Buffer
      */
     protected function setFontFile(string $key): void
     {
-        if (empty($this->font[$key]['file'])) {
+        if ($this->font[$key]['file'] === '') {
             return;
         }
 
         $file = $this->font[$key]['file'];
-        if (! isset($this->file[$file])) {
+        if (!isset($this->file[$file])) {
             $this->file[$file] = [
                 'dir' => '',
                 'keys' => [],
@@ -284,14 +286,14 @@ abstract class Buffer
             ];
         }
 
-        if (! \in_array($key, $this->file[$file]['keys'])) {
+        if (!\in_array($key, $this->file[$file]['keys'], true)) {
             $this->file[$file]['keys'][] = $key;
         }
 
         $this->file[$file]['dir'] = $this->font[$key]['dir'];
         $this->file[$file]['length1'] = $this->font[$key]['length1'];
         $this->file[$file]['length2'] = $this->font[$key]['length2'];
-        $this->file[$file]['subset'] = ($this->file[$file]['subset'] && $this->font[$key]['subset']);
+        $this->file[$file]['subset'] = $this->file[$file]['subset'] && $this->font[$key]['subset'];
     }
 
     /**
@@ -301,7 +303,7 @@ abstract class Buffer
      */
     protected function setFontDiff(string $key): void
     {
-        if (empty($this->font[$key]['diff'])) {
+        if ($this->font[$key]['diff'] === '') {
             return;
         }
 

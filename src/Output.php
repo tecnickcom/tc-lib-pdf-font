@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Output.php
  *
@@ -60,7 +62,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     public function __construct(
         protected array $fonts,
         int $pon,
-        Encrypt $encrypt
+        Encrypt $encrypt,
     ) {
         $this->pon = $pon;
         $this->enc = $encrypt;
@@ -89,25 +91,24 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Get the PDF output string for Font resources dictionary.
      *
-     * @param array<string, array{'i': int, 'n': int}> $data Font data.
+     * @param array<string, TFontData|array{'i': int, 'n': int}> $data Font data.
      *
      * @return string
      */
     private function getOutFontResources(array $data): string
     {
-        if (empty($data)) {
+        if ($data === []) {
             return '';
         }
 
         $out = ' /Font <<';
 
         foreach ($data as $font) {
-            $out .= ' /F' . $font['i'] . ' ' . $font['n'] . ' 0 R';
+            $out .= ' /F' . (int) $font['i'] . ' ' . (int) $font['n'] . ' 0 R';
         }
 
         return $out . ' >>';
     }
-
 
     /**
      * Get the PDF output string for Font resources dictionary.
@@ -128,7 +129,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      */
     public function getOutFontDictByKeys(array $keys): string
     {
-        if (empty($keys)) {
+        if ($keys === []) {
             return '';
         }
 
@@ -153,13 +154,19 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         $out = '';
         $done = []; // store processed items to avoid duplication
         foreach ($this->fonts as $fkey => $font) {
-            if (! empty($font['diff'])) {
+            if ($font['diff'] !== '') {
                 $dkey = \md5($font['diff']);
-                if (! isset($done[$dkey])) {
-                    $out .= (++$this->pon) . ' 0 obj' . "\n"
+                if (!isset($done[$dkey])) {
+                    $out .=
+                        ++$this->pon
+                        . ' 0 obj'
+                        . "\n"
                         . '<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences ['
-                        . $font['diff'] . '] >>' . "\n"
-                        . 'endobj' . "\n";
+                        . $font['diff']
+                        . '] >>'
+                        . "\n"
+                        . 'endobj'
+                        . "\n";
                     $done[$dkey] = $this->pon;
                 }
 
@@ -167,15 +174,17 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             }
 
             // extract the character subset
-            if (! empty($font['file'])) {
+            if ($font['file'] !== '') {
                 $file_key = \md5($font['file']);
-                if (empty($this->subchars[$file_key])) {
+                if (!isset($this->subchars[$file_key]) || $this->subchars[$file_key] === []) {
                     $this->subchars[$file_key] = $font['subsetchars'];
                 } else {
                     foreach ($font['subsetchars'] as $cid => $enabled) {
-                        if ($enabled) {
-                            $this->subchars[$file_key][(int) $cid] = true;
+                        if (!$enabled) {
+                            continue;
                         }
+
+                        $this->subchars[$file_key][(int) $cid] = true;
                     }
                 }
             }
@@ -197,49 +206,52 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         $out = '';
         $done = []; // store processed items to avoid duplication
         foreach ($this->fonts as $fkey => $font) {
-            if (! empty($font['file'])) {
-                $dkey = \md5($font['file']);
-                if (! isset($done[$dkey])) {
-                    $fontfile = $this->getFontFullPath($font['dir'], $font['file']);
-                    $font_data = \file_get_contents($fontfile);
-                    if ($font_data === false) {
-                        throw new FontException('Unable to read font file: ' . $fontfile);
-                    }
+            if ($font['file'] === '') {
+                continue;
+            }
 
-                    if ($font['subset']) {
-                        $font_data = \gzuncompress($font_data);
-                        if ($font_data === false) {
-                            throw new FontException('Unable to uncompress font file: ' . $fontfile);
-                        }
-
-                        $sub = new Subset($font_data, $font, $this->subchars[\md5($font['file'])]);
-                        $font_data = $sub->getSubsetFont();
-                        $font['length1'] = \strlen($font_data);
-                        $font_data = \gzcompress($font_data);
-                        if ($font_data === false) {
-                            throw new FontException('Unable to compress font file: ' . $fontfile);
-                        }
-                    }
-
-                    ++$this->pon;
-                    $stream = $this->enc->encryptString($font_data, $this->pon);
-                    $out .= $this->pon . ' 0 obj' . "\n"
-                        . '<<'
-                        . ' /Filter /FlateDecode'
-                        . ' /Length ' . \strlen($stream)
-                        . ' /Length1 ' . $font['length1'];
-                    $out .= ' /Length2 ' . $font['length2']
-                        . ' /Length3 0';
-
-                    $out .= ' >> stream' . "\n"
-                        . $stream . "\n"
-                        . 'endstream' . "\n"
-                        . 'endobj' . "\n";
-                    $done[$dkey] = $this->pon;
+            $dkey = \md5($font['file']);
+            if (!isset($done[$dkey])) {
+                $fontfile = $this->getFontFullPath($font['dir'], $font['file']);
+                $font_data = \file_get_contents($fontfile);
+                if ($font_data === false) {
+                    throw new FontException('Unable to read font file: ' . $fontfile);
                 }
 
-                $this->fonts[$fkey]['file_n'] = $done[$dkey];
+                if ($font['subset']) {
+                    $font_data = \gzuncompress($font_data);
+                    if ($font_data === false) {
+                        throw new FontException('Unable to uncompress font file: ' . $fontfile);
+                    }
+
+                    $sub = new Subset($font_data, $font, $this->subchars[\md5($font['file'])]);
+                    $font_data = $sub->getSubsetFont();
+                    $font['length1'] = \strlen($font_data);
+                    $font_data = \gzcompress($font_data);
+                    if ($font_data === false) {
+                        throw new FontException('Unable to compress font file: ' . $fontfile);
+                    }
+                }
+
+                ++$this->pon;
+                $stream = $this->enc->encryptString($font_data, $this->pon);
+                $out .=
+                    $this->pon
+                    . ' 0 obj'
+                    . "\n"
+                    . '<<'
+                    . ' /Filter /FlateDecode'
+                    . ' /Length '
+                    . \strlen($stream)
+                    . ' /Length1 '
+                    . $font['length1'];
+                $out .= ' /Length2 ' . $font['length2'] . ' /Length3 0';
+
+                $out .= ' >> stream' . "\n" . $stream . "\n" . 'endstream' . "\n" . 'endobj' . "\n";
+                $done[$dkey] = $this->pon;
             }
+
+            $this->fonts[$fkey]['file_n'] = $done[$dkey];
         }
 
         return $out;

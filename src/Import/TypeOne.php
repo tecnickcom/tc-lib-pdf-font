@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * TypeOne.php
  *
@@ -46,20 +48,20 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     {
         // read first segment
         $dat = \unpack('Cmarker/Ctype/Vsize', \substr($this->font, 0, 6));
-        if (($dat === false) || ($dat['marker'] != 128)) {
+        if ($dat === false || $dat['marker'] !== 128) {
             throw new FontException('Font file is not a valid binary Type1');
         }
 
         $this->fdt['size1'] = $dat['size'];
         $data = \substr($this->font, 6, $this->fdt['size1']);
         // read second segment
-        $dat = \unpack('Cmarker/Ctype/Vsize', \substr($this->font, (6 + $this->fdt['size1']), 6));
-        if (($dat === false) || ($dat['marker'] != 128)) {
+        $dat = \unpack('Cmarker/Ctype/Vsize', \substr($this->font, 6 + $this->fdt['size1'], 6));
+        if ($dat === false || $dat['marker'] !== 128) {
             throw new FontException('Font file is not a valid binary Type1');
         }
 
         $this->fdt['size2'] = $dat['size'];
-        $this->fdt['encrypted'] = \substr($this->font, (12 + $this->fdt['size1']), $this->fdt['size2']);
+        $this->fdt['encrypted'] = \substr($this->font, 12 + $this->fdt['size1'], $this->fdt['size2']);
         $data .= $this->fdt['encrypted'];
         // store compressed font
         $this->fdt['file'] = $this->fdt['file_name'] . '.z';
@@ -82,6 +84,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      */
     protected function extractFontInfo(): void
     {
+        $matches = [];
         if (\preg_match('#/FontName[\s]*+\/([^\s]*+)#', $this->font, $matches) !== 1) {
             \preg_match('#/FullName[\s]*+\(([^\)]*+)#', $this->font, $matches);
         }
@@ -101,7 +104,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         \preg_match('#/ItalicAngle[\s]*+([0-9\+\-]*+)#', $this->font, $matches);
         $this->fdt['italicAngle'] = (int) $matches[1];
 
-        if ($this->fdt['italicAngle'] != 0) {
+        if ($this->fdt['italicAngle'] !== 0) {
             $this->fdt['Flags'] |= 64;
         }
 
@@ -110,12 +113,12 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         \preg_match('#/UnderlineThickness[\s]*+([0-9\+\-]*+)#', $this->font, $matches);
         $this->fdt['underlineThickness'] = (int) $matches[1];
         \preg_match('#/isFixedPitch[\s]*+([^\s]*+)#', $this->font, $matches);
-        if ($matches[1] == 'true') {
-            $this->fdt['Flags'] = (((int) $this->fdt['Flags']) | 1);
+        if ($matches[1] === 'true') {
+            $this->fdt['Flags'] = (int) $this->fdt['Flags'] | 1;
         }
 
         \preg_match('#/Weight[\s]*+\(([^\)]*+)#', $this->font, $matches);
-        if (! empty($matches[1])) {
+        if (isset($matches[1]) && $matches[1] !== '') {
             $this->fdt['weight'] = \strtolower($matches[1]);
         }
 
@@ -131,7 +134,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     protected function getInternalMap(): array
     {
         $imap = [];
-        if (\preg_match_all('#dup[\s]([0-9]+)[\s]*+/([^\s]*+)[\s]put#sU', $this->font, $fmap, PREG_SET_ORDER) > 0) {
+        $fmap = [];
+        $matches = \preg_match_all('#dup[\s]([0-9]+)[\s]*+/([^\s]*+)[\s]put#sU', $this->font, $fmap, PREG_SET_ORDER);
+        if ($matches !== false && $matches >= 1) {
             foreach ($fmap as $val) {
                 $imap[$val[2]] = (int) $val[1];
             }
@@ -145,15 +150,15 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      */
     protected function getEplain(): string
     {
-        $csr = 55665; // eexec encryption constant
-        $cc1 = 52845;
-        $cc2 = 22719;
+        $csr = 55_665; // eexec encryption constant
+        $cc1 = 52_845;
+        $cc2 = 22_719;
         $elen = \strlen($this->fdt['encrypted']);
         $eplain = '';
         for ($idx = 0; $idx < $elen; ++$idx) {
             $chr = \ord($this->fdt['encrypted'][$idx]);
             $eplain .= \chr($chr ^ ($csr >> 8));
-            $csr = ((($chr + $csr) * $cc1 + $cc2) % 65536);
+            $csr = ((($chr + $csr) * $cc1) + $cc2) % 65_536;
         }
 
         return $eplain;
@@ -167,12 +172,13 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     protected function extractEplainInfo(): array
     {
         $eplain = $this->getEplain();
-        if (\preg_match('#/ForceBold[\s]*+([^\s]*+)#', $eplain, $matches) > 0 && $matches[1] == 'true') {
-            $this->fdt['Flags'] |= 0x40000;
+        $matches = [];
+        if (\preg_match('#/ForceBold[\s]*+([^\s]*+)#', $eplain, $matches) === 1 && $matches[1] === 'true') {
+            $this->fdt['Flags'] |= 0x4_0000;
         }
 
         $this->extractStem($eplain);
-        if (\preg_match('#/BlueValues[\s]*+\[([^\]]*+)#', $eplain, $matches) > 0) {
+        if (\preg_match('#/BlueValues[\s]*+\[([^\]]*+)#', $eplain, $matches) === 1) {
             $bvl = \explode(' ', $matches[1]);
             if (\count($bvl) >= 6) {
                 $vl1 = (int) $bvl[2];
@@ -193,23 +199,26 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      */
     protected function extractStem(string $eplain): void
     {
-        if (\preg_match('#/StdVW[\s]*+\[([^\]]*+)#', $eplain, $matches) > 0) {
+        $matches = [];
+        if (\preg_match('#/StdVW[\s]*+\[([^\]]*+)#', $eplain, $matches) === 1) {
             $this->fdt['StemV'] = (int) $matches[1];
-        } elseif (($this->fdt['weight'] == 'bold') || ($this->fdt['weight'] == 'black')) {
+        } elseif ($this->fdt['weight'] === 'bold' || $this->fdt['weight'] === 'black') {
             $this->fdt['StemV'] = 123;
         } else {
             $this->fdt['StemV'] = 70;
         }
 
-        $this->fdt['StemH'] = \preg_match('#/StdHW[\s]*+\[([^\]]*+)#', $eplain, $matches) > 0 ? (int) $matches[1] : 30;
+        $this->fdt['StemH'] = \preg_match('#/StdHW[\s]*+\[([^\]]*+)#', $eplain, $matches) === 1
+            ? (int) $matches[1]
+            : 30;
 
-        if (\preg_match('#/Cap[X]?Height[\s]*+\[([^\]]*+)#', $eplain, $matches) > 0) {
+        if (\preg_match('#/Cap[X]?Height[\s]*+\[([^\]]*+)#', $eplain, $matches) === 1) {
             $this->fdt['CapHeight'] = (int) $matches[1];
         } else {
             $this->fdt['CapHeight'] = (int) $this->fdt['Ascent'];
         }
 
-        $this->fdt['XHeight'] = ((int) $this->fdt['Ascent'] + (int) $this->fdt['Descent']);
+        $this->fdt['XHeight'] = (int) $this->fdt['Ascent'] + (int) $this->fdt['Descent'];
     }
 
     /**
@@ -218,7 +227,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     protected function getRandomBytes(string $eplain): void
     {
         $this->fdt['lenIV'] = 4;
-        if (\preg_match('#/lenIV[\s]*+([\d]*+)#', $eplain, $matches) > 0) {
+        $matches = [];
+        if (\preg_match('#/lenIV[\s]*+([\d]*+)#', $eplain, $matches) === 1) {
             $this->fdt['lenIV'] = (int) $matches[1];
         }
     }
@@ -229,13 +239,20 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     protected function getCharstringData(string $eplain): array
     {
         $this->fdt['enc_map'] = [];
-        $eplain = \substr($eplain, (\strpos($eplain, '/CharStrings') + 1));
+        $charstringsPos = \strpos($eplain, '/CharStrings');
+        if ($charstringsPos === false) {
+            return [];
+        }
+
+        $eplain = \substr($eplain, $charstringsPos + 1);
+        $matches = [];
         \preg_match_all('#/([A-Za-z0-9\.]*+)[\s][0-9]+[\s]RD[\s](.*)[\s]ND#sU', $eplain, $matches, PREG_SET_ORDER);
+        /** @var array<int, array<int, string>> $matches */
         if ($this->fdt['enc'] === '') {
             return $matches;
         }
 
-        if (! isset(Encoding::MAP[$this->fdt['enc']])) {
+        if (!isset(Encoding::MAP[$this->fdt['enc']])) {
             return $matches;
         }
 
@@ -255,11 +272,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             return $imap[$val[1]];
         }
 
-        if ($this->fdt['enc_map'] === false) {
-            return 0;
-        }
-
         $cid = \array_search($val[1], $this->fdt['enc_map'], true);
+
         if ($cid === false) {
             return 0;
         }
@@ -280,40 +294,31 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      *
      * @throws FontException
      */
-    protected function decodeNumber(
-        int $idx,
-        int &$cck,
-        int &$cid,
-        array &$ccom,
-        array &$cdec,
-        array &$cwidths
-    ): int {
-        if ($ccom[$idx] == 255) {
-            $sval = \chr($ccom[($idx + 1)])
-            . \chr($ccom[($idx + 2)])
-            . \chr($ccom[($idx + 3)])
-            . \chr($ccom[($idx + 4)]);
+    protected function decodeNumber(int $idx, int &$cck, int &$cid, array &$ccom, array &$cdec, array &$cwidths): int
+    {
+        if ($ccom[$idx] === 255) {
+            $sval = \chr($ccom[$idx + 1]) . \chr($ccom[$idx + 2]) . \chr($ccom[$idx + 3]) . \chr($ccom[$idx + 4]);
             $vsval = \unpack('li', $sval);
-            if (($vsval === false) || (!\is_numeric($vsval['i']))) {
+            if ($vsval === false) {
                 throw new FontException('Unable to unpack number');
             }
 
             $cdec[$cck] = (int) $vsval['i'];
-            return ($idx + 5);
+            return $idx + 5;
         }
 
         if ($ccom[$idx] >= 251) {
-            $cdec[$cck] = ((-($ccom[$idx] - 251) * 256) - $ccom[($idx + 1)] - 108);
-            return ($idx + 2);
+            $cdec[$cck] = (-($ccom[$idx] - 251) * 256) - $ccom[$idx + 1] - 108;
+            return $idx + 2;
         }
 
         if ($ccom[$idx] >= 247) {
-            $cdec[$cck] = ((($ccom[$idx] - 247) * 256) + $ccom[($idx + 1)] + 108);
-            return ($idx + 2);
+            $cdec[$cck] = (($ccom[$idx] - 247) * 256) + $ccom[$idx + 1] + 108;
+            return $idx + 2;
         }
 
         if ($ccom[$idx] >= 32) {
-            $cdec[$cck] = ($ccom[$idx] - 139);
+            $cdec[$cck] = $ccom[$idx] - 139;
             return ++$idx;
         }
 
@@ -322,12 +327,12 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             return ++$idx;
         }
 
-        if ($cdec[$cck] != 13) {
+        if ($cdec[$cck] !== 13) {
             return ++$idx;
         }
 
         // hsbw command: update width
-        $cwidths[$cid] = $cdec[($cck - 1)];
+        $cwidths[$cid] = $cdec[$cck - 1];
         return ++$idx;
     }
 
@@ -344,8 +349,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $imap = $this->getInternalMap();
         $matches = $this->extractEplainInfo();
         $cwidths = [];
-        $cc1 = 52845;
-        $cc2 = 22719;
+        $cc1 = 52_845;
+        $cc2 = 22_719;
         foreach ($matches as $match) {
             $cid = $this->getCid($imap, $match);
             // decrypt charstring encrypted part
@@ -355,8 +360,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             $ccom = [];
             for ($idx = 0; $idx < $clen; ++$idx) {
                 $chr = \ord($ccd[$idx]);
-                $ccom[] = ($chr ^ ($csr >> 8));
-                $csr = ((($chr + $csr) * $cc1 + $cc2) % 65536);
+                $ccom[] = $chr ^ ($csr >> 8);
+                $csr = ((($chr + $csr) * $cc1) + $cc2) % 65_536;
             }
 
             // decode numbers

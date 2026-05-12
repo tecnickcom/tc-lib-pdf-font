@@ -16,6 +16,8 @@
 
 namespace Test;
 
+use Com\Tecnick\File\Exception as FileException;
+use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Pdf\Font\Import;
 use Com\Tecnick\Pdf\Font\Stack;
 
@@ -27,16 +29,36 @@ class StackUnicodeWidthTest extends TestUtil
 {
     private const HELVETICA_AFM = __DIR__ . '/../util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
 
+    private function prepareTestEnvironment(): void
+    {
+        parent::setupTest();
+    }
+
+    private function fontPath(): string
+    {
+        return parent::getFontPath();
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     private function loadHelveticaStack(): Stack
     {
-        $this->setupTest();
-        new Import((string) \realpath(self::HELVETICA_AFM), $this->getFontPath());
+        $this->prepareTestEnvironment();
+        new Import((string) \realpath(self::HELVETICA_AFM), $this->fontPath());
         $objnum = 1;
         $stack = new Stack(0.75, true, true, false);
         $stack->insert($objnum, 'helvetica', '', 10);
         return $stack;
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testStackResolvesEmdashByUnicode(): void
     {
         $stack = $this->loadHelveticaStack();
@@ -44,6 +66,11 @@ class StackUnicodeWidthTest extends TestUtil
         $this->bcAssertEqualsWithDelta(10.0, $stack->getCharWidth(0x2014), 0.001);
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testStackResolvesEndashByUnicode(): void
     {
         $stack = $this->loadHelveticaStack();
@@ -51,6 +78,11 @@ class StackUnicodeWidthTest extends TestUtil
         $this->bcAssertEqualsWithDelta(5.56, $stack->getCharWidth(0x2013), 0.001);
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testStackResolvesBulletByUnicode(): void
     {
         $stack = $this->loadHelveticaStack();
@@ -58,6 +90,11 @@ class StackUnicodeWidthTest extends TestUtil
         $this->bcAssertEqualsWithDelta(3.5, $stack->getCharWidth(0x2022), 0.001);
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testStackResolvesEuroByUnicode(): void
     {
         $stack = $this->loadHelveticaStack();
@@ -65,6 +102,11 @@ class StackUnicodeWidthTest extends TestUtil
         $this->bcAssertEqualsWithDelta(5.56, $stack->getCharWidth(0x20AC), 0.001);
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testStackResolvesSpaceByCodepoint(): void
     {
         $stack = $this->loadHelveticaStack();
@@ -72,12 +114,22 @@ class StackUnicodeWidthTest extends TestUtil
         $this->bcAssertEqualsWithDelta(2.78, $stack->getCharWidth(0x20), 0.001);
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testStackReturnZeroForShy(): void
     {
         $stack = $this->loadHelveticaStack();
         $this->assertSame(0.0, $stack->getCharWidth(0xAD));
     }
 
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
     public function testStackReturnZeroForZwsp(): void
     {
         $stack = $this->loadHelveticaStack();

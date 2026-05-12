@@ -36,17 +36,18 @@ class TestUtil extends TestCase
 {
     protected function setupTest(): void
     {
-        if (! \defined('K_PATH_FONTS')) {
+        if (!\defined('K_PATH_FONTS')) {
             \define('K_PATH_FONTS', \dirname(__DIR__) . '/target/tmptest/');
         }
 
-        \system('rm -rf ' . K_PATH_FONTS . ' && mkdir -p ' . K_PATH_FONTS);
+        $fontPath = (string) \constant('K_PATH_FONTS');
+        \system('rm -rf ' . $fontPath . ' && mkdir -p ' . $fontPath);
     }
 
     protected function getFontPath(): string
     {
         if (\defined('K_PATH_FONTS')) {
-            return K_PATH_FONTS;
+            return (string) \constant('K_PATH_FONTS');
         }
 
         return '';
@@ -56,7 +57,7 @@ class TestUtil extends TestCase
         mixed $expected,
         mixed $actual,
         float $delta = 0.01,
-        string $message = ''
+        string $message = '',
     ): void {
         parent::assertEqualsWithDelta($expected, $actual, $delta, $message);
     }
@@ -64,7 +65,7 @@ class TestUtil extends TestCase
     /**
      * @param class-string<\Throwable> $exception
      */
-    public function bcExpectException($exception): void
+    public function bcExpectException(string $exception): void
     {
         parent::expectException($exception);
     }

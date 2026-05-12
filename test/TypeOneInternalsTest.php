@@ -16,8 +16,8 @@
 
 namespace Test;
 
-use Com\Tecnick\Pdf\Font\Import\TypeOne;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Pdf\Font\Import\TypeOne;
 
 /**
  * Tests for protected methods of Import\TypeOne exercised via reflection.
@@ -29,103 +29,121 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
  * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  */
 class TypeOneInternalsTest extends TestUtil
 {
-    /** @var array<string, mixed> */
+    /** @var TFontData */
     private static array $fdtDefaults = [
-        'Ascender'          => 0,
-        'Ascent'            => 700,
-        'AvgWidth'          => 0.0,
-        'CapHeight'         => 680,
-        'CharacterSet'      => '',
-        'Descender'         => -200,
-        'Descent'           => -200,
-        'EncodingScheme'    => '',
-        'FamilyName'        => '',
-        'Flags'             => 0,
-        'FontBBox'          => [],
-        'FontName'          => '',
-        'FullName'          => '',
-        'IsFixedPitch'      => false,
-        'ItalicAngle'       => 0,
-        'Leading'           => 0,
-        'MaxWidth'          => 0,
-        'MissingWidth'      => 0,
-        'StdHW'             => 0,
-        'StdVW'             => 0,
-        'StemH'             => 0,
-        'StemV'             => 0,
+        'Ascender' => 0,
+        'Ascent' => 700,
+        'AvgWidth' => 0.0,
+        'CapHeight' => 680,
+        'CharacterSet' => '',
+        'Descender' => -200,
+        'Descent' => -200,
+        'EncodingScheme' => '',
+        'FamilyName' => '',
+        'Flags' => 0,
+        'FontBBox' => [],
+        'FontName' => '',
+        'FullName' => '',
+        'IsFixedPitch' => false,
+        'ItalicAngle' => 0,
+        'Leading' => 0,
+        'MaxWidth' => 0,
+        'MissingWidth' => 0,
+        'StdHW' => 0,
+        'StdVW' => 0,
+        'StemH' => 0,
+        'StemV' => 0,
         'UnderlinePosition' => 0,
         'UnderlineThickness' => 0,
-        'Version'           => '',
-        'Weight'            => '',
-        'XHeight'           => 0,
-        'bbox'              => '',
-        'cbbox'             => [],
-        'cidinfo'           => ['Ordering' => '', 'Registry' => '', 'Supplement' => 0, 'uni2cid' => []],
-        'compress'          => false,
-        'ctg'               => '',
-        'ctgdata'           => [],
-        'cw'                => [],
-        'cwu'               => [],
-        'datafile'          => '',
-        'desc'              => [
-            'Ascent' => 0, 'AvgWidth' => 0, 'CapHeight' => 0, 'Descent' => 0,
-            'Flags' => 0, 'FontBBox' => '', 'ItalicAngle' => 0, 'Leading' => 0,
-            'MaxWidth' => 0, 'MissingWidth' => 0, 'StemH' => 0, 'StemV' => 0, 'XHeight' => 0,
+        'Version' => '',
+        'Weight' => '',
+        'XHeight' => 0,
+        'bbox' => '',
+        'cbbox' => [],
+        'cidinfo' => ['Ordering' => '', 'Registry' => '', 'Supplement' => 0, 'uni2cid' => []],
+        'compress' => false,
+        'ctg' => '',
+        'ctgdata' => [],
+        'cw' => [],
+        'cwu' => [],
+        'datafile' => '',
+        'desc' => [
+            'Ascent' => 0,
+            'AvgWidth' => 0,
+            'CapHeight' => 0,
+            'Descent' => 0,
+            'Flags' => 0,
+            'FontBBox' => '',
+            'ItalicAngle' => 0,
+            'Leading' => 0,
+            'MaxWidth' => 0,
+            'MissingWidth' => 0,
+            'StemH' => 0,
+            'StemV' => 0,
+            'XHeight' => 0,
         ],
-        'diff'              => '',
-        'diff_n'            => 0,
-        'dir'               => '',
-        'dw'                => 0,
-        'enc'               => '',
-        'enc_map'           => [],
-        'encodingTables'    => [],
-        'encoding_id'       => 0,
-        'encrypted'         => '',
-        'fakestyle'         => false,
-        'family'            => '',
-        'file'              => '',
-        'file_n'            => 0,
-        'file_name'         => '',
-        'i'                 => 0,
-        'ifile'             => '',
-        'indexToLoc'        => [],
-        'input_file'        => '',
-        'isUnicode'         => false,
-        'italicAngle'       => 0,
-        'key'               => '',
-        'lenIV'             => 4,
-        'length1'           => 0,
-        'length2'           => 0,
-        'linked'            => false,
-        'mode'              => ['bold' => false, 'italic' => false, 'linethrough' => false, 'overline' => false, 'underline' => false],
-        'n'                 => 0,
-        'name'              => '',
-        'numGlyphs'         => 0,
-        'numHMetrics'       => 0,
-        'originalsize'      => 0,
-        'pdfa'              => false,
-        'platform_id'       => 0,
-        'settype'           => '',
-        'short_offset'      => false,
-        'size1'             => 0,
-        'size2'             => 0,
-        'style'             => '',
-        'subset'            => false,
-        'subsetchars'       => [],
-        'table'             => [],
-        'tot_num_glyphs'    => 0,
-        'type'              => 'Type1',
+        'diff' => '',
+        'diff_n' => 0,
+        'dir' => '',
+        'dw' => 0,
+        'enc' => '',
+        'enc_map' => [],
+        'encodingTables' => [],
+        'encoding_id' => 0,
+        'encrypted' => '',
+        'fakestyle' => false,
+        'family' => '',
+        'file' => '',
+        'file_n' => 0,
+        'file_name' => '',
+        'i' => 0,
+        'ifile' => '',
+        'indexToLoc' => [],
+        'input_file' => '',
+        'isUnicode' => false,
+        'italicAngle' => 0,
+        'key' => '',
+        'lenIV' => 4,
+        'length1' => 0,
+        'length2' => 0,
+        'linked' => false,
+        'mode' => [
+            'bold' => false,
+            'italic' => false,
+            'linethrough' => false,
+            'overline' => false,
+            'underline' => false,
+        ],
+        'n' => 0,
+        'name' => '',
+        'numGlyphs' => 0,
+        'numHMetrics' => 0,
+        'originalsize' => 0,
+        'pdfa' => false,
+        'platform_id' => 0,
+        'settype' => '',
+        'short_offset' => false,
+        'size1' => 0,
+        'size2' => 0,
+        'style' => '',
+        'subset' => false,
+        'subsetchars' => [],
+        'table' => [],
+        'tot_num_glyphs' => 0,
+        'type' => 'Type1',
         'underlinePosition' => 0,
         'underlineThickness' => 0,
-        'unicode'           => false,
-        'unitsPerEm'        => 0,
-        'up'                => 0,
-        'urk'               => 1.0,
-        'ut'                => 0,
-        'weight'            => 'normal',
+        'unicode' => false,
+        'unitsPerEm' => 0,
+        'up' => 0,
+        'urk' => 1.0,
+        'ut' => 0,
+        'weight' => 'normal',
     ];
 
     private function buildTypeOne(): TypeOne
@@ -143,22 +161,95 @@ class TypeOneInternalsTest extends TestUtil
     private function callMethod(object $obj, string $method, array $args = []): mixed
     {
         $ref = new \ReflectionMethod($obj, $method);
-        $ref->setAccessible(true);
         return $ref->invokeArgs($obj, $args);
+    }
+
+    /**
+     * @param array<int, mixed> $args
+     */
+    private function callIntMethod(object $obj, string $method, array $args = []): int
+    {
+        return $this->expectInt($this->callMethod($obj, $method, $args), 'Expected int result.');
+    }
+
+    /**
+     * @param array<int, mixed> $args
+     *
+     * @return array<int, array<int, string>>
+     */
+    private function callArrayMethod(object $obj, string $method, array $args = []): array
+    {
+        return $this->expectIntStringMatrix($this->callMethod($obj, $method, $args), 'Expected array result.');
     }
 
     private function setProp(object $obj, string $name, mixed $value): void
     {
         $prop = new \ReflectionProperty($obj, $name);
-        $prop->setAccessible(true);
         $prop->setValue($obj, $value);
     }
 
-    private function getProp(object $obj, string $name): mixed
+    /** @return array<string, mixed> */
+    private function getFontData(object $obj): array
     {
-        $prop = new \ReflectionProperty($obj, $name);
-        $prop->setAccessible(true);
-        return $prop->getValue($obj);
+        $prop = new \ReflectionProperty($obj, 'fdt');
+        return $this->expectFontData($prop->getValue($obj));
+    }
+
+    /** @param array<string, mixed> $fontData */
+    private function getFontIntValue(array $fontData, string $key): int
+    {
+        if (!isset($fontData[$key]) || !\is_int($fontData[$key])) {
+            $this->fail('Expected int font field: ' . $key);
+        }
+
+        return $fontData[$key];
+    }
+
+    /**
+     * @param array<string, mixed> $fontData
+     *
+     * @return array<int, string>
+     */
+    private function getFontStringMap(array $fontData, string $key): array
+    {
+        if (!isset($fontData[$key]) || !\is_array($fontData[$key])) {
+            $this->fail('Expected array font field: ' . $key);
+        }
+
+        /** @var array<int, string> $value */
+        $value = $fontData[$key];
+        return $value;
+    }
+
+    private function expectInt(mixed $value, string $message): int
+    {
+        if (!\is_int($value)) {
+            $this->fail($message);
+        }
+
+        return $value;
+    }
+
+    /** @return array<int, array<int, string>> */
+    private function expectIntStringMatrix(mixed $value, string $message): array
+    {
+        if (!\is_array($value)) {
+            $this->fail($message);
+        }
+
+        /** @var array<int, array<int, string>> $value */
+        return $value;
+    }
+
+    /** @return array<string, mixed> */
+    private function expectFontData(mixed $value): array
+    {
+        if (!\is_array($value)) {
+            $this->fail('Expected font data array.');
+        }
+
+        /** @var array<string, mixed> $value */
+        return $value;
     }
 
     // -------------------------------------------------------------------------
@@ -170,11 +261,11 @@ class TypeOneInternalsTest extends TestUtil
         $instance = $this->buildTypeOne();
         $eplain = '/StdVW [85] def /StdHW [40] def /CapHeight [690] def';
         $this->callMethod($instance, 'extractStem', [$eplain]);
-        $fdt = $this->getProp($instance, 'fdt');
+        $fdt = $this->getFontData($instance);
 
-        $this->assertSame(85, $fdt['StemV']);
-        $this->assertSame(40, $fdt['StemH']);
-        $this->assertSame(690, $fdt['CapHeight']);
+        $this->assertSame(85, $this->getFontIntValue($fdt, 'StemV'));
+        $this->assertSame(40, $this->getFontIntValue($fdt, 'StemH'));
+        $this->assertSame(690, $this->getFontIntValue($fdt, 'CapHeight'));
     }
 
     public function testExtractStemUsesBoldDefaultWhenStdVwAbsent(): void
@@ -185,22 +276,22 @@ class TypeOneInternalsTest extends TestUtil
         $this->setProp($instance, 'fdt', $fdt);
 
         $this->callMethod($instance, 'extractStem', ['']);
-        $fdt = $this->getProp($instance, 'fdt');
+        $fdt = $this->getFontData($instance);
 
-        $this->assertSame(123, $fdt['StemV']);
-        $this->assertSame(30, $fdt['StemH']);
+        $this->assertSame(123, $this->getFontIntValue($fdt, 'StemV'));
+        $this->assertSame(30, $this->getFontIntValue($fdt, 'StemH'));
     }
 
     public function testExtractStemUsesDefaultsWhenNoMatchingKeys(): void
     {
         $instance = $this->buildTypeOne();
         $this->callMethod($instance, 'extractStem', ['']);
-        $fdt = $this->getProp($instance, 'fdt');
+        $fdt = $this->getFontData($instance);
 
-        $this->assertSame(70, $fdt['StemV']);
-        $this->assertSame(30, $fdt['StemH']);
+        $this->assertSame(70, $this->getFontIntValue($fdt, 'StemV'));
+        $this->assertSame(30, $this->getFontIntValue($fdt, 'StemH'));
         // CapHeight falls back to Ascent (700)
-        $this->assertSame(700, $fdt['CapHeight']);
+        $this->assertSame(700, $this->getFontIntValue($fdt, 'CapHeight'));
     }
 
     // -------------------------------------------------------------------------
@@ -211,24 +302,24 @@ class TypeOneInternalsTest extends TestUtil
     {
         $instance = $this->buildTypeOne();
         $this->callMethod($instance, 'getRandomBytes', ['no lenIV here']);
-        $fdt = $this->getProp($instance, 'fdt');
-        $this->assertSame(4, $fdt['lenIV']);
+        $fdt = $this->getFontData($instance);
+        $this->assertSame(4, $this->getFontIntValue($fdt, 'lenIV'));
     }
 
     public function testGetRandomBytesParsesExplicitLenIV(): void
     {
         $instance = $this->buildTypeOne();
         $this->callMethod($instance, 'getRandomBytes', ['/lenIV 8 def']);
-        $fdt = $this->getProp($instance, 'fdt');
-        $this->assertSame(8, $fdt['lenIV']);
+        $fdt = $this->getFontData($instance);
+        $this->assertSame(8, $this->getFontIntValue($fdt, 'lenIV'));
     }
 
     public function testGetRandomBytesParsesLenIVZero(): void
     {
         $instance = $this->buildTypeOne();
         $this->callMethod($instance, 'getRandomBytes', ['/lenIV 0 def']);
-        $fdt = $this->getProp($instance, 'fdt');
-        $this->assertSame(0, $fdt['lenIV']);
+        $fdt = $this->getFontData($instance);
+        $this->assertSame(0, $this->getFontIntValue($fdt, 'lenIV'));
     }
 
     // -------------------------------------------------------------------------
@@ -243,7 +334,7 @@ class TypeOneInternalsTest extends TestUtil
         $this->setProp($instance, 'fdt', $fdt);
 
         $eplain = '/CharStrings 0 dict dup begin end';
-        $result = $this->callMethod($instance, 'getCharstringData', [$eplain]);
+        $result = $this->callArrayMethod($instance, 'getCharstringData', [$eplain]);
         $this->assertIsArray($result);
         $this->assertCount(0, $result);
     }
@@ -256,7 +347,7 @@ class TypeOneInternalsTest extends TestUtil
         $this->setProp($instance, 'fdt', $fdt);
 
         $eplain = '/CharStrings 0 dict dup begin end';
-        $result = $this->callMethod($instance, 'getCharstringData', [$eplain]);
+        $result = $this->callArrayMethod($instance, 'getCharstringData', [$eplain]);
         $this->assertIsArray($result);
     }
 
@@ -269,9 +360,9 @@ class TypeOneInternalsTest extends TestUtil
 
         $eplain = '/CharStrings 0 dict dup begin end';
         $this->callMethod($instance, 'getCharstringData', [$eplain]);
-        $fdt = $this->getProp($instance, 'fdt');
+        $fdt = $this->getFontData($instance);
 
-        $this->assertNotEmpty($fdt['enc_map']);
+        $this->assertNotEmpty($this->getFontStringMap($fdt, 'enc_map'));
     }
 
     // -------------------------------------------------------------------------
@@ -282,21 +373,21 @@ class TypeOneInternalsTest extends TestUtil
     {
         $instance = $this->buildTypeOne();
         $imap = ['A' => 65, 'B' => 66];
-        $val  = [0 => '', 1 => 'A', 2 => ''];
-        $result = $this->callMethod($instance, 'getCid', [$imap, $val]);
+        $val = [0 => '', 1 => 'A', 2 => ''];
+        $result = $this->callIntMethod($instance, 'getCid', [$imap, $val]);
         $this->assertSame(65, $result);
     }
 
-    public function testGetCidReturnsZeroWhenEncMapFalse(): void
+    public function testGetCidReturnsZeroWhenEncMapEmpty(): void
     {
         $instance = $this->buildTypeOne();
         $fdt = self::$fdtDefaults;
-        $fdt['enc_map'] = false;
+        $fdt['enc_map'] = [];
         $this->setProp($instance, 'fdt', $fdt);
 
         $imap = [];
-        $val  = [0 => '', 1 => 'Z', 2 => ''];
-        $result = $this->callMethod($instance, 'getCid', [$imap, $val]);
+        $val = [0 => '', 1 => 'Z', 2 => ''];
+        $result = $this->callIntMethod($instance, 'getCid', [$imap, $val]);
         $this->assertSame(0, $result);
     }
 
@@ -308,8 +399,8 @@ class TypeOneInternalsTest extends TestUtil
         $this->setProp($instance, 'fdt', $fdt);
 
         $imap = [];
-        $val  = [0 => '', 1 => 'missing', 2 => ''];
-        $result = $this->callMethod($instance, 'getCid', [$imap, $val]);
+        $val = [0 => '', 1 => 'missing', 2 => ''];
+        $result = $this->callIntMethod($instance, 'getCid', [$imap, $val]);
         $this->assertSame(0, $result);
     }
 
@@ -324,8 +415,8 @@ class TypeOneInternalsTest extends TestUtil
         $this->setProp($instance, 'fdt', $fdt);
 
         $imap = [];
-        $val  = [0 => '', 1 => 'BigChar', 2 => ''];
-        $result = $this->callMethod($instance, 'getCid', [$imap, $val]);
+        $val = [0 => '', 1 => 'BigChar', 2 => ''];
+        $result = $this->callIntMethod($instance, 'getCid', [$imap, $val]);
         $this->assertSame(1000, $result);
     }
 
@@ -337,66 +428,70 @@ class TypeOneInternalsTest extends TestUtil
     {
         $instance = $this->buildTypeOne();
         // ccom[0] = 139 → decoded value = 139 - 139 = 0
-        $ccom    = [139];
+        $ccom = [139];
         /** @var array<int, int> $cdec */
-        $cdec    = [];
+        $cdec = [];
         /** @var array<int, int> $cwidths */
         $cwidths = [];
-        $cck     = 0;
-        $cid     = 0;
-        $newIdx  = $this->callMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        $cck = 0;
+        $cid = 0;
+        $newIdx = $this->callIntMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        /** @var array<int, int> $cdec */
         $this->assertSame(1, $newIdx);
-        $this->assertSame(0, $cdec[0]);
+        $this->assertSame(0, $cdec[0] ?? null);
     }
 
     public function testDecodeNumberHandlesBytes247To250(): void
     {
         $instance = $this->buildTypeOne();
         // ccom[0] = 247, ccom[1] = 0 → value = (247-247)*256 + 0 + 108 = 108
-        $ccom    = [247, 0];
+        $ccom = [247, 0];
         /** @var array<int, int> $cdec */
-        $cdec    = [];
+        $cdec = [];
         /** @var array<int, int> $cwidths */
         $cwidths = [];
-        $cck     = 0;
-        $cid     = 0;
-        $newIdx  = $this->callMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        $cck = 0;
+        $cid = 0;
+        $newIdx = $this->callIntMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        /** @var array<int, int> $cdec */
         $this->assertSame(2, $newIdx);
-        $this->assertSame(108, $cdec[0]);
+        $this->assertSame(108, $cdec[0] ?? null);
     }
 
     public function testDecodeNumberHandlesBytes251To254(): void
     {
         $instance = $this->buildTypeOne();
         // ccom[0] = 251, ccom[1] = 0 → value = -(251-251)*256 - 0 - 108 = -108
-        $ccom    = [251, 0];
+        $ccom = [251, 0];
         /** @var array<int, int> $cdec */
-        $cdec    = [];
+        $cdec = [];
         /** @var array<int, int> $cwidths */
         $cwidths = [];
-        $cck     = 0;
-        $cid     = 0;
-        $newIdx  = $this->callMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        $cck = 0;
+        $cid = 0;
+        $newIdx = $this->callIntMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        /** @var array<int, int> $cdec */
         $this->assertSame(2, $newIdx);
-        $this->assertSame(-108, $cdec[0]);
+        $this->assertSame(-108, $cdec[0] ?? null);
     }
 
     public function testDecodeNumberHandlesByte255FourByteInt(): void
     {
         $instance = $this->buildTypeOne();
         // ccom[0]=255, ccom[1..4] = big-endian int 500 = 0x000001F4
-        $ccom    = [255, 0, 0, 1, 0xF4];
+        $ccom = [255, 0, 0, 1, 0xF4];
         /** @var array<int, int> $cdec */
-        $cdec    = [];
+        $cdec = [];
         /** @var array<int, int> $cwidths */
         $cwidths = [];
-        $cck     = 0;
-        $cid     = 0;
-        $newIdx  = $this->callMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        $cck = 0;
+        $cid = 0;
+        $newIdx = $this->callIntMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        /** @var array<int, int> $cdec */
         $this->assertSame(5, $newIdx);
         // The 4-byte sequence packs as little-endian 'l' → 0x000001F4 LE = 0xF4010000 BE
         // unpack('li', "\x00\x00\x01\xF4") depends on system endianness; just assert it returned an int.
-        $this->assertIsInt($cdec[0]);
+        $this->assertIsInt($cdec[0] ?? null);
     }
 
     public function testDecodeNumberHsbwCommandUpdatesWidth(): void
@@ -404,16 +499,17 @@ class TypeOneInternalsTest extends TestUtil
         $instance = $this->buildTypeOne();
         // Build a 2-element decode stack: cdec[0]=width(300), cdec[1]=13 (hsbw)
         // When ccom[$idx]=value<32 and cck>0 and the value==13 → hsbw: cwidths[$cid] = cdec[$cck-1]
-        $ccom    = [13];  // hsbw opcode (value < 32)
+        $ccom = [13]; // hsbw opcode (value < 32)
         /** @var array<int, int> $cdec */
-        $cdec    = [0 => 300];
+        $cdec = [0 => 300];
         /** @var array<int, int> $cwidths */
         $cwidths = [];
-        $cck     = 1;     // stack has one element already
-        $cid     = 7;
+        $cck = 1; // stack has one element already
+        $cid = 7;
         $this->callMethod($instance, 'decodeNumber', [0, &$cck, &$cid, &$ccom, &$cdec, &$cwidths]);
+        /** @var array<int, int> $cwidths */
         $this->assertArrayHasKey(7, $cwidths);
-        $this->assertSame(300, $cwidths[7]);
+        $this->assertSame(300, $cwidths[7] ?? null);
     }
 
     // -------------------------------------------------------------------------
@@ -425,7 +521,7 @@ class TypeOneInternalsTest extends TestUtil
         $instance = $this->buildTypeOne();
         // First byte not 128 → invalid binary Type1
         $this->setProp($instance, 'font', "\x00\x00\x00\x00\x00\x00");
-        $this->bcExpectException('\\' . FontException::class);
+        $this->bcExpectException(FontException::class);
         $this->callMethod($instance, 'storeFontData', []);
     }
 }

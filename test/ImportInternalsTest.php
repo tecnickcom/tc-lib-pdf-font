@@ -41,17 +41,20 @@ class ImportInternalsTest extends TestUtil
     /**
      * @param array<int, mixed> $args
      */
-    private function callMethod(object $obj, string $method, array $args = []): mixed
+    private function callStringMethod(object $obj, string $method, array $args = []): string
     {
         $ref = new \ReflectionMethod($obj, $method);
-        $ref->setAccessible(true);
-        return $ref->invokeArgs($obj, $args);
+
+        if (!\is_string($ref->invokeArgs($obj, $args))) {
+            $this->fail('Expected string return value.');
+        }
+
+        return (string) $ref->invokeArgs($obj, $args);
     }
 
     private function setFdt(object $obj, mixed $fdt): void
     {
         $prop = new \ReflectionProperty($obj, 'fdt');
-        $prop->setAccessible(true);
         $prop->setValue($obj, $fdt);
     }
 
@@ -64,17 +67,17 @@ class ImportInternalsTest extends TestUtil
         $instance = $this->buildImport();
         // 65536 CID slots × 2 bytes = 131072 bytes
         $map = str_repeat("\x00", 131072);
-        $result = $this->callMethod($instance, 'updateCIDtoGIDmap', [$map, 65, 42]);
+        $result = $this->callStringMethod($instance, 'updateCIDtoGIDmap', [$map, 65, 42]);
         // gid 42 = 0x002A → high byte = 0x00, low byte = 0x2A
         $this->assertSame(0, ord($result[65 * 2]));
-        $this->assertSame(42, ord($result[65 * 2 + 1]));
+        $this->assertSame(42, ord($result[(65 * 2) + 1]));
     }
 
     public function testUpdateCIDtoGIDmapIgnoresCidOutOfRange(): void
     {
         $instance = $this->buildImport();
         $map = str_repeat("\x00", 131072);
-        $result = $this->callMethod($instance, 'updateCIDtoGIDmap', [$map, 0x10000, 5]);
+        $result = $this->callStringMethod($instance, 'updateCIDtoGIDmap', [$map, 0x10000, 5]);
         // CID 0x10000 is out of the 0..0xFFFF range → map unchanged
         $this->assertSame($map, $result);
     }
@@ -84,7 +87,7 @@ class ImportInternalsTest extends TestUtil
         $instance = $this->buildImport();
         $map = str_repeat("\x00", 131072);
         // gid = 0x1002A  →  gid -= 0x10000  →  0x002A = 42
-        $result = $this->callMethod($instance, 'updateCIDtoGIDmap', [$map, 0, 0x1002A]);
+        $result = $this->callStringMethod($instance, 'updateCIDtoGIDmap', [$map, 0, 0x1002A]);
         $this->assertSame(0, ord($result[0]));
         $this->assertSame(42, ord($result[1]));
     }
@@ -94,7 +97,7 @@ class ImportInternalsTest extends TestUtil
         $instance = $this->buildImport();
         $map = str_repeat("\x00", 131072);
         // gid < 0 → condition ($gid >= 0) is false → map unchanged
-        $result = $this->callMethod($instance, 'updateCIDtoGIDmap', [$map, 10, -1]);
+        $result = $this->callStringMethod($instance, 'updateCIDtoGIDmap', [$map, 10, -1]);
         $this->assertSame($map, $result);
     }
 
@@ -107,7 +110,7 @@ class ImportInternalsTest extends TestUtil
         $instance = $this->buildImport();
         $this->setFdt($instance, ['type' => 'Type1', 'Flags' => 32]);
         // Flags & 4 == 0 → non-symbolic Type1 → cp1252
-        $result = $this->callMethod($instance, 'getEncodingTable', ['']);
+        $result = $this->callStringMethod($instance, 'getEncodingTable', ['']);
         $this->assertSame('cp1252', $result);
     }
 
@@ -116,7 +119,7 @@ class ImportInternalsTest extends TestUtil
         $instance = $this->buildImport();
         $this->setFdt($instance, ['type' => 'Type1', 'Flags' => 4]);
         // Flags & 4 != 0 → symbolic → empty string
-        $result = $this->callMethod($instance, 'getEncodingTable', ['']);
+        $result = $this->callStringMethod($instance, 'getEncodingTable', ['']);
         $this->assertSame('', $result);
     }
 
@@ -124,7 +127,7 @@ class ImportInternalsTest extends TestUtil
     {
         $instance = $this->buildImport();
         $this->setFdt($instance, ['type' => 'TrueTypeUnicode', 'Flags' => 0]);
-        $result = $this->callMethod($instance, 'getEncodingTable', ['']);
+        $result = $this->callStringMethod($instance, 'getEncodingTable', ['']);
         $this->assertSame('', $result);
     }
 
@@ -132,7 +135,7 @@ class ImportInternalsTest extends TestUtil
     {
         $instance = $this->buildImport();
         $this->setFdt($instance, ['type' => 'TrueType', 'Flags' => 0]);
-        $result = $this->callMethod($instance, 'getEncodingTable', ['iso-8859-1']);
+        $result = $this->callStringMethod($instance, 'getEncodingTable', ['iso-8859-1']);
         $this->assertSame('iso-8859-1', $result);
     }
 
@@ -144,7 +147,7 @@ class ImportInternalsTest extends TestUtil
     {
         $this->setupTest();
         $instance = $this->buildImport();
-        $result = $this->callMethod($instance, 'findOutputPath', ['']);
+        $result = $this->callStringMethod($instance, 'findOutputPath', ['']);
         $this->assertSame(constant('K_PATH_FONTS'), $result);
     }
 
@@ -153,7 +156,7 @@ class ImportInternalsTest extends TestUtil
         $outdir = dirname(__DIR__) . '/target/tmptest/internals/';
         system('mkdir -p ' . $outdir);
         $instance = $this->buildImport();
-        $result = $this->callMethod($instance, 'findOutputPath', [$outdir]);
+        $result = $this->callStringMethod($instance, 'findOutputPath', [$outdir]);
         $this->assertSame($outdir, $result);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Import.php
  *
@@ -210,6 +212,7 @@ class Import
      *
      * @throws FileException in case of error
      * @throws FontException in case of error
+     * @throws \RangeException in case of byte-range errors
      */
     public function __construct(
         string $file,
@@ -219,7 +222,7 @@ class Import
         int $flags = 32,
         int $platform_id = 3,
         int $encoding_id = 1,
-        bool $linked = false
+        bool $linked = false,
     ) {
         if (FILE::hasDoubleDots($file) || FILE::hasForbiddenProtocol($file)) {
             throw new FontException('Invalid font file name: ' . $file);
@@ -227,22 +230,22 @@ class Import
 
         $this->fdt['input_file'] = $file;
         $this->fdt['file_name'] = $this->makeFontName($file);
-        if (empty($this->fdt['file_name'])) {
+        if ($this->fdt['file_name'] === '') {
             throw new FontException('the font name is empty');
         }
 
         $this->fdt['dir'] = $this->findOutputPath($output_path);
         $this->fdt['datafile'] = $this->fdt['dir'] . $this->fdt['file_name'] . '.json';
-        if (@\file_exists($this->fdt['datafile'])) {
+        if (\file_exists($this->fdt['datafile'])) {
             throw new FontException('this font has been already imported: ' . $this->fdt['datafile']);
         }
 
         // get font data
-        if (! is_file($file)) {
+        if (!is_file($file)) {
             throw new FontException('invalid font file: ' . $file);
         }
 
-        if (($font = @\file_get_contents($file)) === false) {
+        if (($font = \file_get_contents($file)) === false) {
             throw new FontException('unable to read the input font file: ' . $file);
         }
 
@@ -252,7 +255,7 @@ class Import
 
         $this->fdt['settype'] = $type;
         $this->fdt['type'] = $this->getFontType($type);
-        $this->fdt['isUnicode'] = (($this->fdt['type'] == 'TrueTypeUnicode') || ($this->fdt['type'] == 'cidfont0'));
+        $this->fdt['isUnicode'] = $this->fdt['type'] === 'TrueTypeUnicode' || $this->fdt['type'] === 'cidfont0';
         $this->fdt['Flags'] = $flags;
         $this->initFlags();
         $this->fdt['enc'] = $this->getEncodingTable($encoding);
@@ -300,24 +303,18 @@ class Import
         $filename = \strtolower(\basename($this->fdt['input_file']));
 
         if (
-            (\str_contains($filename, 'mono'))
-            || (\str_contains($filename, 'courier'))
-            || (\str_contains($filename, 'fixed'))
+            \str_contains($filename, 'mono')
+            || \str_contains($filename, 'courier')
+            || \str_contains($filename, 'fixed')
         ) {
             $this->fdt['Flags'] |= 1;
         }
 
-        if (
-            (\str_contains($filename, 'symbol'))
-            || (\str_contains($filename, 'zapfdingbats'))
-        ) {
+        if (\str_contains($filename, 'symbol') || \str_contains($filename, 'zapfdingbats')) {
             $this->fdt['Flags'] |= 4;
         }
 
-        if (
-            (\str_contains($filename, 'italic'))
-            || (\str_contains($filename, 'oblique'))
-        ) {
+        if (\str_contains($filename, 'italic') || \str_contains($filename, 'oblique')) {
             $this->fdt['Flags'] |= 64;
         }
     }
@@ -330,39 +327,66 @@ class Import
      *
      * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      * @SuppressWarnings("PHPMD.NPathComplexity")
-    * @SuppressWarnings("PHPMD.ExcessiveMethodLength")
+     * @SuppressWarnings("PHPMD.ExcessiveMethodLength")
      */
     protected function saveFontData(): void
     {
-        $pfile = '{"type":"' . $this->fdt['type'] . '"'
-            . ',"name":"' . $this->fdt['name'] . '"'
-            . ',"up":' . $this->fdt['underlinePosition']
-            . ',"ut":' . $this->fdt['underlineThickness']
-            . ',"dw":' . (($this->fdt['MissingWidth'] > 0) ? $this->fdt['MissingWidth'] : $this->fdt['AvgWidth'])
-            . ',"diff":"' . $this->fdt['diff'] . '"'
-            . ',"platform_id":' . $this->fdt['platform_id']
-            . ',"encoding_id":' . $this->fdt['encoding_id'];
+        $missingWidth = $this->fdt['MissingWidth'];
+        $pfile =
+            '{"type":"'
+            . $this->fdt['type']
+            . '"'
+            . ',"name":"'
+            . $this->fdt['name']
+            . '"'
+            . ',"up":'
+            . $this->fdt['underlinePosition']
+            . ',"ut":'
+            . $this->fdt['underlineThickness']
+            . ',"dw":'
+            . ($missingWidth !== null && $missingWidth > 0 ? $missingWidth : $this->fdt['AvgWidth'])
+            . ',"diff":"'
+            . $this->fdt['diff']
+            . '"'
+            . ',"platform_id":'
+            . $this->fdt['platform_id']
+            . ',"encoding_id":'
+            . $this->fdt['encoding_id'];
 
-        if ($this->fdt['type'] == 'Core') {
+        if ($this->fdt['type'] === 'Core') {
             // Core
             $pfile .= ',"enc":""';
-        } elseif ($this->fdt['type'] == 'Type1') {
+        } elseif ($this->fdt['type'] === 'Type1') {
             // Type 1
-            $pfile .= ',"enc":"' . $this->fdt['enc'] . '"'
-                . ',"file":"' . $this->fdt['file'] . '"'
-                . ',"size1":' . $this->fdt['size1']
-                . ',"size2":' . $this->fdt['size2'];
+            $pfile .=
+                ',"enc":"'
+                . $this->fdt['enc']
+                . '"'
+                . ',"file":"'
+                . $this->fdt['file']
+                . '"'
+                . ',"size1":'
+                . $this->fdt['size1']
+                . ',"size2":'
+                . $this->fdt['size2'];
         } else {
             $pfile .= ',"originalsize":' . $this->fdt['originalsize'];
-            if ($this->fdt['type'] == 'cidfont0') {
-                $pfile .= ',' . UniToCid::TYPE[$this->fdt['settype']];
+            if ($this->fdt['type'] === 'cidfont0') {
+                $pfile .= ',' . (UniToCid::TYPE[$this->fdt['settype']] ?? '');
             } else {
                 // TrueType
-                $pfile .= ',"enc":"' . $this->fdt['enc'] . '"'
-                    . ',"file":"' . $this->fdt['file'] . '"'
-                    . ',"ctg":"' . $this->fdt['ctg'] . '"';
+                $pfile .=
+                    ',"enc":"'
+                    . $this->fdt['enc']
+                    . '"'
+                    . ',"file":"'
+                    . $this->fdt['file']
+                    . '"'
+                    . ',"ctg":"'
+                    . $this->fdt['ctg']
+                    . '"';
                 // create CIDToGIDMap
-                $cidtogidmap = \str_pad('', 131072, "\x00"); // (256 * 256 * 2) = 131072
+                $cidtogidmap = \str_pad('', 131_072, "\x00"); // (256 * 256 * 2) = 131072
                 foreach ($this->fdt['ctgdata'] as $cid => $gid) {
                     $cidtogidmap = $this->updateCIDtoGIDmap($cidtogidmap, (int) $cid, (int) $gid);
                 }
@@ -387,30 +411,46 @@ class Import
             $pfile .= ',"isUnicode":false';
         }
 
-        $pfile .= ',"desc":{"Flags":' . $this->fdt['Flags']
-            . ',"FontBBox":"[' . $this->fdt['bbox'] . ']"'
-            . ',"ItalicAngle":' . $this->fdt['italicAngle']
-            . ',"Ascent":' . $this->fdt['Ascent']
-            . ',"Descent":' . $this->fdt['Descent']
-            . ',"Leading":' . $this->fdt['Leading']
-            . ',"CapHeight":' . $this->fdt['CapHeight']
-            . ',"XHeight":' . $this->fdt['XHeight']
-            . ',"StemV":' . $this->fdt['StemV']
-            . ',"StemH":' . $this->fdt['StemH']
-            . ',"AvgWidth":' . $this->fdt['AvgWidth']
-            . ',"MaxWidth":' . $this->fdt['MaxWidth']
-            . ',"MissingWidth":' . $this->fdt['MissingWidth']
+        $pfile .=
+            ',"desc":{"Flags":'
+            . $this->fdt['Flags']
+            . ',"FontBBox":"['
+            . $this->fdt['bbox']
+            . ']"'
+            . ',"ItalicAngle":'
+            . $this->fdt['italicAngle']
+            . ',"Ascent":'
+            . $this->fdt['Ascent']
+            . ',"Descent":'
+            . $this->fdt['Descent']
+            . ',"Leading":'
+            . $this->fdt['Leading']
+            . ',"CapHeight":'
+            . $this->fdt['CapHeight']
+            . ',"XHeight":'
+            . $this->fdt['XHeight']
+            . ',"StemV":'
+            . $this->fdt['StemV']
+            . ',"StemH":'
+            . $this->fdt['StemH']
+            . ',"AvgWidth":'
+            . $this->fdt['AvgWidth']
+            . ',"MaxWidth":'
+            . $this->fdt['MaxWidth']
+            . ',"MissingWidth":'
+            . (string) ($missingWidth ?? 0)
             . '}';
-        if (! empty($this->fdt['cbbox'])) {
+        if ($this->fdt['cbbox'] !== []) {
             $ccboxstr = '';
             foreach ($this->fdt['cbbox'] as $cid => $bbox) {
-                $ccboxstr .= ',"' . $cid . '":[' . $bbox[0] . ',' . $bbox[1] . ',' . $bbox[2] . ',' . $bbox[3] . ']';
+                $box = \array_pad(\array_values($bbox), 4, 0);
+                $ccboxstr .= ',"' . $cid . '":[' . $box[0] . ',' . $box[1] . ',' . $box[2] . ',' . $box[3] . ']';
             }
 
             $pfile .= ',"cbbox":{' . \substr($ccboxstr, 1) . '}';
         }
 
-        if (! empty($this->fdt['cw'])) {
+        if ($this->fdt['cw'] !== []) {
             $cwstr = '';
             foreach ($this->fdt['cw'] as $cid => $width) {
                 $cwstr .= ',"' . $cid . '":' . $width;
@@ -419,7 +459,7 @@ class Import
             $pfile .= ',"cw":{' . \substr($cwstr, 1) . '}';
         }
 
-        if (! empty($this->fdt['cwu'])) {
+        if ($this->fdt['cwu'] !== []) {
             $cwustr = '';
             foreach ($this->fdt['cwu'] as $codepoint => $width) {
                 $cwustr .= ',"' . $codepoint . '":' . $width;
@@ -447,7 +487,7 @@ class Import
     protected function makeFontName(string $font_file): string
     {
         $font_path_parts = \pathinfo($font_file);
-        if (empty($font_path_parts['filename'])) {
+        if ($font_path_parts['filename'] === '') {
             throw new FontException('Invalid font file name: ' . $font_file);
         }
 
@@ -456,11 +496,7 @@ class Import
             throw new FontException('Invalid font file name: ' . $font_file);
         }
 
-        return \str_replace(
-            ['bold', 'oblique', 'italic', 'regular'],
-            ['b', 'i', 'i', ''],
-            $fname
-        );
+        return \str_replace(['bold', 'oblique', 'italic', 'regular'], ['b', 'i', 'i', ''], $fname);
     }
 
     /**
@@ -473,24 +509,27 @@ class Import
     {
         if (
             $output_path !== ''
-            && (\strpos($output_path, '://') === false)
+            && !\str_contains($output_path, '://')
             && !FILE::hasDoubleDots($output_path)
             && \is_writable($output_path)
         ) {
             return $output_path;
         }
 
-        if (\defined('K_PATH_FONTS') && \is_writable(K_PATH_FONTS)) {
-            return K_PATH_FONTS;
+        if (\defined('K_PATH_FONTS')) {
+            $kpathfonts = (string) \constant('K_PATH_FONTS');
+            if ($kpathfonts !== '' && \is_writable($kpathfonts)) {
+                return $kpathfonts;
+            }
         }
 
         $dirobj = new Dir();
         $dir = $dirobj->findParentDir('fonts', __DIR__);
-        if ($dir == '/') {
+        if ($dir === '/') {
             $dir = \sys_get_temp_dir();
         }
 
-        if (! \str_ends_with($dir, '/')) {
+        if (!\str_ends_with($dir, '/')) {
             $dir .= '/';
         }
 
@@ -517,7 +556,7 @@ class Import
                 throw new FontException('Unsupported font format: OpenType with CFF data');
             }
 
-            if ($this->fbyte->getULong(0) == 0x10000) {
+            if ($this->fbyte->getULong(0) === 0x1_0000) {
                 return 'TrueTypeUnicode';
             }
 
@@ -528,7 +567,7 @@ class Import
             return 'cidfont0';
         }
 
-        if (\in_array($font_type, ['Core', 'Type1', 'TrueType', 'TrueTypeUnicode'])) {
+        if (\in_array($font_type, ['Core', 'Type1', 'TrueType', 'TrueTypeUnicode'], true)) {
             return $font_type;
         }
 
@@ -547,7 +586,7 @@ class Import
     protected function getEncodingTable(string $encoding = ''): string
     {
         if ($encoding === '') {
-            if (($this->fdt['type'] == 'Type1') && (($this->fdt['Flags'] & 4) == 0)) {
+            if ($this->fdt['type'] === 'Type1' && ($this->fdt['Flags'] & 4) === 0) {
                 return 'cp1252';
             }
 
@@ -571,25 +610,26 @@ class Import
     {
         $diff = '';
         if (
-            (($this->fdt['type'] == 'TrueType') || ($this->fdt['type'] == 'Type1'))
-            && (! empty($this->fdt['enc'])
-            && (\is_string($this->fdt['enc']))
-            && ($this->fdt['enc'] != 'cp1252')
-            && isset(Encoding::MAP[$this->fdt['enc']]))
+            ($this->fdt['type'] === 'TrueType' || $this->fdt['type'] === 'Type1')
+            && ($this->fdt['enc'] !== '' && $this->fdt['enc'] !== 'cp1252' && isset(Encoding::MAP[$this->fdt['enc']]))
         ) {
             // build differences from reference encoding
-            $enc_ref = Encoding::MAP['cp1252'];
+            $enc_ref = Encoding::MAP['cp1252'] ?? [];
             $enc_target = Encoding::MAP[$this->fdt['enc']];
             $last = 0;
             for ($idx = 32; $idx <= 255; ++$idx) {
-                if ($enc_target[$idx] != $enc_ref[$idx]) {
-                    if ($idx != $last + 1) {
-                        $diff .= $idx . ' ';
-                    }
-
-                    $last = $idx;
-                    $diff .= '/' . $enc_target[$idx] . ' ';
+                $target = $enc_target[$idx] ?? '';
+                $ref = $enc_ref[$idx] ?? '';
+                if ($target === $ref) {
+                    continue;
                 }
+
+                if ($idx !== ($last + 1)) {
+                    $diff .= $idx . ' ';
+                }
+
+                $last = $idx;
+                $diff .= '/' . $target . ' ';
             }
         }
 
@@ -608,13 +648,13 @@ class Import
      */
     protected function updateCIDtoGIDmap(string $map, int $cid, int $gid): string
     {
-        if (($cid >= 0) && ($cid <= 0xFFFF) && ($gid >= 0)) {
+        if ($cid >= 0 && $cid <= 0xFFFF && $gid >= 0) {
             if ($gid > 0xFFFF) {
-                $gid -= 0x10000;
+                $gid -= 0x1_0000;
             }
 
-            $map[($cid * 2)] = \chr($gid >> 8);
-            $map[(($cid * 2) + 1)] = \chr($gid & 0xFF);
+            $map[$cid * 2] = \chr($gid >> 8);
+            $map[($cid * 2) + 1] = \chr($gid & 0xFF);
         }
 
         return $map;

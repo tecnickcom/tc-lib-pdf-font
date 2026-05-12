@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * OutUtil.php
  *
@@ -29,6 +31,8 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
  * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
+ *
+ * @phpstan-import-type TFontData from Load
  */
 abstract class OutUtil
 {
@@ -45,12 +49,16 @@ abstract class OutUtil
     protected function getFontFullPath(string $fontdir, string $file): string
     {
         $dirobj = new Dir();
+        $kpathfonts = \defined('K_PATH_FONTS') ? (string) \constant('K_PATH_FONTS') : '';
         // directories where to search for the font definition file
-        $dirs = \array_unique(
-            ['', $fontdir, (\defined('K_PATH_FONTS') ? K_PATH_FONTS : ''), $dirobj->findParentDir('fonts', __DIR__)]
-        );
+        $dirs = \array_unique([
+            '',
+            $fontdir,
+            $kpathfonts,
+            $dirobj->findParentDir('fonts', __DIR__),
+        ]);
         foreach ($dirs as $dir) {
-            if (@\is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
+            if (\is_readable($dir . DIRECTORY_SEPARATOR . $file)) {
                 return $dir . DIRECTORY_SEPARATOR . $file;
             }
         }
@@ -61,12 +69,7 @@ abstract class OutUtil
     /**
      * Outputs font widths
      *
-     * @param array{
-     *        'cw':  array<int, int>,
-     *        'dw': int,
-     *        'subset': bool,
-     *        'subsetchars': array<int, bool>,
-     *    } $font      Font to process
+     * @param TFontData $font Font to process
      * @param int    $cidoffset Offset for CID values
      *
      * @return string PDF command string for font widths
@@ -78,7 +81,7 @@ abstract class OutUtil
         // output data
         $wdt = '';
         foreach ($range as $kdx => $wds) {
-            if (\count(\array_count_values($wds)) == 1) {
+            if (\count(\array_count_values($wds)) === 1) {
                 // interval mode is more compact
                 $wdt .= ' ' . $kdx . ' ' . ($kdx + \count($wds) - 1) . ' ' . $wds[0];
             } else {
@@ -93,12 +96,7 @@ abstract class OutUtil
     /**
      * get width ranges of characters
      *
-     * @param array{
-     *        'cw':  array<int, int>,
-     *        'dw': int,
-     *        'subset': bool,
-     *        'subsetchars': array<int, bool>,
-     *    } $font      Font to process
+     * @param TFontData $font Font to process
      * @param int    $cidoffset Offset for CID values
      *
      * @return array<int, array<int, int>>
@@ -113,15 +111,15 @@ abstract class OutUtil
         // for each character
         foreach ($font['cw'] as $cid => $width) {
             $cid -= $cidoffset;
-            if ($font['subset'] && (! isset($font['subsetchars'][$cid]))) {
+            if ($font['subset'] && !isset($font['subsetchars'][$cid])) {
                 // ignore the unused characters (font subsetting)
                 continue;
             }
 
-            if ($width != $font['dw']) {
-                if ($cid === $prevcid + 1) {
+            if ($width !== $font['dw']) {
+                if ($cid === ($prevcid + 1)) {
                     // consecutive CID
-                    if ($width == $prevwidth) {
+                    if ($width === $prevwidth) {
                         if ($width === $range[$rangeid][0]) {
                             $range[$rangeid][] = $width;
                         } else {
@@ -160,6 +158,7 @@ abstract class OutUtil
             }
         }
 
+        /** @var array<int, array<int, int>> $range */
         return $this->optimizeWidthRanges($range);
     }
 
@@ -177,7 +176,7 @@ abstract class OutUtil
         $prevint = false;
         foreach ($range as $kdx => $wds) {
             $cws = \count($wds);
-            if (($kdx == $nextk) && (! $prevint) && ((! isset($wds[-1])) || ($cws < 4))) {
+            if ($kdx === $nextk && !$prevint && (!isset($wds[-1]) || $cws < 4)) {
                 unset($range[$kdx][-1]);
                 $range[$prevk] = [...$range[$prevk], ...$range[$kdx]];
                 unset($range[$kdx]);
@@ -189,7 +188,7 @@ abstract class OutUtil
             $nextk = $kdx + $cws;
             if (isset($wds[-1])) {
                 unset($range[$kdx][-1]);
-                $prevint = ($cws > 3);
+                $prevint = $cws > 3;
                 --$nextk;
             }
         }
