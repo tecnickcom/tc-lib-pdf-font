@@ -333,7 +333,7 @@ class OutputTest extends TestUtil
         $base['key'] = 'freesans_dup';
         $base['i'] += 1000;
         $base['n'] += 1000;
-        $base['subsetchars'] = [8776 => true];
+        $base['subsetchars'] = [8776 => true, 9999 => false];
         $primary = $fonts['freesans'];
         $primary['subsetchars'] = [960 => true];
 
@@ -356,6 +356,7 @@ class OutputTest extends TestUtil
         $this->assertIsArray($first);
         $this->assertArrayHasKey(960, $first);
         $this->assertArrayHasKey(8776, $first);
+        $this->assertArrayNotHasKey(9999, $first);
     }
 
     public function testUniToCidPreservesNumericCidKeys(): void
@@ -381,5 +382,109 @@ class OutputTest extends TestUtil
         $this->assertArrayHasKey(3283, $font['cw']);
         $this->assertSame(500, $font['cw'][853] ?? null);
         $this->assertSame(600, $font['cw'][3283] ?? null);
+    }
+
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
+    public function testGetFontFullPathThrowsForMissingFile(): void
+    {
+        $this->setupTest();
+        $outfont = new OutputTestOutFont();
+        $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
+        $outfont->runGetFontFullPath($this->getFontPath(), 'not-here.bin');
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \ReflectionException
+     */
+    public function testOutputRejectsSubsetFromPlainFileData(): void
+    {
+        $this->prepareTestEnvironment();
+        $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
+
+        $tmpfile = $this->getFontPath() . 'plain-font.bin';
+        \file_put_contents($tmpfile, 'not-gzip-data');
+
+        $font = $this->getFontTemplate();
+        $font['key'] = 'plain';
+        $font['name'] = 'Plain';
+        $font['i'] = 1;
+        $font['n'] = 1;
+        $font['file'] = 'plain-font.bin';
+        $font['dir'] = $this->getFontPath();
+        $font['subset'] = true;
+        $font['subsetchars'] = [65 => true];
+
+        $encrypt = $this->createEncrypt();
+        \set_error_handler(static fn(): bool => true);
+        try {
+            new \Com\Tecnick\Pdf\Font\Output(['plain' => $font], 1, $encrypt);
+        } finally {
+            \restore_error_handler();
+        }
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \ReflectionException
+     */
+    public function testOutputBuildsTrueTypeDefinitionWithDefaultEncoding(): void
+    {
+        $font = $this->getFontTemplate();
+        $font['key'] = 'truetypefont';
+        $font['name'] = 'TrueTypeFont';
+        $font['type'] = 'TrueType';
+        $font['i'] = 1;
+        $font['n'] = 1;
+        $font['enc'] = 'cp1252';
+        $font['dw'] = 600;
+        $font['cw'] = [32 => 250, 65 => 700];
+
+        $encrypt = $this->createEncrypt();
+        $output = new \Com\Tecnick\Pdf\Font\Output(['truetypefont' => $font], 1, $encrypt);
+        $block = $output->getFontsBlock();
+
+        $this->assertStringContainsString('/Subtype /TrueType', $block);
+        $this->assertStringContainsString('/Encoding /WinAnsiEncoding', $block);
+    }
+
+    public function testGetKeyValOutFormatsFloatValues(): void
+    {
+        $outfont = new OutputTestOutFont();
+        $out = $outfont->runGetKeyValOut('ItalicAngle', 12.5);
+        $this->assertSame(' /ItalicAngle 12.500000', $out);
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \ReflectionException
+     */
+    public function testOutputBuildsCidFont0WhenGlyphOneIsNotDefined(): void
+    {
+        $font = $this->getFontTemplate();
+        $font['key'] = 'cidfont0';
+        $font['name'] = 'CIDFont0Test';
+        $font['type'] = 'CIDFont0';
+        $font['i'] = 1;
+        $font['n'] = 1;
+        $font['enc'] = 'Identity-H';
+        $font['dw'] = 600;
+        $font['cw'] = [32 => 500, 65 => 700];
+        $font['cidinfo'] = [
+            'Registry' => 'Adobe',
+            'Ordering' => 'Identity',
+            'Supplement' => 0,
+            'uni2cid' => [],
+        ];
+
+        $encrypt = $this->createEncrypt();
+        $output = new \Com\Tecnick\Pdf\Font\Output(['cidfont0' => $font], 1, $encrypt);
+        $block = $output->getFontsBlock();
+
+        $this->assertStringContainsString('/Subtype /Type0', $block);
+        $this->assertStringContainsString('/Subtype /CIDFontType0', $block);
     }
 }

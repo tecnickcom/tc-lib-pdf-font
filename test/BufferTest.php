@@ -31,6 +31,22 @@ namespace Test;
  */
 class BufferTest extends TestUtil
 {
+    public function testSubsetModeDisabledByDefault(): void
+    {
+        $this->setupTest();
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        $this->assertFalse($stack->isSubsetMode());
+    }
+
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
+    public function testAddSubsetCharOnMissingFontThrows(): void
+    {
+        $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
+        $this->setupTest();
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        $stack->addSubsetChar('missing', 65);
+    }
+
     /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testStackMissingKey(): void
     {

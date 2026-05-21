@@ -291,4 +291,77 @@ class StackTest extends TestUtil
         $this->bcAssertEqualsWithDelta(11.25, $clone['size'], 0.0001);
         $this->assertEquals("BT /F1 11.250000 Tf ET\r", $clone['out']);
     }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testCloneFontRejectsOutOfRangeIndex(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+        $objnum = 1;
+
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'core/Helvetica.afm');
+        $stack->insert($objnum, 'helvetica');
+
+        $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
+        $stack->cloneFont($objnum, 99);
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testReplaceMissingCharsKeepsOriginalWhenNoSubstitutesProvided(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+        $objnum = 1;
+
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'core/Helvetica.afm');
+        $stack->insert($objnum, 'helvetica');
+
+        $this->assertSame([400], $stack->replaceMissingChars([400], []));
+    }
+
+    /** @throws FontException */
+    public function testGetFontFamilyNameRejectsEmptyString(): void
+    {
+        $this->prepareTestEnvironment();
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+
+        $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
+        $stack->getFontFamilyName('');
+    }
+
+    /** @throws FontException */
+    public function testGetCharWidthFailsWithoutCurrentFont(): void
+    {
+        $this->prepareTestEnvironment();
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+
+        $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
+        $stack->getCharWidth(65);
+    }
+
+    /** @throws FontException */
+    public function testMalformedCharBoxDataIsIgnored(): void
+    {
+        $this->prepareTestEnvironment();
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+
+        \file_put_contents(
+            $this->getFontPath() . 'badbbox.json',
+            '{"type":"Type1","desc":{"FontBBox":"[0 0 0 0]"},"cw":{"65":400},"cbbox":{"65":[1,2,3]}}',
+        );
+
+        $stack->insert($objnum, 'badbbox', '', null, null, null, $this->getFontPath() . 'badbbox.json', null);
+        $this->assertSame([0.0, 0.0, 0.0, 0.0], $stack->getCharBBox(65));
+    }
 }

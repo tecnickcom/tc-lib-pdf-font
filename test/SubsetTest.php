@@ -339,4 +339,129 @@ class SubsetTest extends TestUtil
         $this->assertArrayHasKey(853, $subglyphs);
         $this->assertArrayHasKey(3283, $subglyphs);
     }
+
+    public function testAddCompositeGlyphsSkipsDisabledDerivedGlyphs(): void
+    {
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            private bool $first = true;
+
+            public function __construct() {}
+
+            public function run(): void
+            {
+                $this->addCompositeGlyphs();
+            }
+
+            /** @return array<int, bool> */
+            public function getSubglyphs(): array
+            {
+                return $this->subglyphs;
+            }
+
+            /**
+             * @param array<int, bool> $new_sga
+             * @param int              $key
+             *
+             * @return array<int, bool>
+             */
+            protected function findCompositeGlyphs(array $new_sga, int $key): array
+            {
+                if ($this->first) {
+                    $this->first = false;
+                    $new_sga[400] = false;
+                    $new_sga[401] = true;
+                }
+
+                return $new_sga;
+            }
+        };
+
+        $this->setProp($subset, 'subglyphs', [100 => true]);
+        $subset->run();
+
+        $subglyphs = $subset->getSubglyphs();
+        $this->assertArrayHasKey(100, $subglyphs);
+        $this->assertArrayHasKey(401, $subglyphs);
+        $this->assertArrayNotHasKey(400, $subglyphs);
+    }
+
+    public function testFindCompositeGlyphsParsesScaleAndTwoByTwoComponents(): void
+    {
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
+
+            /**
+             * @param array<int, bool> $newSga
+             *
+             * @return array<int, bool>
+             */
+            public function runFindCompositeGlyphs(array $newSga, int $key): array
+            {
+                return $this->findCompositeGlyphs($newSga, $key);
+            }
+        };
+
+        // Glyph header: numberOfContours = -1 (composite), 8 bytes bbox.
+        // Component 1: MORE_COMPONENTS + WE_HAVE_AN_X_AND_Y_SCALE, glyph 5.
+        // Component 2: WE_HAVE_A_TWO_BY_TWO, glyph 6.
+        $font =
+            "\xFF\xFF\x00\x00\x00\x00\x00\x00\x00\x00"
+            . "\x00\x60\x00\x05\x00\x00\x00\x00\x00\x00"
+            . "\x00\x80\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+
+        $this->setProp($subset, 'font', $font);
+        $this->setProp($subset, 'fbyte', new \Com\Tecnick\File\Byte($font));
+        $this->setProp($subset, 'subglyphs', []);
+        $this->setProp($subset, 'fdt', \array_replace_recursive($this->getDefaultFdt(), [
+            'indexToLoc' => [0 => 0],
+            'table' => [
+                'glyf' => ['offset' => 0, 'length' => \strlen($font), 'checkSum' => 0, 'data' => ''],
+            ],
+        ]));
+
+        $newSga = $subset->runFindCompositeGlyphs([], 0);
+        $this->assertArrayHasKey(5, $newSga);
+        $this->assertArrayHasKey(6, $newSga);
+    }
+
+    public function testAddProcessedTablesCreatesShortLocaAndPadsTables(): void
+    {
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
+
+            public function run(): void
+            {
+                $this->addProcessedTables();
+            }
+
+            /** @return array<string, mixed> */
+            public function getTable(): array
+            {
+                return $this->fdt['table'];
+            }
+        };
+
+        // One glyph with 3 bytes to force padding in both loca and glyf tables.
+        $font = "\xAA\xBB\xCC";
+        $this->setProp($subset, 'font', $font);
+        $this->setProp($subset, 'offset', 0);
+        $this->setProp($subset, 'subglyphs', [0 => true]);
+        $this->setProp($subset, 'fdt', \array_replace_recursive($this->getDefaultFdt(), [
+            'tot_num_glyphs' => 1,
+            'short_offset' => true,
+            'indexToLoc' => [0 => 0, 1 => 3],
+            'table' => [
+                'glyf' => ['offset' => 0, 'length' => 3, 'checkSum' => 0, 'data' => ''],
+            ],
+        ]));
+
+        $subset->run();
+        $table = $subset->getTable();
+
+        $this->assertArrayHasKey('loca', $table);
+        $this->assertSame(4, $this->getTableRecordInt($table, 'loca', 'length'));
+        $this->assertSame(4, $this->getTableRecordInt($table, 'glyf', 'length'));
+        $this->assertSame(0, \strlen($this->getTableRecordString($table, 'loca', 'data')) % 4);
+        $this->assertSame(0, \strlen($this->getTableRecordString($table, 'glyf', 'data')) % 4);
+    }
 }

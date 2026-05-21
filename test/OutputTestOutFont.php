@@ -28,4 +28,17 @@ class OutputTestOutFont extends \Com\Tecnick\Pdf\Font\OutFont
     {
         $this->uniToCid($font, $cidoffset);
     }
+
+    /**
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
+    public function runGetFontFullPath(string $fontdir, string $file): string
+    {
+        return $this->getFontFullPath($fontdir, $file);
+    }
+
+    public function runGetKeyValOut(string $key, mixed $val): string
+    {
+        return $this->getKeyValOut($key, $val);
+    }
 }
