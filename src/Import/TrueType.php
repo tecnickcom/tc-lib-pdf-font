@@ -20,7 +20,7 @@ namespace Com\Tecnick\Pdf\Font\Import;
 
 use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\Exception as FileException;
-use Com\Tecnick\File\File;
+use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
@@ -41,6 +41,11 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  */
 class TrueType
 {
+    /**
+     * File helper used to load font definition files.
+     */
+    protected ObjFile $fileHelper;
+
     /**
      * Minimum byte length of the OS/2 table needed to read through fsType.
      */
@@ -88,10 +93,11 @@ class TrueType
     /**
      * Process TrueType font
      *
-     * @param string           $font     Content of the input font file
-     * @param TFontData        $fdt      Extracted font metrics
-     * @param Byte             $fbyte    Object used to read font bytes
-     * @param array<int, bool> $subchars Array containing subset chars
+     * @param string           $font       Content of the input font file
+     * @param TFontData        $fdt        Extracted font metrics
+     * @param ObjFile          $fileHelper File helper for font loading.
+     * @param Byte             $fbyte      Object used to read font bytes
+     * @param array<int, bool> $subchars   Array containing subset chars
      *
      * @throws FileException
      * @throws FontException
@@ -99,9 +105,11 @@ class TrueType
     public function __construct(
         protected string $font,
         protected array $fdt,
+        ObjFile $fileHelper,
         protected Byte $fbyte,
         array $subchars = [],
     ) {
+        $this->fileHelper = $fileHelper;
         \ksort($subchars);
         $this->subchars = $subchars;
         $this->process();
@@ -195,8 +203,7 @@ class TrueType
 
         // store compressed font
         $this->fdt['file'] = $this->fdt['file_name'] . '.z';
-        $file = new File();
-        $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
+        $fpt = $this->fileHelper->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
 
         $cmpr = \gzcompress($this->font);
         if ($cmpr === false) {

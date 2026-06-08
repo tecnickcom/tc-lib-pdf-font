@@ -19,7 +19,6 @@ declare(strict_types=1);
 namespace Com\Tecnick\Pdf\Font\Import;
 
 use Com\Tecnick\File\Exception as FileException;
-use Com\Tecnick\File\File;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Unicode\Data\Encoding;
 
@@ -65,8 +64,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $data .= $this->fdt['encrypted'];
         // store compressed font
         $this->fdt['file'] = $this->fdt['file_name'] . '.z';
-        $file = new File();
-        $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
+        $fpt = $this->fileHelper->fopenLocal($this->fdt['dir'] . $this->fdt['file'], 'wb');
 
         $cmpr = \gzcompress($data);
         if ($cmpr === false) {

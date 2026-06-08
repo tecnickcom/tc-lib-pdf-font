@@ -33,14 +33,6 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
- * @phpstan-type TFileOptions array{
- *   allowedHosts?: array<string>,
- *   maxRemoteSize?: int,
- *   curlopts?: array<int, bool|int|string>,
- *   defaultCurlOpts?: array<int, bool|int|string>,
- *   fixedCurlOpts?: array<int, bool|int|string>
- * }
- *
  * @phpstan-type TFontDataCidInfo array{
  *            'Ordering': string,
  *            'Registry': string,
@@ -182,7 +174,12 @@ abstract class Load
     /**
      * File helper used to load font definition files.
      */
-    protected ObjFile $file;
+    protected ObjFile $fileHelper;
+
+    /**
+     * True when the file helper is created internally by this class.
+     */
+    protected bool $ownsFileHelper = false;
 
     /**
      * Valid Font types
@@ -319,17 +316,12 @@ abstract class Load
     ];
 
     /**
-     * @param TFileOptions|null $fileOptions Optional configuration for the font file helper.
+     * @param ObjFile|null $fileHelper Optional file helper for font loading.
      */
-    public function __construct(?array $fileOptions = null)
+    public function __construct(?ObjFile $fileHelper = null)
     {
-        $this->file = new ObjFile(
-            $fileOptions['allowedHosts'] ?? [],
-            $fileOptions['maxRemoteSize'] ?? 52_428_800,
-            $fileOptions['curlopts'] ?? [],
-            $fileOptions['defaultCurlOpts'] ?? null,
-            $fileOptions['fixedCurlOpts'] ?? null,
-        );
+        $this->ownsFileHelper = $fileHelper === null;
+        $this->fileHelper = $fileHelper ?? new ObjFile(allowedPaths: $this->buildAllowedPaths());
     }
 
     /**
@@ -361,8 +353,12 @@ abstract class Load
     {
         $this->findFontFile();
 
+        if ($this->ownsFileHelper) {
+            $this->fileHelper->setAllowedPaths($this->buildAllowedPaths());
+        }
+
         // read the font definition file
-        $fdt = $this->file->getFileData($this->data['ifile']);
+        $fdt = $this->fileHelper->getFileData($this->data['ifile']);
         if ($fdt === false) {
             throw new FontException('unable to read file: ' . $this->data['ifile']);
         }
@@ -410,6 +406,16 @@ abstract class Load
         }
 
         return \array_unique($dirs);
+    }
+
+    /**
+     * Build trusted roots for local font definition loading.
+     *
+     * @return array<string>
+     */
+    protected function buildAllowedPaths(): array
+    {
+        return FontPaths::buildAllowedPaths();
     }
 
     /**

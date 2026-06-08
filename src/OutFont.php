@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace Com\Tecnick\Pdf\Font;
 
+use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Encrypt\Encrypt;
 use Com\Tecnick\Pdf\Encrypt\Exception as EncException;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
@@ -49,6 +50,11 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
      * Encrypt object
      */
     protected Encrypt $enc;
+
+    /**
+     * File helper used to load font files.
+     */
+    protected ObjFile $fileHelper;
 
     /**
      * Get the PDF output string for a CID-0 font.
@@ -320,7 +326,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $ctgfile = \strtolower($fontctg);
             // search and get ctg font file to embed
             $fontfile = $this->getFontFullPath($fontdir, $ctgfile);
-            $content = \file_get_contents($fontfile);
+            $content = $this->fileHelper->getLocalFileData($fontfile);
             if ($content === false) {
                 throw new FontException('Unable to read font file: ' . $fontfile);
             }

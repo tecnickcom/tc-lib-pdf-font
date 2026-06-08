@@ -218,7 +218,7 @@ class OutputTest extends TestUtil
         $this->assertCount(10, $fonts);
 
         $encrypt = $this->createEncrypt();
-        $output = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt);
+        $output = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt, null);
 
         $this->assertEquals(37, $output->getObjectNumber());
 
@@ -244,7 +244,7 @@ class OutputTest extends TestUtil
         // Empty font array: constructor still runs without error; all output methods
         // return empty strings because there is nothing to iterate over.
         $encrypt = $this->createEncrypt();
-        $output = new \Com\Tecnick\Pdf\Font\Output([], 1, $encrypt);
+        $output = new \Com\Tecnick\Pdf\Font\Output([], 1, $encrypt, null);
 
         $this->assertSame('', $output->getFontsBlock());
         $this->assertSame('', $output->getOutFontDict());
@@ -269,7 +269,7 @@ class OutputTest extends TestUtil
         $fonts = ['unknown_key' => $this->getFontTemplate()];
         $fonts['unknown_key']['type'] = 'UnknownType';
 
-        new \Com\Tecnick\Pdf\Font\Output($fonts, 1, $encrypt);
+        new \Com\Tecnick\Pdf\Font\Output($fonts, 1, $encrypt, null);
     }
 
     /**
@@ -294,7 +294,7 @@ class OutputTest extends TestUtil
         }
 
         $encrypt = $this->createEncrypt();
-        $output = new \Com\Tecnick\Pdf\Font\Output($stack->getFonts(), $objnum, $encrypt);
+        $output = new \Com\Tecnick\Pdf\Font\Output($stack->getFonts(), $objnum, $encrypt, null);
         $out = $output->getFontsBlock();
 
         $this->assertStringNotContainsString('/Registry () /Ordering ()', $out);
@@ -343,7 +343,7 @@ class OutputTest extends TestUtil
         ]);
 
         $encrypt = $this->createEncrypt();
-        $output = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt);
+        $output = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt, null);
 
         $ref = new \ReflectionClass($output);
         $prop = $ref->getProperty('subchars');
@@ -419,7 +419,7 @@ class OutputTest extends TestUtil
         $encrypt = $this->createEncrypt();
         \set_error_handler(static fn(): bool => true);
         try {
-            new \Com\Tecnick\Pdf\Font\Output(['plain' => $font], 1, $encrypt);
+            new \Com\Tecnick\Pdf\Font\Output(['plain' => $font], 1, $encrypt, null);
         } finally {
             \restore_error_handler();
         }
@@ -443,7 +443,7 @@ class OutputTest extends TestUtil
         $font['cw'] = [32 => 250, 65 => 700];
 
         $encrypt = $this->createEncrypt();
-        $output = new \Com\Tecnick\Pdf\Font\Output(['truetypefont' => $font], 1, $encrypt);
+        $output = new \Com\Tecnick\Pdf\Font\Output(['truetypefont' => $font], 1, $encrypt, null);
         $block = $output->getFontsBlock();
 
         $this->assertStringContainsString('/Subtype /TrueType', $block);
@@ -481,7 +481,7 @@ class OutputTest extends TestUtil
         ];
 
         $encrypt = $this->createEncrypt();
-        $output = new \Com\Tecnick\Pdf\Font\Output(['cidfont0' => $font], 1, $encrypt);
+        $output = new \Com\Tecnick\Pdf\Font\Output(['cidfont0' => $font], 1, $encrypt, null);
         $block = $output->getFontsBlock();
 
         $this->assertStringContainsString('/Subtype /Type0', $block);

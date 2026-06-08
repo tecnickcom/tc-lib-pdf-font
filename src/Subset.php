@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace Com\Tecnick\Pdf\Font;
 
 use Com\Tecnick\File\Byte;
+use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Pdf\Font\Import\TrueType;
 
@@ -205,19 +206,32 @@ class Subset
     protected int $offset = 0;
 
     /**
+     * File helper used to load font definition files.
+     */
+    protected ObjFile $fileHelper;
+
+    /**
      * Process TrueType font
      *
-     * @param string           $font     Content of the input font file
-     * @param TFontData        $fdt      Extracted font metrics
-     * @param array<int, bool> $subchars Array containing subset chars
+     * @param string           $font       Content of the input font file
+     * @param TFontData        $fdt        Extracted font metrics
+     * @param ObjFile          $fileHelper Optional file helper for font loading.
+     * @param array<int, bool> $subchars   Array containing subset chars
      *
      * @throws FontException in case of error
      */
-    public function __construct(string $font, array $fdt, array $subchars = [])
+    public function __construct(string $font, array $fdt, ObjFile $fileHelper, array $subchars = [])
     {
+        $this->fileHelper = $fileHelper;
         $this->font = $font;
         $this->fbyte = new Byte($font);
-        $trueType = new TrueType($font, $fdt, $this->fbyte, $subchars);
+        $trueType = new TrueType(
+            font: $font,
+            fdt: $fdt,
+            fileHelper: $this->fileHelper,
+            fbyte: $this->fbyte,
+            subchars: $subchars,
+        );
         $this->fdt = $trueType->getFontMetrics();
         $this->subglyphs = $trueType->getSubGlyphs();
         $this->addCompositeGlyphs();

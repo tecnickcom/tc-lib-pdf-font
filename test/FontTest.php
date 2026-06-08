@@ -34,6 +34,15 @@ class FontTest extends TestUtil
     {
         $this->bcExpectException(\Com\Tecnick\Pdf\Font\Exception::class);
         $this->setupTest();
-        new \Com\Tecnick\Pdf\Font\Font('helvetica', '', '../font.json');
+        new \Com\Tecnick\Pdf\Font\Font(
+            'helvetica',
+            '',
+            '../font.json',
+            false,
+            true,
+            false,
+            true,
+            new \Com\Tecnick\File\File(),
+        );
     }
 }

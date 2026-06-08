@@ -242,7 +242,7 @@ class CoreMetricsTest extends TestCase
         $content = \file_get_contents(self::HELVETICA_AFM);
         $this->assertIsString($content);
 
-        $core = new Core($content, self::$fdtTemplate);
+        $core = new Core($content, self::$fdtTemplate, new \Com\Tecnick\File\File());
 
         return $core->getFontMetrics();
     }

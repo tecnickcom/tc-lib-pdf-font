@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace Com\Tecnick\Pdf\Font;
 
-use Com\Tecnick\File\File;
+use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
@@ -31,8 +31,6 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
  * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
- *
- * @phpstan-import-type TFileOptions from Load
  *
  * @phpstan-import-type TFontData from Load
  */
@@ -72,7 +70,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
      * @param bool   $unicode  True in Unicode mode, False otherwise.
      * @param bool   $pdfa     True in PDF/A mode, False otherwise.
      * @param bool   $compress Set to false to disable stream compression.
-     * @param TFileOptions|null $fileOptions Optional configuration for the font file helper.
+     * @param ObjFile|null $fileHelper Optional file helper for font loading.
      *
      * @throws FontException in case of error
      */
@@ -84,16 +82,19 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         bool $unicode = true,
         bool $pdfa = false,
         bool $compress = true,
-        ?array $fileOptions = null,
+        ?ObjFile $fileHelper = null,
     ) {
-        parent::__construct($fileOptions);
+        parent::__construct($fileHelper);
 
         if ($font === '') {
             throw new FontException('empty font family name');
         }
 
-        if (FILE::hasDoubleDots($ifile) || FILE::hasForbiddenProtocol($ifile)) {
-            throw new FontException('Invalid font ifile: ' . $ifile);
+        if ($ifile !== '') {
+            $validatedIfile = $ifile;
+            if (!$this->fileHelper->isValidFile($validatedIfile)) {
+                throw new FontException('Invalid font ifile: ' . $ifile);
+            }
         }
 
         $this->data['ifile'] = $ifile;

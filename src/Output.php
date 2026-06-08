@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace Com\Tecnick\Pdf\Font;
 
 use Com\Tecnick\File\Exception as FileException;
+use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Encrypt\Encrypt;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
@@ -52,9 +53,10 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Initialize font data
      *
-     * @param array<string, TFontData> $fonts   Array of imported fonts data
-     * @param int                      $pon     Current PDF Object Number
-     * @param Encrypt                  $encrypt Encrypt object
+     * @param array<string, TFontData> $fonts      Array of imported fonts data
+     * @param int                      $pon        Current PDF Object Number
+     * @param Encrypt                  $encrypt    Encrypt object
+     * @param ObjFile                  $fileHelper File helper for font loading.
      *
      * @throws FileException
      * @throws FontException
@@ -63,13 +65,26 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         protected array $fonts,
         int $pon,
         Encrypt $encrypt,
+        ?ObjFile $fileHelper = null,
     ) {
+        $this->fileHelper = $fileHelper ?? new ObjFile(allowedPaths: $this->buildAllowedPaths());
+
         $this->pon = $pon;
         $this->enc = $encrypt;
 
         $this->out = $this->getEncodingDiffs();
         $this->out .= $this->getFontFiles();
         $this->out .= $this->getFontDefinitions();
+    }
+
+    /**
+     * Build trusted roots for local font file loading.
+     *
+     * @return array<string>
+     */
+    private function buildAllowedPaths(): array
+    {
+        return FontPaths::buildAllowedPaths();
     }
 
     /**
@@ -213,7 +228,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             $dkey = \md5($font['file']);
             if (!isset($done[$dkey])) {
                 $fontfile = $this->getFontFullPath($font['dir'], $font['file']);
-                $font_data = \file_get_contents($fontfile);
+                $font_data = $this->fileHelper->getLocalFileData($fontfile);
                 if ($font_data === false) {
                     throw new FontException('Unable to read font file: ' . $fontfile);
                 }
@@ -224,7 +239,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                         throw new FontException('Unable to uncompress font file: ' . $fontfile);
                     }
 
-                    $sub = new Subset($font_data, $font, $this->subchars[\md5($font['file'])]);
+                    $sub = new Subset($font_data, $font, $this->fileHelper, $this->subchars[\md5($font['file'])]);
                     $font_data = $sub->getSubsetFont();
                     $font['length1'] = \strlen($font_data);
                     $font_data = \gzcompress($font_data);

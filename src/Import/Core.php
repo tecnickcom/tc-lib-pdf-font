@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace Com\Tecnick\Pdf\Font\Import;
 
+use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Unicode\Data\Encoding;
 
@@ -377,15 +378,23 @@ class Core
     private array $cwu = [];
 
     /**
-     * @param string   $font Content of the input font file
-     * @param TFontData $fdt  Extracted font metrics
+     * File helper used to load font definition files.
+     */
+    protected ObjFile $fileHelper;
+
+    /**
+     * @param string    $font       Content of the input font file
+     * @param TFontData $fdt        Extracted font metrics
+     * @param ObjFile   $fileHelper File helper for font loading.
      *
      * @throws FontException in case of error
      */
     public function __construct(
         protected string $font,
         protected array $fdt,
+        ObjFile $fileHelper,
     ) {
+        $this->fileHelper = $fileHelper;
         $this->process();
     }
 

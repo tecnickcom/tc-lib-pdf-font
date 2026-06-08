@@ -21,7 +21,7 @@ namespace Com\Tecnick\Pdf\Font;
 use Com\Tecnick\File\Byte;
 use Com\Tecnick\File\Dir;
 use Com\Tecnick\File\Exception as FileException;
-use Com\Tecnick\File\File;
+use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Pdf\Font\Import\Core;
 use Com\Tecnick\Pdf\Font\Import\TrueType;
@@ -45,6 +45,16 @@ use Com\Tecnick\Unicode\Data\Encoding;
  */
 class Import
 {
+    /**
+     * File helper used to load font definition files.
+     */
+    protected ObjFile $fileHelper;
+
+    /**
+     * True when the file helper is created internally by this class.
+     */
+    protected bool $ownsFileHelper = false;
+
     /**
      * Content of the input font file
      */
@@ -209,6 +219,7 @@ class Import
      *                            Reserved, 10 = UCS-4.
      * @param bool   $linked      If true, links the font file to system font instead of copying the font data
      *                            (not transportable). Note: this option do not work with Type1 fonts.
+     * @param ObjFile|null        $fileHelper Optional file helper for font loading.
      *
      * @throws FileException in case of error
      * @throws FontException in case of error
@@ -223,8 +234,12 @@ class Import
         int $platform_id = 3,
         int $encoding_id = 1,
         bool $linked = false,
+        ?ObjFile $fileHelper = null,
     ) {
-        if (FILE::hasDoubleDots($file) || FILE::hasForbiddenProtocol($file)) {
+        $this->ownsFileHelper = $fileHelper === null;
+        $this->fileHelper = $fileHelper ?? new ObjFile(allowedPaths: self::buildAllowedPaths($file));
+        $validatedFile = $file;
+        if (!$this->fileHelper->isValidFile($validatedFile)) {
             throw new FontException('Invalid font file name: ' . $file);
         }
 
@@ -235,6 +250,10 @@ class Import
         }
 
         $this->fdt['dir'] = $this->findOutputPath($output_path);
+        if ($this->ownsFileHelper) {
+            $this->fileHelper->setAllowedPaths(self::buildAllowedPaths($file, $this->fdt['dir']));
+        }
+
         $this->fdt['datafile'] = $this->fdt['dir'] . $this->fdt['file_name'] . '.json';
         if (\file_exists($this->fdt['datafile'])) {
             throw new FontException('this font has been already imported: ' . $this->fdt['datafile']);
@@ -245,7 +264,7 @@ class Import
             throw new FontException('invalid font file: ' . $file);
         }
 
-        if (($font = \file_get_contents($file)) === false) {
+        if (($font = $this->fileHelper->getLocalFileData($file)) === false) {
             throw new FontException('unable to read the input font file: ' . $file);
         }
 
@@ -267,9 +286,14 @@ class Import
         $this->fdt['linked'] = $linked;
 
         $processor = match ($this->fdt['type']) {
-            'Core' => new Core($this->font, $this->fdt),
-            'Type1' => new TypeOne($this->font, $this->fdt),
-            default => new TrueType($this->font, $this->fdt, $this->fbyte),
+            'Core' => new Core(font: $this->font, fdt: $this->fdt, fileHelper: $this->fileHelper),
+            'Type1' => new TypeOne(font: $this->font, fdt: $this->fdt, fileHelper: $this->fileHelper),
+            default => new TrueType(
+                font: $this->font,
+                fdt: $this->fdt,
+                fileHelper: $this->fileHelper,
+                fbyte: $this->fbyte,
+            ),
         };
 
         $this->fdt = $processor->getFontMetrics();
@@ -317,6 +341,64 @@ class Import
         if (\str_contains($filename, 'italic') || \str_contains($filename, 'oblique')) {
             $this->fdt['Flags'] |= 64;
         }
+    }
+
+    /**
+     * Check for unsafe path components that were previously rejected by the
+     * file helper's internal validation.
+     */
+    private static function hasUnsafePath(string $path): bool
+    {
+        return (
+            $path !== ''
+            && (
+                \str_contains($path, '://')
+                || \str_contains(\str_ireplace('%2E', '.', \html_entity_decode($path, ENT_QUOTES, 'UTF-8')), '..')
+            )
+        );
+    }
+
+    /**
+     * Build trusted roots for local file validation.
+     *
+     * The minimum roots required by Import are:
+     * - the input font directory (read access)
+     * - the output directory (write access), when available
+     *
+     * For each root we include both the given path and, when resolvable,
+     * its canonical realpath to support symlinked directories.
+     *
+     * @return array<string>
+     */
+    private static function buildAllowedPaths(string $fontFile, string $outputDir = ''): array
+    {
+        $roots = [];
+
+        $fontDir = \dirname($fontFile);
+        if ($fontDir !== '' && $fontDir !== '.') {
+            $roots[] = $fontDir;
+        }
+
+        if ($outputDir !== '') {
+            $roots[] = $outputDir;
+        }
+
+        $allowed = [];
+        foreach ($roots as $root) {
+            $normalized = \rtrim($root, '/\\');
+            if ($normalized === '') {
+                continue;
+            }
+
+            $allowed[] = $normalized;
+
+            $resolved = \realpath($normalized);
+            if ($resolved !== false) {
+                $allowed[] = \rtrim($resolved, '/\\');
+            }
+        }
+
+        return \array_values(\array_unique($allowed));
     }
 
     /**
@@ -392,8 +474,7 @@ class Import
                 }
 
                 // store compressed CIDToGIDMap
-                $file = new File();
-                $fpt = $file->fopenLocal($this->fdt['dir'] . $this->fdt['ctg'], 'wb');
+                $fpt = $this->fileHelper->fopenLocal($this->fdt['dir'] . $this->fdt['ctg'], 'wb');
 
                 $cmpr = \gzcompress($cidtogidmap);
                 if ($cmpr === false) {
@@ -471,8 +552,7 @@ class Import
         $pfile .= '}' . "\n";
 
         // store file
-        $file = new File();
-        $fpt = $file->fopenLocal($this->fdt['datafile'], 'wb');
+        $fpt = $this->fileHelper->fopenLocal($this->fdt['datafile'], 'wb');
         \fwrite($fpt, $pfile);
         \fclose($fpt);
     }
@@ -507,12 +587,7 @@ class Import
      */
     protected function findOutputPath(string $output_path = ''): string
     {
-        if (
-            $output_path !== ''
-            && !\str_contains($output_path, '://')
-            && !FILE::hasDoubleDots($output_path)
-            && \is_writable($output_path)
-        ) {
+        if ($output_path !== '' && !self::hasUnsafePath($output_path) && \is_writable($output_path)) {
             return $output_path;
         }
 
