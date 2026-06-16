@@ -487,4 +487,122 @@ class OutputTest extends TestUtil
         $this->assertStringContainsString('/Subtype /Type0', $block);
         $this->assertStringContainsString('/Subtype /CIDFontType0', $block);
     }
+
+    /**
+     * Build a subset-enabled FreeSans font stack for cache tests.
+     *
+     * @return array<string, TFontData>
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    private function buildSubsetFonts(int $objnum): array
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->add($objnum, 'freesans', '', '', true);
+
+        foreach ([32, 65, 66, 67, 937, 960] as $ord) {
+            $stack->addSubsetChar('freesans', $ord);
+        }
+
+        return $stack->getFonts();
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     * @throws \ReflectionException
+     */
+    public function testSubsetCacheStoresOnMissAndReusesOnHit(): void
+    {
+        $objnum = 1;
+        $fonts = $this->buildSubsetFonts($objnum);
+        $cache = new SpyFontSubsetCache();
+        $encrypt = $this->createEncrypt();
+
+        $firstObj = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt, null, $cache);
+        $first = $firstObj->getFontsBlock();
+
+        $secondObj = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt, null, $cache);
+        $second = $secondObj->getFontsBlock();
+
+        $this->assertSame($first, $second);
+        $this->assertCount(1, $cache->store, 'subset should be stored exactly once');
+
+        $storedKey = \array_key_first($cache->store);
+        $this->assertIsString($storedKey);
+        $this->assertSame([$storedKey], $cache->setCalls, 'subset should be computed and stored exactly once');
+        $this->assertSame(
+            [$storedKey, $storedKey],
+            $cache->getCalls,
+            'cache should be consulted on every pass (miss then hit) for the same key',
+        );
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     * @throws \ReflectionException
+     */
+    public function testSubsetCacheHitProducesIdenticalOutputToNoCache(): void
+    {
+        $objnum = 1;
+        $fonts = $this->buildSubsetFonts($objnum);
+        $encrypt = $this->createEncrypt();
+
+        $noCacheObj = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt, null, null);
+        $noCache = $noCacheObj->getFontsBlock();
+
+        $cache = new SpyFontSubsetCache();
+        // First pass populates the cache (miss), second pass reads from it (hit).
+        new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt, null, $cache);
+        $hitObj = new \Com\Tecnick\Pdf\Font\Output($fonts, $objnum, $encrypt, null, $cache);
+        $hit = $hitObj->getFontsBlock();
+
+        $this->assertSame($noCache, $hit, 'a cache hit must reproduce the no-cache output byte-for-byte');
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \ReflectionException
+     */
+    public function testSubsetCacheKeyIsStableAndDiscriminating(): void
+    {
+        $this->setupTest();
+        $encrypt = $this->createEncrypt();
+        $output = new OutputTestOutput([], 1, $encrypt, null);
+
+        $font = $this->getFontTemplate();
+        $font['platform_id'] = 3;
+        $font['encoding_id'] = 1;
+        $font['type'] = 'TrueTypeUnicode';
+        $data = 'FONT-PROGRAM-BYTES';
+
+        $keyA = $output->runSubsetCacheKey($data, $font, [65 => true, 66 => true]);
+
+        $keyOrder = $output->runSubsetCacheKey($data, $font, [66 => true, 65 => true]);
+        $this->assertSame($keyA, $keyOrder, 'char insertion order must not change the key');
+
+        $keyDisabled = $output->runSubsetCacheKey($data, $font, [65 => true, 66 => true, 67 => false]);
+        $this->assertSame($keyA, $keyDisabled, 'disabled chars must not change the key');
+
+        $keyChars = $output->runSubsetCacheKey($data, $font, [65 => true]);
+        $this->assertNotSame($keyA, $keyChars, 'a different char set must change the key');
+
+        $keyBytes = $output->runSubsetCacheKey('OTHER-BYTES', $font, [65 => true, 66 => true]);
+        $this->assertNotSame($keyA, $keyBytes, 'different font bytes must change the key');
+
+        $fontAlt = $font;
+        $fontAlt['encoding_id'] = 10;
+        $keyCmap = $output->runSubsetCacheKey($data, $fontAlt, [65 => true, 66 => true]);
+        $this->assertNotSame($keyA, $keyCmap, 'different cmap selection metrics must change the key');
+    }
 }

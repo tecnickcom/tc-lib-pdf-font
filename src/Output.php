@@ -39,6 +39,14 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
 class Output extends \Com\Tecnick\Pdf\Font\OutFont
 {
     /**
+     * Namespace and schema-version prefix for subset cache keys.
+     *
+     * Bump the trailing version segment to invalidate previously cached
+     * subsets whenever the subsetting algorithm or key format changes.
+     */
+    protected const SUBSET_CACHE_KEY_PREFIX = 'tc-lib-pdf-font:subset:v1:';
+
+    /**
      * Array of character subsets for each font file
      *
      * @var array<string, array<int, bool>>
@@ -53,10 +61,11 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     /**
      * Initialize font data
      *
-     * @param array<string, TFontData> $fonts      Array of imported fonts data
-     * @param int                      $pon        Current PDF Object Number
-     * @param Encrypt                  $encrypt    Encrypt object
-     * @param ObjFile                  $fileHelper File helper for font loading.
+     * @param array<string, TFontData>     $fonts       Array of imported fonts data
+     * @param int                          $pon         Current PDF Object Number
+     * @param Encrypt                      $encrypt     Encrypt object
+     * @param ObjFile                      $fileHelper  File helper for font loading.
+     * @param FontSubsetCacheInterface     $subsetCache Optional cache for subset font programs.
      *
      * @throws FileException
      * @throws FontException
@@ -66,6 +75,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         int $pon,
         Encrypt $encrypt,
         ?ObjFile $fileHelper = null,
+        protected ?FontSubsetCacheInterface $subsetCache = null,
     ) {
         $this->fileHelper = $fileHelper ?? new ObjFile(allowedPaths: $this->buildAllowedPaths());
 
@@ -239,8 +249,16 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                         throw new FontException('Unable to uncompress font file: ' . $fontfile);
                     }
 
-                    $sub = new Subset($font_data, $font, $this->fileHelper, $this->subchars[\md5($font['file'])]);
-                    $font_data = $sub->getSubsetFont();
+                    $subchars = $this->subchars[\md5($font['file'])];
+                    $cacheKey = $this->subsetCacheKey($font_data, $font, $subchars);
+                    $subsetFont = $this->subsetCache?->get($cacheKey);
+                    if ($subsetFont === null) {
+                        $sub = new Subset($font_data, $font, $this->fileHelper, $subchars);
+                        $subsetFont = $sub->getSubsetFont();
+                        $this->subsetCache?->set($cacheKey, $subsetFont);
+                    }
+
+                    $font_data = $subsetFont;
                     $font['length1'] = \strlen($font_data);
                     $font_data = \gzcompress($font_data);
                     if ($font_data === false) {
@@ -270,6 +288,37 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         }
 
         return $out;
+    }
+
+    /**
+     * Build the cache key identifying a subset font program.
+     *
+     * The subset output is fully determined by the uncompressed font program
+     * bytes, the cmap-selection metrics that drive glyph mapping
+     * (platform_id, encoding_id, type) and the requested subset characters,
+     * so the key combines all of them. The version prefix allows invalidating
+     * stale entries if the subset algorithm changes.
+     *
+     * @param string           $font_data Uncompressed font program bytes.
+     * @param TFontData        $font      Extracted font metrics.
+     * @param array<int, bool> $subchars  Subset characters (charcode => enabled).
+     */
+    protected function subsetCacheKey(string $font_data, array $font, array $subchars): string
+    {
+        \ksort($subchars);
+
+        return (
+            self::SUBSET_CACHE_KEY_PREFIX
+            . \hash('sha256', $font_data)
+            . ':'
+            . $font['platform_id']
+            . ':'
+            . $font['encoding_id']
+            . ':'
+            . $font['type']
+            . ':'
+            . \hash('sha256', \implode(',', \array_keys(\array_filter($subchars))))
+        );
     }
 
     /**

@@ -36,6 +36,7 @@ It bridges static font assets and runtime document composition by handling metri
 - Import support for core, Type1, and TrueType sources
 - Font metadata extraction and normalization
 - Utilities for subset and output dictionary generation
+- Optional injectable cache to reuse computed TrueType font subsets
 
 ### Runtime Font Stack
 - Font stack insertion and switching
@@ -74,6 +75,88 @@ var_dump($font->getFontName(), $metrics['type']);
 ```
 
 For larger examples, refer to `test/OutputTest.php` and the conversion tooling in this repository.
+
+---
+
+## Subset Caching
+
+TrueType font subsetting is computational and memory intensive. When the same
+fonts and character sets are embedded repeatedly (for example across many
+generated documents), you can inject an optional cache into
+`\Com\Tecnick\Pdf\Font\Output` to reuse previously computed subset programs.
+
+Provide any object implementing
+`\Com\Tecnick\Pdf\Font\FontSubsetCacheInterface`:
+
+```php
+interface FontSubsetCacheInterface
+{
+    public function get(string $key): ?string;          // null on cache miss
+    public function set(string $key, string $subsetFont): void;
+}
+```
+
+Pass it as the last constructor argument:
+
+```php
+$output = new \Com\Tecnick\Pdf\Font\Output(
+    $fonts,
+    $objectNumber,
+    $encrypt,
+    $fileHelper,   // or null
+    $subsetCache,  // your FontSubsetCacheInterface implementation
+);
+```
+
+When no cache is supplied (the default), behavior is unchanged and every
+subset is recomputed. The library never evicts entries — the injected backend
+owns expiration and size limits. The cache key already accounts for the font
+program bytes, the cmap-selection metrics, and the requested subset
+characters, so distinct inputs never collide.
+
+### Using a PSR-16 cache
+
+No PSR-16 adapter is bundled, because the interface above is intentionally
+trivial to wrap around any backend (PSR-16/PSR-6, Symfony Cache, Laravel,
+Redis, APCu, …). A correct PSR-16 wrapper is a few lines:
+
+```php
+use Com\Tecnick\Pdf\Font\FontSubsetCacheInterface;
+use Psr\SimpleCache\CacheInterface;
+
+final class Psr16SubsetCache implements FontSubsetCacheInterface
+{
+    public function __construct(private CacheInterface $cache) {}
+
+    public function get(string $key): ?string
+    {
+        $value = $this->cache->get($this->normalize($key));
+
+        return \is_string($value) ? $value : null;
+    }
+
+    public function set(string $key, string $subsetFont): void
+    {
+        $this->cache->set($this->normalize($key), $subsetFont);
+    }
+
+    /**
+     * PSR-16 only guarantees keys matching [A-Za-z0-9_.] up to 64 chars and
+     * reserves {}()/\@: — the library's raw key uses ':' and '-' and is longer,
+     * so hash it into a guaranteed-legal, fixed-length key.
+     */
+    private function normalize(string $key): string
+    {
+        return 'tclpf_' . \sha1($key);
+    }
+}
+```
+
+The `normalize()` step matters: the library's raw key is human-readable and
+works with permissive backends, but stricter PSR-16 implementations may reject
+or mangle it. Hashing it keeps the wrapper portable. Note that hashing discards
+the readable namespace, so scope the underlying PSR-16 pool to this library if
+you share it with other consumers.
 
 ---
 
