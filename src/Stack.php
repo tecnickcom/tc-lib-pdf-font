@@ -528,7 +528,12 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             }
 
             $unitype = UnicodeType::UNI[$ord] ?? '';
-            $chrwidth = $this->getCharWidth($ord);
+            // Inline the width lookup using the already-resolved $curfont metric: calling
+            // getCharWidth() here would re-resolve getFontMetric($this->index) per character.
+            $chrwidth = match ($ord) {
+                173, 8203 => 0.0, // 173 = SHY (hyphenation), 8203 = ZWSP: not printed
+                default => $curfont['cwu'][$ord] ?? $curfont['cw'][$ord] ?? $curfont['dw'],
+            };
             // 'B' Paragraph Separator
             // 'S' Segment Separator
             // 'WS' Whitespace
@@ -615,7 +620,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     protected function getFontMetric(int $idx): array
     {
         $font = $this->getStackItem($idx);
-        $mkey = \md5(\serialize($font));
+        // Cheap, collision-free cache key from just the fields the metric depends on,
+        // instead of md5(serialize($font)) which ran on every (mostly cache-hit) call.
+        $mkey = $font['key'] . '|' . $font['size'] . '|' . $font['spacing']
+            . '|' . $font['stretching'] . '|' . $font['style'];
         if (isset($this->metric[$mkey])) {
             return $this->metric[$mkey];
         }
