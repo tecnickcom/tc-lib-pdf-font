@@ -650,7 +650,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 continue;
             }
 
-            $bbox = \array_pad(\array_values($val), 4, 0);
+            $bbox = \array_values($val);
             $cbbox[(int) $cid] = [
                 0 => (float) $bbox[0],
                 1 => (float) $bbox[1],
