@@ -44,7 +44,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * Bump the trailing version segment to invalidate previously cached
      * subsets whenever the subsetting algorithm or key format changes.
      */
-    protected const SUBSET_CACHE_KEY_PREFIX = 'tc-lib-pdf-font:subset:v1:';
+    protected const SUBSET_CACHE_KEY_PREFIX = 'tc-lib-pdf-font:subset:v2:';
 
     /**
      * Array of character subsets for each font file
@@ -250,12 +250,20 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     }
 
                     $subchars = $this->subchars[\md5($font['file'])];
-                    $cacheKey = $this->subsetCacheKey($font_data, $font, $subchars);
-                    $subsetFont = $this->subsetCache?->get($cacheKey);
+                    // Only derive the cache key when a cache is configured: subsetCacheKey()
+                    // hashes the whole (multi-MB) font program, which is pure waste otherwise.
+                    $cache = $this->subsetCache;
+                    $cacheKey = '';
+                    $subsetFont = null;
+                    if ($cache !== null) {
+                        $cacheKey = $this->subsetCacheKey($font_data, $font, $subchars);
+                        $subsetFont = $cache->get($cacheKey);
+                    }
+
                     if ($subsetFont === null) {
                         $sub = new Subset($font_data, $font, $this->fileHelper, $subchars);
                         $subsetFont = $sub->getSubsetFont();
-                        $this->subsetCache?->set($cacheKey, $subsetFont);
+                        $cache?->set($cacheKey, $subsetFont);
                     }
 
                     $font_data = $subsetFont;
@@ -299,6 +307,11 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * so the key combines all of them. The version prefix allows invalidating
      * stale entries if the subset algorithm changes.
      *
+     * The font program (potentially several MB) is fingerprinted with xxh128:
+     * this is a content hash purely for cache addressing, not a security
+     * primitive, so a fast non-cryptographic 128-bit hash is sufficient and
+     * keeps cache-hit lookups cheap.
+     *
      * @param string           $font_data Uncompressed font program bytes.
      * @param TFontData        $font      Extracted font metrics.
      * @param array<int, bool> $subchars  Subset characters (charcode => enabled).
@@ -309,7 +322,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
 
         return (
             self::SUBSET_CACHE_KEY_PREFIX
-            . \hash('sha256', $font_data)
+            . \hash('xxh128', $font_data)
             . ':'
             . $font['platform_id']
             . ':'
@@ -317,7 +330,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             . ':'
             . $font['type']
             . ':'
-            . \hash('sha256', \implode(',', \array_keys(\array_filter($subchars))))
+            . \hash('xxh128', \implode(',', \array_keys(\array_filter($subchars))))
         );
     }
 
