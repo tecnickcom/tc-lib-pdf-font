@@ -57,6 +57,14 @@ abstract class Buffer
     protected int $numfonts = 0;
 
     /**
+     * Cache mapping a (font family, style) pair to its resolved font key, so repeated
+     * lookups of an already-loaded font skip constructing a throwaway Font object.
+     *
+     * @var array<string, array<string, string>>
+     */
+    protected array $fontKeyCache = [];
+
+    /**
      * Array containing encoding differences
      *
      * @var array<int, string>
@@ -246,8 +254,21 @@ abstract class Buffer
             $subset = $this->subset;
         }
 
+        // The font key depends only on (family, style, unicode, pdfa) - all known without
+        // constructing a Font. When autodetecting the definition file (ifile === '') and the
+        // resolved font is already loaded, skip the expensive Font allocation.
+        if ($ifile === '' && isset($this->fontKeyCache[$font][$style])) {
+            $cachedKey = $this->fontKeyCache[$font][$style];
+            if (isset($this->font[$cachedKey])) {
+                return $cachedKey;
+            }
+        }
+
         $fobj = new Font($font, $style, $ifile, $subset, $this->unicode, $this->pdfa, true, $this->fileHelper);
         $key = $fobj->getFontkey();
+        if ($ifile === '') {
+            $this->fontKeyCache[$font][$style] = $key;
+        }
 
         if (isset($this->font[$key])) {
             return $key;

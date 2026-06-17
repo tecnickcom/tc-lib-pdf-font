@@ -249,7 +249,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                         throw new FontException('Unable to uncompress font file: ' . $fontfile);
                     }
 
-                    $subchars = $this->subchars[\md5($font['file'])];
+                    $subchars = $this->subchars[$dkey];
                     // Only derive the cache key when a cache is configured: subsetCacheKey()
                     // hashes the whole (multi-MB) font program, which is pure waste otherwise.
                     $cache = $this->subsetCache;

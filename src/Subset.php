@@ -231,6 +231,9 @@ class Subset
             fileHelper: $this->fileHelper,
             fbyte: $this->fbyte,
             subchars: $subchars,
+            // Subsetting only needs the glyph program (loca/glyf); per-glyph bounding
+            // boxes are never read here, so skip computing them.
+            withCbbox: false,
         );
         $this->fdt = $trueType->getFontMetrics();
         $this->subglyphs = $trueType->getSubGlyphs();

@@ -98,6 +98,9 @@ class TrueType
      * @param ObjFile          $fileHelper File helper for font loading.
      * @param Byte             $fbyte      Object used to read font bytes
      * @param array<int, bool> $subchars   Array containing subset chars
+     * @param bool             $withCbbox  Whether to compute per-glyph bounding boxes.
+     *                                     The subsetting path does not use them, so it can
+     *                                     skip the per-glyph glyf reads by passing false.
      *
      * @throws FileException
      * @throws FontException
@@ -108,6 +111,7 @@ class TrueType
         ObjFile $fileHelper,
         protected Byte $fbyte,
         array $subchars = [],
+        protected bool $withCbbox = true,
     ) {
         $this->fileHelper = $fileHelper;
         \ksort($subchars);
@@ -804,18 +808,16 @@ class TrueType
         $this->fdt['MissingWidth'] = $chw[0] ?? 0;
         $this->fdt['cw'] = [];
         $this->fdt['cbbox'] = [];
-        for ($cid = 0; $cid <= 65_535; ++$cid) {
-            if (!isset($this->fdt['ctgdata'][$cid])) {
-                continue;
+        // Iterate the actual CID->GID map instead of scanning the full 0..65535 code space,
+        // so fonts with few glyphs skip the empty positions. ctgdata is built in ascending
+        // CID order, so the resulting cw/cbbox ordering is unchanged.
+        foreach ($this->fdt['ctgdata'] as $cid => $gid) {
+            if (isset($chw[$gid])) {
+                $this->fdt['cw'][$cid] = $chw[$gid];
             }
 
-            if (isset($chw[$this->fdt['ctgdata'][$cid]])) {
-                $this->fdt['cw'][$cid] = $chw[$this->fdt['ctgdata'][$cid]];
-            }
-
-            if (isset($this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]])) {
-                $this->offset =
-                    $this->fdt['table']['glyf']['offset'] + $this->fdt['indexToLoc'][$this->fdt['ctgdata'][$cid]];
+            if ($this->withCbbox && isset($this->fdt['indexToLoc'][$gid])) {
+                $this->offset = $this->fdt['table']['glyf']['offset'] + $this->fdt['indexToLoc'][$gid];
                 $xMin = (int) \round($this->fbyte->getFWord($this->offset + 2) * $this->fdt['urk']);
                 $yMin = (int) \round($this->fbyte->getFWord($this->offset + 4) * $this->fdt['urk']);
                 $xMax = (int) \round($this->fbyte->getFWord($this->offset + 6) * $this->fdt['urk']);
