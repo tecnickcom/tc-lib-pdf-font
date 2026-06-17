@@ -386,13 +386,15 @@ abstract class Load
     protected function findFontDirectories(): array
     {
         $dir = new Dir();
-        $dirs = [''];
+        $dirs = [];
         if (\defined('K_PATH_FONTS')) {
             $kpathfonts = (string) \constant('K_PATH_FONTS');
-            $dirs[] = $kpathfonts;
-            $glb = \glob($kpathfonts . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
-            if ($glb !== false) {
-                $dirs = [...$dirs, ...$glb];
+            if ($kpathfonts !== '') {
+                $dirs[] = $kpathfonts;
+                $glb = \glob($kpathfonts . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+                if ($glb !== false) {
+                    $dirs = [...$dirs, ...$glb];
+                }
             }
         }
 

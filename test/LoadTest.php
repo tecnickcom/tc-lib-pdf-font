@@ -43,6 +43,19 @@ class LoadTest extends TestUtil
         $this->assertSame(64, $load->getFlagsValue());
     }
 
+    public function testFindFontDirectoriesExcludesEmptyRootEntry(): void
+    {
+        $load = new LoadTestHarness('customfont', '');
+
+        $dirs = $load->exposeFontDirectories();
+
+        // An empty entry makes findFontFile() probe the filesystem root
+        // (is_readable('' . DIRECTORY_SEPARATOR . $file) === is_readable('/<font>.json')),
+        // which fails and emits a warning under open_basedir restrictions.
+        // See https://github.com/tecnickcom/tc-lib-pdf/issues/238
+        $this->assertNotContains('', $dirs);
+    }
+
     /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testLoadUpdatesExistingBoldAndItalicMetrics(): void
     {

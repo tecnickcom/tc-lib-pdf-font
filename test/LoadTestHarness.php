@@ -46,6 +46,16 @@ class LoadTestHarness extends \Com\Tecnick\Pdf\Font\Load
         return $this->data['name'];
     }
 
+    /**
+     * Expose the resolved font search directories for testing.
+     *
+     * @return array<string>
+     */
+    public function exposeFontDirectories(): array
+    {
+        return $this->findFontDirectories();
+    }
+
     public function getStemVValue(): int
     {
         return $this->data['desc']['StemV'];
