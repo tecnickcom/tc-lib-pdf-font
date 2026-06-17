@@ -622,8 +622,16 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $font = $this->getStackItem($idx);
         // Cheap, collision-free cache key from just the fields the metric depends on,
         // instead of md5(serialize($font)) which ran on every (mostly cache-hit) call.
-        $mkey = $font['key'] . '|' . $font['size'] . '|' . $font['spacing']
-            . '|' . $font['stretching'] . '|' . $font['style'];
+        $mkey =
+            $font['key']
+            . '|'
+            . $font['size']
+            . '|'
+            . $font['spacing']
+            . '|'
+            . $font['stretching']
+            . '|'
+            . $font['style'];
         if (isset($this->metric[$mkey])) {
             return $this->metric[$mkey];
         }
@@ -639,31 +647,30 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $wratio = $cratio * $fontstretching; // horizontal ratio
         $data = $this->getFont($fontkey);
         $desc = $data['desc'];
-        $cwraw = $data['cw'];
+        // Build the glyph widths and bounding boxes already scaled to internal units in a
+        // single pass, instead of first casting into intermediate arrays and then rescaling.
         $cw = [];
-        foreach ($cwraw as $cid => $width) {
-            $cw[(int) $cid] = (float) $width;
+        foreach ($data['cw'] as $cid => $width) {
+            $cw[(int) $cid] = (float) $width * $wratio;
         }
 
-        $cwuraw = $data['cwu'];
         $cwu = [];
-        foreach ($cwuraw as $codepoint => $width) {
-            $cwu[(int) $codepoint] = (float) $width;
+        foreach ($data['cwu'] as $codepoint => $width) {
+            $cwu[(int) $codepoint] = (float) $width * $wratio;
         }
 
-        $cbboxraw = $data['cbbox'];
         $cbbox = [];
-        foreach ($cbboxraw as $cid => $val) {
+        foreach ($data['cbbox'] as $cid => $val) {
             if (\count($val) !== 4) {
                 continue;
             }
 
             $bbox = \array_values($val);
             $cbbox[(int) $cid] = [
-                0 => (float) $bbox[0],
-                1 => (float) $bbox[1],
-                2 => (float) $bbox[2],
-                3 => (float) $bbox[3],
+                0 => (float) $bbox[0] * $wratio,
+                1 => (float) $bbox[1] * $cratio,
+                2 => (float) $bbox[2] * $wratio,
+                3 => (float) $bbox[3] * $cratio,
             ];
         }
 
@@ -686,10 +693,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'ascent' => $ascent * $cratio,
             'avgwidth' => $avgwidth * $cratio * $fontstretching,
             'capheight' => $capheight * $cratio,
-            'cbbox' => [],
+            'cbbox' => $cbbox,
             'cratio' => $cratio,
-            'cw' => [],
-            'cwu' => [],
+            'cw' => $cw,
+            'cwu' => $cwu,
             'descent' => $descent * $cratio,
             'dw' => $dw * $cratio * $fontstretching,
             'fbbox' => [
@@ -716,26 +723,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'ut' => $ut * $cratio,
             'xheight' => $xheight * $cratio,
         ];
-        //left, bottom, right, and top edges
-        foreach ($cw as $cid => $width) {
-            $this->metric[$mkey]['cw'][(int) $cid] = $width * $wratio;
-        }
-
-        if ($cwu !== []) {
-            foreach ($cwu as $codepoint => $width) {
-                $this->metric[$mkey]['cwu'][(int) $codepoint] = $width * $wratio;
-            }
-        }
-
-        foreach ($cbbox as $cid => $bbox) {
-            $this->metric[$mkey]['cbbox'][(int) $cid] = [
-                0 => $bbox[0] * $wratio,
-                1 => $bbox[1] * $cratio,
-                2 => $bbox[2] * $wratio,
-                3 => $bbox[3] * $cratio,
-            ];
-        }
-
         return $this->metric[$mkey];
     }
 
