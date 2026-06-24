@@ -428,7 +428,7 @@ class Subset
             if ($pad !== 4) {
                 // the length of a table must be a multiple of four bytes
                 $this->fdt['table'][$tag]['length'] += (int) $pad;
-                $this->fdt['table'][$tag]['data'] .= \str_repeat("\x0", $pad);
+                $this->fdt['table'][$tag]['data'] .= \str_repeat("\x0", max(0, $pad));
             }
 
             $this->fdt['table'][$tag]['offset'] = $this->offset;

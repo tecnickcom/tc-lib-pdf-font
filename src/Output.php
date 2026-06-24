@@ -286,7 +286,11 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     . \strlen($stream)
                     . ' /Length1 '
                     . $font['length1'];
-                $out .= ' /Length2 ' . $font['length2'] . ' /Length3 0';
+                if ($font['type'] === 'Type1') {
+                    // Length2/Length3 are only valid for Type1 FontFile streams,
+                    // not for TrueType (FontFile2) or CFF (FontFile3) programs.
+                    $out .= ' /Length2 ' . $font['length2'] . ' /Length3 0';
+                }
 
                 $out .= ' >> stream' . "\n" . $stream . "\n" . 'endstream' . "\n" . 'endobj' . "\n";
                 $done[$dkey] = $this->pon;

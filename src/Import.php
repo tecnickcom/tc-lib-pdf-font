@@ -723,11 +723,10 @@ class Import
      */
     protected function updateCIDtoGIDmap(string $map, int $cid, int $gid): string
     {
-        if ($cid >= 0 && $cid <= 0xFFFF && $gid >= 0) {
-            if ($gid > 0xFFFF) {
-                $gid -= 0x1_0000;
-            }
-
+        // The CIDToGIDMap is a table of 16-bit big-endian values, so a glyph id outside
+        // 0..0xFFFF cannot be represented; such entries are left as 0 (notdef) rather than
+        // being silently wrapped into a bogus glyph id.
+        if ($cid >= 0 && $cid <= 0xFFFF && $gid >= 0 && $gid <= 0xFFFF) {
             $map[$cid * 2] = \chr($gid >> 8);
             $map[($cid * 2) + 1] = \chr($gid & 0xFF);
         }

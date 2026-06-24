@@ -304,8 +304,11 @@ abstract class Buffer
                 'keys' => [],
                 'length1' => 0,
                 'length2' => 0,
-                'subset' => false,
+                // a shared font file may only be subset if every font referencing it is subset
+                'subset' => $this->font[$key]['subset'],
             ];
+        } else {
+            $this->file[$file]['subset'] = $this->file[$file]['subset'] && $this->font[$key]['subset'];
         }
 
         if (!\in_array($key, $this->file[$file]['keys'], true)) {
@@ -315,7 +318,6 @@ abstract class Buffer
         $this->file[$file]['dir'] = $this->font[$key]['dir'];
         $this->file[$file]['length1'] = $this->font[$key]['length1'];
         $this->file[$file]['length2'] = $this->font[$key]['length2'];
-        $this->file[$file]['subset'] = $this->file[$file]['subset'] && $this->font[$key]['subset'];
     }
 
     /**

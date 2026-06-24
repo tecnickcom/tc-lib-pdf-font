@@ -547,7 +547,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                     'septype' => $unitype,
                     'wordwidth' => $words > 0 ? $currenttotwidth - $prevtotwidth : 0,
                     'totwidth' => $currenttotwidth,
-                    'totspacewidth' => $totspacewidth + ($fact * ($spaces - 1)),
+                    'totspacewidth' => $totspacewidth + ($fact * \max(0, $spaces - 1)),
                 ];
                 $prevtotwidth = $currenttotwidth;
                 $words++;
@@ -558,8 +558,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             }
             $totwidth += $chrwidth;
         }
-        $totwidth += $fact * ($chars - 1);
-        $totspacewidth += $fact * ($spaces - 1);
+        $totwidth += $fact * \max(0, $chars - 1);
+        $totspacewidth += $fact * \max(0, $spaces - 1);
         return [
             'chars' => $chars,
             'spaces' => $spaces,

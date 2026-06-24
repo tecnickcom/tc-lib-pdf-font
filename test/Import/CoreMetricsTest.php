@@ -232,6 +232,28 @@ class CoreMetricsTest extends TestCase
         );
     }
 
+    /** @throws FontException */
+    public function testGetFontMetricsHandlesAfmWithoutCharMetrics(): void
+    {
+        // an AFM with zero "C" lines must not trigger a DivisionByZeroError in setCharWidths
+        $afm =
+            "StartFontMetrics 4.1\n"
+            . "FontName TestEmpty\n"
+            . "FullName Test Empty\n"
+            . "FontBBox 0 -200 1000 700\n"
+            . "CapHeight 700\n"
+            . "Ascender 700\n"
+            . "Descender -200\n"
+            . "StartCharMetrics 0\n"
+            . "EndCharMetrics\n"
+            . "EndFontMetrics\n";
+
+        $core = new Core($afm, self::$fdtTemplate, new \Com\Tecnick\File\File());
+        $fdt = $core->getFontMetrics();
+
+        $this->assertSame(0, $fdt['AvgWidth']);
+    }
+
     /**
      * @return TFontData
      *

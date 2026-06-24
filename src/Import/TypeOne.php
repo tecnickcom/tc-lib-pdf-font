@@ -52,6 +52,12 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         }
 
         $this->fdt['size1'] = $dat['size'];
+        $fontlen = \strlen($this->font);
+        // the first segment plus the 6-byte header of the second segment must fit in the file
+        if ((6 + $this->fdt['size1'] + 6) > $fontlen) {
+            throw new FontException('Type1 font segment 1 length exceeds the file size');
+        }
+
         $data = \substr($this->font, 6, $this->fdt['size1']);
         // read second segment
         $dat = \unpack('Cmarker/Ctype/Vsize', \substr($this->font, 6 + $this->fdt['size1'], 6));
@@ -60,6 +66,10 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         }
 
         $this->fdt['size2'] = $dat['size'];
+        if ((12 + $this->fdt['size1'] + $this->fdt['size2']) > $fontlen) {
+            throw new FontException('Type1 font segment 2 length exceeds the file size');
+        }
+
         $this->fdt['encrypted'] = \substr($this->font, 12 + $this->fdt['size1'], $this->fdt['size2']);
         $data .= $this->fdt['encrypted'];
         // store compressed font
@@ -83,8 +93,11 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     protected function extractFontInfo(): void
     {
         $matches = [];
-        if (\preg_match('#/FontName[\s]*+\/([^\s]*+)#', $this->font, $matches) !== 1) {
-            \preg_match('#/FullName[\s]*+\(([^\)]*+)#', $this->font, $matches);
+        if (
+            \preg_match('#/FontName[\s]*+\/([^\s]*+)#', $this->font, $matches) !== 1
+            && \preg_match('#/FullName[\s]*+\(([^\)]*+)#', $this->font, $matches) !== 1
+        ) {
+            throw new FontException('Unable to extract font name');
         }
 
         $name = \preg_replace('/[^a-zA-Z0-9_\-]/', '', $matches[1]);
@@ -93,34 +106,51 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         }
 
         $this->fdt['name'] = $name;
-        \preg_match('#/FontBBox[\s]*+{([^}]*+)#', $this->font, $matches);
-        $rawbvl = \explode(' ', \trim($matches[1]));
-        $bvl = [(int) $rawbvl[0], (int) $rawbvl[1], (int) $rawbvl[2], (int) $rawbvl[3]];
+
+        $bvl = [0, 0, 0, 0];
+        if (\preg_match('#/FontBBox[\s]*+{([^}]*+)#', $this->font, $matches) === 1) {
+            $rawbvl = \explode(' ', \trim($matches[1]));
+            $bvl = [
+                (int) $rawbvl[0],
+                (int) ($rawbvl[1] ?? 0),
+                (int) ($rawbvl[2] ?? 0),
+                (int) ($rawbvl[3] ?? 0),
+            ];
+        }
+
         $this->fdt['bbox'] = \implode(' ', $bvl);
         $this->fdt['Ascent'] = $bvl[3];
         $this->fdt['Descent'] = $bvl[1];
-        \preg_match('#/ItalicAngle[\s]*+([0-9\+\-]*+)#', $this->font, $matches);
-        $this->fdt['italicAngle'] = (int) $matches[1];
+
+        $this->fdt['italicAngle'] = \preg_match('#/ItalicAngle[\s]*+([0-9\+\-]*+)#', $this->font, $matches) === 1
+            ? (int) $matches[1]
+            : 0;
 
         if ($this->fdt['italicAngle'] !== 0) {
             $this->fdt['Flags'] |= 64;
         }
 
-        \preg_match('#/UnderlinePosition[\s]*+([0-9\+\-]*+)#', $this->font, $matches);
-        $this->fdt['underlinePosition'] = (int) $matches[1];
-        \preg_match('#/UnderlineThickness[\s]*+([0-9\+\-]*+)#', $this->font, $matches);
-        $this->fdt['underlineThickness'] = (int) $matches[1];
-        \preg_match('#/isFixedPitch[\s]*+([^\s]*+)#', $this->font, $matches);
-        if ($matches[1] === 'true') {
+        $this->fdt['underlinePosition'] = \preg_match('#/UnderlinePosition[\s]*+([0-9\+\-]*+)#', $this->font, $matches)
+        === 1
+            ? (int) $matches[1]
+            : 0;
+        $this->fdt['underlineThickness'] = \preg_match(
+            '#/UnderlineThickness[\s]*+([0-9\+\-]*+)#',
+            $this->font,
+            $matches,
+        ) === 1
+            ? (int) $matches[1]
+            : 0;
+
+        if (\preg_match('#/isFixedPitch[\s]*+([^\s]*+)#', $this->font, $matches) === 1 && $matches[1] === 'true') {
             $this->fdt['Flags'] = (int) $this->fdt['Flags'] | 1;
         }
 
-        \preg_match('#/Weight[\s]*+\(([^\)]*+)#', $this->font, $matches);
-        if (isset($matches[1]) && $matches[1] !== '') {
+        $this->fdt['weight'] = 'Book';
+        if (\preg_match('#/Weight[\s]*+\(([^\)]*+)#', $this->font, $matches) === 1 && $matches[1] !== '') {
             $this->fdt['weight'] = \strtolower($matches[1]);
         }
 
-        $this->fdt['weight'] = 'Book';
         $this->fdt['Leading'] = 0;
     }
 
@@ -295,6 +325,10 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     protected function decodeNumber(int $idx, int &$cck, int &$cid, array &$ccom, array &$cdec, array &$cwidths): int
     {
         if ($ccom[$idx] === 255) {
+            if (!isset($ccom[$idx + 4])) {
+                throw new FontException('Truncated Type1 charstring number operand');
+            }
+
             $sval = \chr($ccom[$idx + 1]) . \chr($ccom[$idx + 2]) . \chr($ccom[$idx + 3]) . \chr($ccom[$idx + 4]);
             $vsval = \unpack('li', $sval);
             if ($vsval === false) {
@@ -306,11 +340,19 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         }
 
         if ($ccom[$idx] >= 251) {
+            if (!isset($ccom[$idx + 1])) {
+                throw new FontException('Truncated Type1 charstring number operand');
+            }
+
             $cdec[$cck] = (-($ccom[$idx] - 251) * 256) - $ccom[$idx + 1] - 108;
             return $idx + 2;
         }
 
         if ($ccom[$idx] >= 247) {
+            if (!isset($ccom[$idx + 1])) {
+                throw new FontException('Truncated Type1 charstring number operand');
+            }
+
             $cdec[$cck] = (($ccom[$idx] - 247) * 256) + $ccom[$idx + 1] + 108;
             return $idx + 2;
         }

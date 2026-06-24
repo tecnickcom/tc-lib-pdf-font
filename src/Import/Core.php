@@ -453,7 +453,8 @@ class Core
             }
         }
 
-        $this->fdt['AvgWidth'] = (int) \round($this->fdt['AvgWidth'] / \count($cwidths));
+        $numWidths = \count($cwidths);
+        $this->fdt['AvgWidth'] = $numWidths > 0 ? (int) \round($this->fdt['AvgWidth'] / $numWidths) : 0;
     }
 
     /**
@@ -593,10 +594,6 @@ class Core
 
         $this->fdt['name'] = $name;
         $this->fdt['bbox'] = \implode(' ', $this->fdt['FontBBox']);
-
-        if ($this->fdt['XHeight'] === 0) {
-            $this->fdt['XHeight'] = 0;
-        }
     }
 
     protected function setMissingValues(): void

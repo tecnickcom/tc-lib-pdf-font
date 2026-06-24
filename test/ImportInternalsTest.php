@@ -82,14 +82,14 @@ class ImportInternalsTest extends TestUtil
         $this->assertSame($map, $result);
     }
 
-    public function testUpdateCIDtoGIDmapTruncatesGidAbove0xffff(): void
+    public function testUpdateCIDtoGIDmapIgnoresGidAbove0xffff(): void
     {
         $instance = $this->buildImport();
         $map = str_repeat("\x00", 131072);
-        // gid = 0x1002A  →  gid -= 0x10000  →  0x002A = 42
+        // gid = 0x1002A is outside the representable 16-bit range → entry left as 0 (notdef)
         $result = $this->callStringMethod($instance, 'updateCIDtoGIDmap', [$map, 0, 0x1002A]);
         $this->assertSame(0, ord($result[0]));
-        $this->assertSame(42, ord($result[1]));
+        $this->assertSame(0, ord($result[1]));
     }
 
     public function testUpdateCIDtoGIDmapIgnoresNegativeGid(): void

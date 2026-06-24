@@ -51,8 +51,9 @@ abstract class OutUtil
         $dirobj = new Dir();
         $kpathfonts = \defined('K_PATH_FONTS') ? (string) \constant('K_PATH_FONTS') : '';
         // directories where to search for the font definition file
+        // ('.' searches the current working directory)
         $dirs = \array_unique([
-            '',
+            '.',
             $fontdir,
             $kpathfonts,
             $dirobj->findParentDir('fonts', __DIR__),

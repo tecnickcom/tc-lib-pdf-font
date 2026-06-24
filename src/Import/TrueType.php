@@ -52,6 +52,23 @@ class TrueType
     private const OS2_MIN_LENGTH = 10;
 
     /**
+     * Highest valid Unicode code point (U+10FFFF).
+     *
+     * Used to clamp attacker-controlled character ranges in the uint32-based cmap
+     * subtable formats (8, 12 and 13) so a malformed font cannot drive a multi-billion
+     * iteration loop or unbounded memory growth.
+     */
+    private const MAX_UNICODE_CODEPOINT = 0x10_FFFF;
+
+    /**
+     * Maximum number of character codes a single cmap subtable may map.
+     *
+     * A valid (non-overlapping) Unicode cmap cannot map more code points than exist,
+     * so this acts as a hard upper bound that rejects abusive subtables.
+     */
+    private const MAX_CMAP_ENTRIES = 0x11_0000;
+
+    /**
      * Priority-ordered (platformID, encodingID) fallback pairs for cmap subtable selection.
      * Used when no subtable matching the caller-requested pair is found.
      *
@@ -150,6 +167,7 @@ class TrueType
         $this->isValidType();
         $this->setFontFile();
         $this->getTables();
+        $this->checkRequiredTables();
         $this->checkMagickNumber();
         $this->offset += 2; // skip flags
         $this->getBbox();
@@ -262,6 +280,24 @@ class TrueType
             $this->offset += 4;
             $this->fdt['table'][$tag]['length'] = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
+        }
+    }
+
+    /**
+     * Ensure every table the parser later dereferences is present in the table directory.
+     *
+     * A truncated or malformed font that omits one of these would otherwise trigger an
+     * undefined-array-key warning followed by an uncaught TypeError; converting that into
+     * a controlled FontException keeps the documented exception contract.
+     *
+     * @throws FontException if a mandatory table is missing
+     */
+    protected function checkRequiredTables(): void
+    {
+        foreach (['head', 'loca', 'cmap', 'name', 'post', 'hhea', 'maxp', 'hmtx', 'glyf'] as $tag) {
+            if (!isset($this->fdt['table'][$tag])) {
+                throw new FontException('Missing required font table: ' . $tag);
+            }
         }
     }
 
@@ -1174,6 +1210,7 @@ class TrueType
 
         $nGroups = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
+        $budget = self::MAX_CMAP_ENTRIES;
         for ($idx = 0; $idx < $nGroups; ++$idx) {
             $startCharCode = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
@@ -1181,6 +1218,16 @@ class TrueType
             $this->offset += 4;
             $startGlyphID = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
+            if ($startCharCode > self::MAX_UNICODE_CODEPOINT) {
+                continue;
+            }
+
+            $endCharCode = \min($endCharCode, self::MAX_UNICODE_CODEPOINT);
+            $budget -= $endCharCode - $startCharCode + 1;
+            if ($budget < 0) {
+                throw new FontException('cmap format 8 subtable maps too many code points');
+            }
+
             for ($cpw = $startCharCode; $cpw <= $endCharCode; ++$cpw) {
                 $is32idx = (int) \floor($cpw / 8);
                 if (isset($is32[$is32idx]) && ($is32[$is32idx] & (1 << (7 - ($cpw % 8)))) === 0) {
@@ -1194,7 +1241,6 @@ class TrueType
                 }
 
                 $this->addCtgItem($chr, $startGlyphID);
-                $this->fdt['ctgdata'][$chr] = 0; // overwrite
                 ++$startGlyphID;
             }
         }
@@ -1244,6 +1290,7 @@ class TrueType
         $this->offset += 10; // skip length and version/language
         $nGroups = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
+        $budget = self::MAX_CMAP_ENTRIES;
         for ($kdx = 0; $kdx < $nGroups; ++$kdx) {
             $startCharCode = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
@@ -1251,6 +1298,16 @@ class TrueType
             $this->offset += 4;
             $startGlyphCode = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
+            if ($startCharCode > self::MAX_UNICODE_CODEPOINT) {
+                continue;
+            }
+
+            $endCharCode = \min($endCharCode, self::MAX_UNICODE_CODEPOINT);
+            $budget -= $endCharCode - $startCharCode + 1;
+            if ($budget < 0) {
+                throw new FontException('cmap format 12 subtable maps too many code points');
+            }
+
             for ($chr = $startCharCode; $chr <= $endCharCode; ++$chr) {
                 $this->addCtgItem($chr, $startGlyphCode);
                 ++$startGlyphCode;
@@ -1277,6 +1334,7 @@ class TrueType
         $this->offset += 10; // skip reserved, length and language
         $nGroups = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
+        $budget = self::MAX_CMAP_ENTRIES;
         for ($kdx = 0; $kdx < $nGroups; ++$kdx) {
             $startCharCode = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
@@ -1284,6 +1342,16 @@ class TrueType
             $this->offset += 4;
             $glyphID = $this->fbyte->getULong($this->offset);
             $this->offset += 4;
+            if ($startCharCode > self::MAX_UNICODE_CODEPOINT) {
+                continue;
+            }
+
+            $endCharCode = \min($endCharCode, self::MAX_UNICODE_CODEPOINT);
+            $budget -= $endCharCode - $startCharCode + 1;
+            if ($budget < 0) {
+                throw new FontException('cmap format 13 subtable maps too many code points');
+            }
+
             for ($chr = $startCharCode; $chr <= $endCharCode; ++$chr) {
                 $this->addCtgItem($chr, $glyphID);
             }

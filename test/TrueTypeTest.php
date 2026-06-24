@@ -1178,8 +1178,8 @@ class TrueTypeTest extends TestUtil
     public function testProcessFormat8MapsSingleByteChar(): void
     {
         // numGroups=1: chars 65..65 → glyph 5. is32[8]=0 → single-byte char.
-        // After addCtgItem the code overwrites ctgdata[chr] = 0, so the final
-        // stored glyph ID is 0, but subglyphs contains glyph 5 when subchars[65] is set.
+        // Per the cmap format 8 spec the character maps to its real glyph id
+        // (startGlyphID = 5), and subglyphs contains glyph 5 when subchars[65] is set.
         $is32 = str_repeat("\x00", 8192);
         $font =
             "\x00\x08" // format = 8
@@ -1207,9 +1207,9 @@ class TrueTypeTest extends TestUtil
         $fontData = $this->getFontData($instance);
         $subGlyphs = $this->getSubglyphs($instance);
 
-        // The overwrite sets ctgdata[65] = 0 (format 8 spec)
-        $this->assertSame(0, $this->getCtgGlyph($fontData, 65));
-        // But addCtgItem ran first and recorded glyph 5 in subglyphs
+        // ctgdata[65] maps to the real glyph id 5 (startGlyphID)
+        $this->assertSame(5, $this->getCtgGlyph($fontData, 65));
+        // addCtgItem also recorded glyph 5 in subglyphs
         $this->assertArrayHasKey(5, $subGlyphs);
     }
 
@@ -1310,6 +1310,86 @@ class TrueTypeTest extends TestUtil
         $fontData = $this->getFontData($instance);
 
         $this->assertSame([0 => 0], $this->getCtgData($fontData));
+    }
+
+    public function testProcessFormat12ClampsRangeToUnicodeMax(): void
+    {
+        // A group ending at 0xFFFFFFFF must be clamped to U+10FFFF instead of iterating
+        // ~4 billion times (DoS guard). Only the two in-range code points are mapped.
+        $font =
+            "\x00\x0C" // format = 12
+            . "\x00\x00" // reserved
+            . "\x00\x00\x00\x1C" // length (unused)
+            . "\x00\x00\x00\x00" // language (unused)
+            . "\x00\x00\x00\x01" // nGroups = 1
+            . "\x00\x10\xFF\xFE" // startCharCode = 0x10FFFE
+            . "\xFF\xFF\xFF\xFF" // endCharCode   = 0xFFFFFFFF (clamped to 0x10FFFF)
+            . "\x00\x00\x00\x07"; // startGlyphID  = 7
+
+        $instance = $this->buildTrueType($font, [
+            'encodingTables' => [
+                ['platformID' => 3, 'encodingID' => 1, 'offset' => 0],
+            ],
+            'platform_id' => 3,
+            'encoding_id' => 1,
+            'table' => ['cmap' => ['offset' => 0]],
+            'type' => 'TrueTypeUnicode',
+        ]);
+
+        $this->invokeMethod($instance, 'getCIDToGIDMap');
+        $fontData = $this->getFontData($instance);
+
+        $this->assertSame(7, $this->getCtgGlyph($fontData, 0x10FFFE));
+        $this->assertSame(8, $this->getCtgGlyph($fontData, 0x10FFFF));
+        // nothing beyond the Unicode maximum was mapped
+        $this->assertNull($this->getCtgGlyph($fontData, 0x110000));
+    }
+
+    public function testProcessFormat12SkipsGroupAboveUnicodeMax(): void
+    {
+        // A group that starts beyond U+10FFFF is skipped entirely.
+        $font =
+            "\x00\x0C" // format = 12
+            . "\x00\x00" // reserved
+            . "\x00\x00\x00\x1C" // length (unused)
+            . "\x00\x00\x00\x00" // language (unused)
+            . "\x00\x00\x00\x01" // nGroups = 1
+            . "\x00\x11\x00\x00" // startCharCode = 0x110000 (> U+10FFFF)
+            . "\x00\x11\x00\x05" // endCharCode   = 0x110005
+            . "\x00\x00\x00\x07"; // startGlyphID  = 7
+
+        $instance = $this->buildTrueType($font, [
+            'encodingTables' => [
+                ['platformID' => 3, 'encodingID' => 1, 'offset' => 0],
+            ],
+            'platform_id' => 3,
+            'encoding_id' => 1,
+            'table' => ['cmap' => ['offset' => 0]],
+            'type' => 'TrueTypeUnicode',
+        ]);
+
+        $this->invokeMethod($instance, 'getCIDToGIDMap');
+        $fontData = $this->getFontData($instance);
+
+        $this->assertSame([0 => 0], $this->getCtgData($fontData));
+    }
+
+    // -------------------------------------------------------------------------
+    // checkRequiredTables
+    // -------------------------------------------------------------------------
+
+    public function testCheckRequiredTablesThrowsWhenTableMissing(): void
+    {
+        // every mandatory table is present except 'glyf'
+        $tables = [];
+        foreach (['head', 'loca', 'cmap', 'name', 'post', 'hhea', 'maxp', 'hmtx'] as $tag) {
+            $tables[$tag] = ['checkSum' => 0, 'data' => '', 'length' => 0, 'offset' => 0];
+        }
+
+        $instance = $this->buildTrueType('', ['table' => $tables]);
+
+        $this->expectException(FontException::class);
+        $this->invokeMethod($instance, 'checkRequiredTables');
     }
 
     // -------------------------------------------------------------------------

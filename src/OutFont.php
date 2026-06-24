@@ -107,10 +107,10 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $out .= ' /Encoding /' . $fontenc;
         }
 
-        $out .= ' /DescendantFonts [' . ($this->pon + 1) . ' 0 R]' . ' >>' . "\n" . 'endobj' . "\n";
+        $out .= ' /DescendantFonts [' . ($this->pon + 1) . ' 0 R] >>' . "\n" . 'endobj' . "\n";
 
         // obj 2
-        $out .= ++$this->pon . ' 0 obj' . "\n" . '<</Type /Font' . ' /Subtype /CIDFontType0' . ' /BaseFont /' . $name;
+        $out .= ++$this->pon . ' 0 obj' . "\n" . '<</Type /Font /Subtype /CIDFontType0 /BaseFont /' . $name;
         $cidinfo =
             '/Registry '
             . $this->enc->escapeDataString($cidregistry, $this->pon)
@@ -275,8 +275,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
 
         // CIDFontType2
         // A CIDFont whose glyph descriptions are based on TrueType font technology
-        $out .=
-            ++$this->pon . ' 0 obj' . "\n" . '<< /Type /Font' . ' /Subtype /CIDFontType2' . ' /BaseFont /' . $fontname;
+        $out .= ++$this->pon . ' 0 obj' . "\n" . '<< /Type /Font /Subtype /CIDFontType2 /BaseFont /' . $fontname;
         // A dictionary containing entries that define the character collection of the CIDFont.
         $cidRegistry = $fontcidinfo['Registry'] === '' ? 'Adobe' : $fontcidinfo['Registry'];
         $cidOrdering = $fontcidinfo['Ordering'] === '' ? 'Identity' : $fontcidinfo['Ordering'];
@@ -306,7 +305,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
 
         // Font descriptor
         // A font descriptor describing the CIDFont default metrics other than its glyph widths
-        $out .= ++$this->pon . ' 0 obj' . "\n" . '<< /Type /FontDescriptor' . ' /FontName /' . $fontname;
+        $out .= ++$this->pon . ' 0 obj' . "\n" . '<< /Type /FontDescriptor /FontName /' . $fontname;
         foreach ($fontdesc as $key => $val) {
             $out .= $this->getKeyValOut($key, $val);
         }

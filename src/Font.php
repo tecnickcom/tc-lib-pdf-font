@@ -103,7 +103,7 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
         $this->data['pdfa'] = $pdfa;
         $this->data['compress'] = $compress;
         $this->data['subset'] = $subset;
-        $this->data['subsetchars'] = \array_fill(0, 255, true);
+        $this->data['subsetchars'] = \array_fill(0, 256, true);
 
         // generate the font key and set styles
         $this->setStyle($style);

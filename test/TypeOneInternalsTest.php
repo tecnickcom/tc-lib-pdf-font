@@ -252,6 +252,48 @@ class TypeOneInternalsTest extends TestUtil
         return $value;
     }
 
+    /** @param array<string, mixed> $fontData */
+    private function getFontStringValue(array $fontData, string $key): string
+    {
+        if (!isset($fontData[$key]) || !\is_string($fontData[$key])) {
+            $this->fail('Expected string font field: ' . $key);
+        }
+
+        return $fontData[$key];
+    }
+
+    // -------------------------------------------------------------------------
+    // extractFontInfo
+    // -------------------------------------------------------------------------
+
+    public function testExtractFontInfoParsesWeight(): void
+    {
+        $instance = $this->buildTypeOne();
+        $this->setProp(
+            $instance,
+            'font',
+            "/FontName /Helvetica-Bold def\n/FontBBox {0 -200 1000 700} def\n/Weight (Bold) def",
+        );
+
+        $this->callMethod($instance, 'extractFontInfo');
+        $fdt = $this->getFontData($instance);
+
+        // the parsed /Weight must survive (it previously was hard-coded to 'Book',
+        // which disabled the bold StemV heuristic in extractStem)
+        $this->assertSame('bold', $this->getFontStringValue($fdt, 'weight'));
+    }
+
+    public function testExtractFontInfoDefaultsWeightToBook(): void
+    {
+        $instance = $this->buildTypeOne();
+        $this->setProp($instance, 'font', "/FontName /Helvetica def\n/FontBBox {0 -200 1000 700} def");
+
+        $this->callMethod($instance, 'extractFontInfo');
+        $fdt = $this->getFontData($instance);
+
+        $this->assertSame('Book', $this->getFontStringValue($fdt, 'weight'));
+    }
+
     // -------------------------------------------------------------------------
     // extractStem
     // -------------------------------------------------------------------------

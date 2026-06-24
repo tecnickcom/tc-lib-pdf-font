@@ -370,7 +370,7 @@ abstract class Load
         }
 
         if (!isset($fdtdata['type'])) {
-            throw new FontException('fhe font definition file has a bad format: ' . $this->data['ifile']);
+            throw new FontException('The font definition file has a bad format: ' . $this->data['ifile']);
         }
 
         $merged = \array_replace_recursive($this->data, $fdtdata);
@@ -496,7 +496,7 @@ abstract class Load
     protected function setName(): void
     {
         if ($this->data['type'] === 'Core') {
-            $this->data['name'] = Core::FONT[$this->data['key']];
+            $this->data['name'] = Core::FONT[$this->data['key']] ?? $this->data['key'];
             $this->data['subset'] = false;
         } elseif ($this->data['type'] === 'Type1' || $this->data['type'] === 'TrueType') {
             $this->data['subset'] = false;
