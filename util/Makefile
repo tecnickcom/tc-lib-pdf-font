@@ -77,6 +77,9 @@ ifeq ($(shell uname -s),Darwin)
 	SEDINPLACE=-i ''
 endif
 
+# Mago version
+MAGOVERSION=1.40.2
+
 # --- MAKE TARGETS ---
 
 # Display general help about this command

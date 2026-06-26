@@ -95,6 +95,9 @@ PHPDOC=$(shell which phpDocumentor)
 # List of fonts to process
 FONTLIST=core pdfa cid0 freefont unifont dejavu noto
 
+# Mago version
+MAGOVERSION=1.40.2
+
 # --- MAKE TARGETS ---
 
 # Display general help about this command
@@ -167,7 +170,7 @@ endif
 deps: ensuretarget
 	rm -rf ./vendor/* $(TARGETDIR)/fonts
 	($(COMPOSER) install -vvv --no-interaction)
-	curl --proto '=https' --tlsv1.2 --silent --show-error --fail --location https://carthage.software/mago.sh | bash -s -- --install-dir=./vendor/bin
+	curl --proto '=https' --tlsv1.2 --silent --show-error --fail --location https://carthage.software/mago.sh | bash -s -- --install-dir=./vendor/bin --version=$(MAGOVERSION)
 	cd util && make deps
 
 ## Generate source code documentation
