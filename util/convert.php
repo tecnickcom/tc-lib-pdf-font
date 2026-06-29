@@ -163,7 +163,12 @@ foreach ($inopt as $opt => $val) {
     switch ($opt) {
         case 'o':
         case 'outpath':
-            $options['outpath'] = \realpath($val);
+            // Keep the raw value when the directory does not exist yet:
+            // realpath() returns false for a missing path and would
+            // otherwise collapse the output path to '/'. The directory is
+            // created and the path normalized further below.
+            $resolved = \realpath($val);
+            $options['outpath'] = ($resolved !== false) ? $resolved : $val;
             if (\substr($options['outpath'], -1) != '/') {
                 $options['outpath'] .= '/';
             }
@@ -217,6 +222,9 @@ if (!is_dir($options['outpath']) || !\is_writable($options['outpath'])) {
     exit(2);
 }
 
+// the directory now exists: normalize to an absolute path with trailing slash
+$options['outpath'] = \realpath($options['outpath']) . '/';
+
 if (empty($options['fonts'])) {
     \fwrite(STDERR, 'ERROR: missing input fonts (try --help for usage)'."\n\n");
     exit(3);
@@ -228,7 +236,27 @@ if (empty($options['fonts'])) {
 $convert_errors = 0;
 $convert_success = 0;
 
-require_once (\dirname(\dirname(__DIR__)).'/vendor/autoload.php');
+// Locate the Composer autoloader, supporting both a standalone checkout
+// (vendor inside the project root) and installation as a dependency
+// (autoloader at the top level of the host project).
+$autoloadFound = false;
+foreach (
+    array(
+        \dirname(__DIR__) . '/vendor/autoload.php',    // standalone repository checkout
+        \dirname(__DIR__, 4) . '/vendor/autoload.php', // installed under <project>/vendor/tecnickcom/tc-lib-pdf-font
+    ) as $autoloadFile
+) {
+    if (\is_file($autoloadFile)) {
+        require_once $autoloadFile;
+        $autoloadFound = true;
+        break;
+    }
+}
+
+if (!$autoloadFound) {
+    \fwrite(STDERR, 'ERROR: Composer autoloader not found. Run "composer install" first.'."\n\n");
+    exit(5);
+}
 
 foreach ($options['fonts'] as $font) {
     try {
