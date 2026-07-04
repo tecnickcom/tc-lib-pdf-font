@@ -96,7 +96,7 @@ PHPDOC=$(shell which phpDocumentor)
 FONTLIST=core pdfa cid0 freefont unifont dejavu noto
 
 # Mago version
-MAGOVERSION=1.40.2
+MAGOVERSION=1.42.0
 
 # --- MAKE TARGETS ---
 
