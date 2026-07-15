@@ -168,7 +168,7 @@ endif
 ## Clean all artifacts and download all dependencies
 .PHONY: deps
 deps: ensuretarget
-	rm -rf ./vendor/* "$(TARGETDIR)/fonts"
+	rm -rf ./vendor/*
 	($(COMPOSER) install -vvv --no-interaction)
 	curl --proto '=https' --tlsv1.2 --silent --show-error --fail --location https://carthage.software/mago.sh | bash -s -- --install-dir=./vendor/bin --version=$(MAGOVERSION)
 	cd util && make deps
@@ -289,6 +289,8 @@ versionup:
 
 ## import and convert fonts
 fonts:
+	rm -rf "$(TARGETDIR)/fonts"
+	test -f vendor/autoload.php || $(COMPOSER) install --no-dev --no-interaction
 	cd util && ($(COMPOSER) install -vvv --no-interaction)
 	cd util && make build
 	
