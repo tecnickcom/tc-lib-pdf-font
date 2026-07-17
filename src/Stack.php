@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @package   PdfFont
  * @author    Nicola Asuni <info@tecnick.com>
  * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
- * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * This file is part of tc-lib-pdf-font software library.
@@ -30,7 +30,7 @@ use Com\Tecnick\Unicode\Data\Type as UnicodeType;
  * @package   PdfFont
  * @author    Nicola Asuni <info@tecnick.com>
  * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
- * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE.TXT)
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE)
  * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type TFontData from Load
@@ -719,7 +719,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $fonttype = $data['type'];
         $outfont = \sprintf('/F%d %F Tf', (int) $data['i'], $fontsize); // PDF output string
         $tbox = \array_pad(\explode(' ', \substr($fontbbox, 1, -1)), 4, '0');
-        // add this font in the stack wit metrics in internal units
+        // add this font in the stack with metrics in internal units
         $this->metric[$mkey] = [
             'ascent' => $ascent * $cratio,
             'avgwidth' => $avgwidth * $cratio * $fontstretching,
