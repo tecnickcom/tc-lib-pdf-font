@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace Com\Tecnick\Pdf\Font;
 
 use Com\Tecnick\Pdf\Font\Exception as FontException;
+use Com\Tecnick\Unicode\Data\BidiClass;
 use Com\Tecnick\Unicode\Data\Type as UnicodeType;
 
 /**
@@ -555,17 +556,20 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             }
 
             $unitype = UnicodeType::UNI[$ord] ?? '';
+            $bidiClass = BidiClass::tryFrom($unitype);
             // Inline the width lookup using the already-resolved $curfont metric: calling
             // getCharWidth() here would re-resolve getFontMetric($this->index) per character.
             $chrwidth = match ($ord) {
                 173, 8203 => 0.0, // 173 = SHY (hyphenation), 8203 = ZWSP: not printed
                 default => $curfont['cwu'][$ord] ?? $curfont['cw'][$ord] ?? $curfont['dw'],
             };
-            // 'B' Paragraph Separator
-            // 'S' Segment Separator
-            // 'WS' Whitespace
-            // 'BN' Boundary Neutral
-            if ($unitype === 'B' || $unitype === 'S' || $unitype === 'WS' || $unitype === 'BN') {
+            // Split on paragraph/segment separators (B, S), whitespace (WS) and boundary neutrals (BN).
+            if (
+                $bidiClass === BidiClass::B
+                || $bidiClass === BidiClass::S
+                || $bidiClass === BidiClass::WS
+                || $bidiClass === BidiClass::BN
+            ) {
                 $currenttotwidth = $totwidth + ($fact * ($idx - 1));
                 $split[$words] = [
                     'pos' => $idx,
@@ -578,7 +582,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 ];
                 $prevtotwidth = $currenttotwidth;
                 $words++;
-                if ($unitype === 'WS') {
+                if ($bidiClass === BidiClass::WS) {
                     ++$spaces;
                     $totspacewidth += $chrwidth;
                 }
