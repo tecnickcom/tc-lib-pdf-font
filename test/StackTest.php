@@ -242,6 +242,41 @@ class StackTest extends TestUtil
     }
 
     /**
+     * Only the paragraph and segment separators, the whitespace and the boundary neutrals
+     * split words. The type table lists the code points whose bidirectional type is not L,
+     * so the letters that are missing from it must not be taken as separators.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testWordSplitOnSeparatorsOnly(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+        $objnum = 1;
+
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->insert($objnum, 'freesans', '', 12, 0, 1, '', null);
+
+        // LATIN A, CJK UNIFIED IDEOGRAPH-4E00, HANGUL SYLLABLE GA and DEVANAGARI KA are
+        // all of bidirectional type L: one word, closed by the trailing ZWSP.
+        $widths = $stack->getOrdArrDims([0x41, 0x4E00, 0xAC00, 0x0915]);
+        $this->assertEquals(4, $widths['chars']);
+        $this->assertEquals(0, $widths['spaces']);
+        $this->assertEquals(1, $widths['words']);
+
+        // The same letters around a space: two words plus the trailing ZWSP.
+        $widths = $stack->getOrdArrDims([0x41, 0x4E00, 0x20, 0xAC00, 0x0915]);
+        $this->assertEquals(1, $widths['spaces']);
+        $this->assertEquals(2, $widths['words']);
+        $split = $widths['split'][0] ?? null;
+        $this->assertIsArray($split);
+        $this->assertEquals('WS', $split['septype']);
+    }
+
+    /**
      * @throws FileException
      * @throws FontException
      * @throws \RangeException

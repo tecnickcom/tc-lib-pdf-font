@@ -555,7 +555,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 $this->addSubsetChar($fkey, $ord);
             }
 
-            $unitype = UnicodeType::UNI[$ord] ?? '';
+            // getType() resolves the code points that are not listed in the type table,
+            // which only holds the ones whose bidirectional type is not L.
+            $unitype = UnicodeType::getType($ord);
             $bidiClass = BidiClass::tryFrom($unitype);
             // Inline the width lookup using the already-resolved $curfont metric: calling
             // getCharWidth() here would re-resolve getFontMetric($this->index) per character.
