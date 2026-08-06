@@ -28,11 +28,17 @@
     ],
     "require": {
         "php": ">=8.2",
+        "ext-hash": "*",
         "ext-json": "*",
+        "ext-pcre": "*",
         "ext-zlib": "*",
         "tecnickcom/tc-lib-file": "^3.7",
         "tecnickcom/tc-lib-unicode-data": "^3.0",
         "tecnickcom/tc-lib-pdf-encrypt": "^2.9"
+    },
+    "suggest": {
+        "ext-iconv": "Decodes legacy Macintosh (MacRoman) TrueType name strings",
+        "ext-mbstring": "Decodes UTF-16BE and Windows-1252 TrueType name strings"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
