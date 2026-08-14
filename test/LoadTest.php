@@ -43,6 +43,43 @@ class LoadTest extends TestUtil
         $this->assertSame(64, $load->getFlagsValue());
     }
 
+    /**
+     * A definition stating a width below zero states no usable width: a negative default
+     * would move the text backwards wherever a glyph has no width of its own.
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
+    public function testLoadReplacesADefaultWidthBelowZero(): void
+    {
+        $load = new LoadTestHarness('customfont', 'Custom');
+        $load->setModeAndMetrics(false, false, 70, 0, 32);
+        $load->setDefaultWidthValue(-100);
+
+        $load->load();
+
+        // the width of the space is the first fallback, ahead of the fixed 600
+        $this->assertSame(500, $load->getDefaultWidthValue());
+    }
+
+    /**
+     * The width of the space is the first fallback of the default width, so it states no
+     * usable width when it is below zero either.
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
+    public function testLoadIgnoresASpaceWidthBelowZero(): void
+    {
+        $load = new LoadTestHarness('customfont', 'Custom');
+        $load->setModeAndMetrics(false, false, 70, 0, 32);
+        $load->setDefaultWidthValue(-100);
+        $load->setSpaceWidthValue(-250);
+
+        $load->load();
+
+        // both the declared default and the space state no width, so the fixed one applies
+        $this->assertSame(600, $load->getDefaultWidthValue());
+    }
+
     public function testFindFontDirectoriesExcludesEmptyRootEntry(): void
     {
         $load = new LoadTestHarness('customfont', '');

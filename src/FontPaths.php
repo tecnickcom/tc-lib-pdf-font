@@ -18,8 +18,20 @@ declare(strict_types=1);
 
 namespace Com\Tecnick\Pdf\Font;
 
+use Com\Tecnick\File\Dir;
+
 /**
+ * Com\Tecnick\Pdf\Font\FontPaths
+ *
  * Shared font paths rooted at the library base directory.
+ *
+ * @since     2026-06-08
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  */
 class FontPaths
 {
@@ -29,6 +41,46 @@ class FontPaths
     public static function getLibraryRoot(): string
     {
         return \rtrim(\dirname(__DIR__), '/\\');
+    }
+
+    /**
+     * Returns the full path of a font file, or an empty string when it is not found.
+     *
+     * @param string $fontdir Original font directory.
+     * @param string $file    Font file name.
+     */
+    public static function findFontFile(string $fontdir, string $file): string
+    {
+        if ($file === '') {
+            return '';
+        }
+
+        $dirobj = new Dir();
+        $kpathfonts = \defined('K_PATH_FONTS') ? (string) \constant('K_PATH_FONTS') : '';
+        // Directories where to search for the font file, most specific first. The directory
+        // holding the font definition wins, as the importer stores the artifacts of a font
+        // next to it. The process working directory ('.') is a legacy fallback and is not a
+        // trusted root.
+        $dirs = \array_unique([
+            $fontdir,
+            $kpathfonts,
+            $dirobj->findParentDir('fonts', __DIR__),
+            '.',
+        ]);
+        foreach ($dirs as $dir) {
+            if ($dir === '') {
+                // an empty entry would resolve to the filesystem root
+                continue;
+            }
+
+            $path = $dir . DIRECTORY_SEPARATOR . $file;
+            // a directory is readable too, so the entry must also be a regular file
+            if (\is_file($path) && \is_readable($path)) {
+                return $path;
+            }
+        }
+
+        return '';
     }
 
     /**

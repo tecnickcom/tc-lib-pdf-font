@@ -17,6 +17,16 @@
 namespace Test;
 
 /**
+ * Test helper exposing the protected members of OutFont.
+ *
+ * @since     2011-05-23
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
+ *
  * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  */
 class OutputTestOutFont extends \Com\Tecnick\Pdf\Font\OutFont
@@ -40,5 +50,20 @@ class OutputTestOutFont extends \Com\Tecnick\Pdf\Font\OutFont
     public function runGetKeyValOut(string $key, mixed $val): string
     {
         return $this->getKeyValOut($key, $val);
+    }
+
+    public function runGetUtf16beHex(int $ord): string
+    {
+        return $this->getUtf16beHex($ord);
+    }
+
+    /**
+     * @param TFontData $font
+     */
+    public function runGetTrueType(array $font, int $pon = 1): string
+    {
+        $this->pon = $pon;
+
+        return $this->getTrueType($font);
     }
 }

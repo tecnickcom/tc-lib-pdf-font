@@ -17,7 +17,15 @@
 namespace Test;
 
 /**
- * Test helper exposing protected Output members.
+ * Test helper exposing the protected members of Output.
+ *
+ * @since     2026-06-16
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  *
  * @phpstan-import-type TFontData from \Com\Tecnick\Pdf\Font\Load
  */
@@ -30,5 +38,15 @@ class OutputTestOutput extends \Com\Tecnick\Pdf\Font\Output
     public function runSubsetCacheKey(string $font_data, array $font, array $subchars): string
     {
         return $this->subsetCacheKey($font_data, $font, $subchars);
+    }
+
+    /**
+     * Subset characters collected for each font program file.
+     *
+     * @return array<string, array<int, bool>>
+     */
+    public function getSubsetChars(): array
+    {
+        return $this->subchars;
     }
 }

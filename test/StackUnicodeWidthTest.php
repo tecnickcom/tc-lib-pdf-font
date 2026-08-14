@@ -22,8 +22,18 @@ use Com\Tecnick\Pdf\Font\Import;
 use Com\Tecnick\Pdf\Font\Stack;
 
 /**
- * Verifies that Stack::getCharWidth() resolves widths for non-ASCII Unicode
- * codepoints via the cwu table populated during Core font import.
+ * Stack Unicode Width Test
+ *
+ * Verifies that Stack::getCharWidth() resolves the widths of the non-ASCII
+ * codepoints through the cwu table filled by the Core font import.
+ *
+ * @since     2026-05-05
+ * @category  Library
+ * @package   PdfFont
+ * @author    Nicola Asuni <info@tecnick.com>
+ * @copyright 2011-2026 Nicola Asuni - Tecnick.com LTD
+ * @license   https://www.gnu.org/copyleft/lesser.html GNU-LGPL v3 (see LICENSE)
+ * @link      https://github.com/tecnickcom/tc-lib-pdf-font
  */
 class StackUnicodeWidthTest extends TestUtil
 {
@@ -110,7 +120,7 @@ class StackUnicodeWidthTest extends TestUtil
     public function testStackResolvesSpaceByCodepoint(): void
     {
         $stack = $this->loadHelveticaStack();
-        // space U+0020 → AFM width 278 (sanity check, no regression)
+        // space U+0020 has AFM width 278
         $this->bcAssertEqualsWithDelta(2.78, $stack->getCharWidth(0x20), 0.001);
     }
 

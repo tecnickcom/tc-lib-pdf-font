@@ -31,11 +31,53 @@ namespace Test;
  */
 class BufferTest extends TestUtil
 {
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testSubsetModeDisabledByDefault(): void
     {
         $this->setupTest();
         $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
         $this->assertFalse($stack->isSubsetMode());
+    }
+
+    /**
+     * Every font metric is scaled by the unit ratio: a zero would raise a
+     * DivisionByZeroError deep inside the conversion, and a negative one would mirror
+     * every glyph. Both are refused as a font error, the only type this library contracts.
+     *
+     * @throws \Throwable
+     */
+    public function testUnitRatioMustBePositive(): void
+    {
+        $this->setupTest();
+
+        foreach ([0.0, -1.0] as $kunit) {
+            $this->assertThrowsMessage(
+                \Com\Tecnick\Pdf\Font\Exception::class,
+                'conversion ratio must be a finite number greater than zero',
+                /** @throws \Com\Tecnick\Pdf\Font\Exception */
+                static fn(): object => new \Com\Tecnick\Pdf\Font\Stack($kunit),
+            );
+        }
+    }
+
+    /**
+     * NAN passes every comparison, so it would reach the conversion and turn every metric
+     * into NAN, and INF would collapse them all to zero. Neither is a ratio.
+     *
+     * @throws \Throwable
+     */
+    public function testUnitRatioMustBeFinite(): void
+    {
+        $this->setupTest();
+
+        foreach ([NAN, INF, -INF] as $kunit) {
+            $this->assertThrowsMessage(
+                \Com\Tecnick\Pdf\Font\Exception::class,
+                'conversion ratio must be a finite number greater than zero',
+                /** @throws \Com\Tecnick\Pdf\Font\Exception */
+                static fn(): object => new \Com\Tecnick\Pdf\Font\Stack($kunit),
+            );
+        }
     }
 
     /** @throws \Com\Tecnick\Pdf\Font\Exception */

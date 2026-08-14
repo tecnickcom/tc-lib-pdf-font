@@ -98,13 +98,11 @@ class SubsetTest extends TestUtil
         $this->assertSame(0x01020300, $subset->checksum("\x01\x02\x03", 3));
     }
 
-    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testTableChecksumHandlesMixedFullAndPartialWords(): void
     {
         $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
             public function __construct() {}
 
-            /** @throws \Com\Tecnick\Pdf\Font\Exception */
             public function checksum(string $table, int $length): int
             {
                 return $this->getTableChecksum($table, $length);
@@ -120,6 +118,7 @@ class SubsetTest extends TestUtil
     // removeUnusedTables
     // -------------------------------------------------------------------------
 
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testRemoveUnusedTablesDropsUnknownTableTags(): void
     {
         // Build an anonymous subclass that exposes removeUnusedTables and lets us
@@ -127,6 +126,7 @@ class SubsetTest extends TestUtil
         $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
             public function __construct() {}
 
+            /** @throws \Com\Tecnick\Pdf\Font\Exception */
             public function run(): void
             {
                 $this->removeUnusedTables();
@@ -159,15 +159,105 @@ class SubsetTest extends TestUtil
         $this->assertArrayNotHasKey('xxxx', $table);
     }
 
+    /**
+     * Build a Subset harness exposing removeUnusedTables over a font buffer and tables.
+     *
+     * @param array<string, array{'checkSum': int, 'data': string, 'length': int, 'offset': int}> $tables
+     */
+    private function buildRemoveUnusedTablesStub(string $font, array $tables): SubsetTestHarness
+    {
+        $subset = new SubsetTestHarness();
+        $this->setProp($subset, 'font', $font);
+        $this->setProp($subset, 'offset', 12);
+        $this->setProp($subset, 'fdt', array_merge($this->getDefaultFdt(), ['table' => $tables]));
+
+        return $subset;
+    }
+
+    /**
+     * The emitted table directory advertises the declared length, so a table whose bytes
+     * run past the end of the font file is rejected.
+     */
+    public function testRemoveUnusedTablesRejectsATableTruncatedByTheFontFile(): void
+    {
+        // the font holds 16 bytes but 'hhea' claims 64 starting at offset 8
+        $subset = $this->buildRemoveUnusedTablesStub(str_repeat("\x00", 16), [
+            'hhea' => ['offset' => 8, 'length' => 64, 'checkSum' => 0, 'data' => ''],
+        ]);
+
+        try {
+            $subset->runRemoveUnusedTables();
+        } catch (\Com\Tecnick\Pdf\Font\Exception $exception) {
+            $this->assertStringContainsString('truncated font table: hhea', $exception->getMessage());
+            return;
+        }
+
+        $this->fail('a truncated table must be rejected');
+    }
+
+    public function testRemoveUnusedTablesRejectsATableStartingPastTheEndOfTheFont(): void
+    {
+        $subset = $this->buildRemoveUnusedTablesStub(str_repeat("\x00", 16), [
+            'hhea' => ['offset' => 128, 'length' => 4, 'checkSum' => 0, 'data' => ''],
+        ]);
+
+        try {
+            $subset->runRemoveUnusedTables();
+        } catch (\Com\Tecnick\Pdf\Font\Exception $exception) {
+            $this->assertStringContainsString('truncated font table: hhea', $exception->getMessage());
+            return;
+        }
+
+        $this->fail('a table beyond the end of the font must be rejected');
+    }
+
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
+    public function testRemoveUnusedTablesAcceptsATableThatFitsExactly(): void
+    {
+        $subset = $this->buildRemoveUnusedTablesStub(str_repeat("\xAB", 16), [
+            'hhea' => ['offset' => 8, 'length' => 8, 'checkSum' => 0, 'data' => ''],
+        ]);
+
+        $subset->runRemoveUnusedTables();
+
+        $table = $subset->getTable();
+        $this->assertArrayHasKey('hhea', $table);
+        // 8 bytes read, and 8 is already a multiple of 4 so no padding is appended
+        $this->assertSame(str_repeat("\xAB", 8), $this->getTableRecordString($table, 'hhea', 'data'));
+        $this->assertSame(8, $this->getTableRecordInt($table, 'hhea', 'length'));
+    }
+
+    /**
+     * loca and glyf are rebuilt from the subset glyphs, so their declared length does not
+     * describe the original file and is not checked against it.
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
+    public function testRemoveUnusedTablesDoesNotLengthCheckTheRebuiltTables(): void
+    {
+        $subset = $this->buildRemoveUnusedTablesStub(str_repeat("\x00", 16), [
+            'glyf' => ['offset' => 0, 'length' => 4096, 'checkSum' => 0, 'data' => 'rebuilt'],
+            'loca' => ['offset' => 0, 'length' => 2048, 'checkSum' => 0, 'data' => 'rebuilt'],
+        ]);
+
+        $subset->runRemoveUnusedTables();
+
+        $table = $subset->getTable();
+        $this->assertArrayHasKey('glyf', $table);
+        $this->assertArrayHasKey('loca', $table);
+    }
+
     // -------------------------------------------------------------------------
     // addProcessedTables
     // -------------------------------------------------------------------------
 
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testAddProcessedTablesBuildsLocaAndGlyfFromSubsetGlyphs(): void
     {
         $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
             public function __construct() {}
 
+            /** @throws \Com\Tecnick\Pdf\Font\Exception */
             public function run(): void
             {
                 $this->addProcessedTables();
@@ -254,11 +344,13 @@ class SubsetTest extends TestUtil
         $this->assertSame(28, $offset[1]);
     }
 
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testAddProcessedTablesUsesNextAvailableLocaIndexWhenImmediateIsMissing(): void
     {
         $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
             public function __construct() {}
 
+            /** @throws \Com\Tecnick\Pdf\Font\Exception */
             public function run(): void
             {
                 $this->addProcessedTables();
@@ -277,8 +369,8 @@ class SubsetTest extends TestUtil
         $this->setProp($subset, 'offset', 0);
         $this->setProp($subset, 'subglyphs', [0 => true]);
 
-        // Simulate parser output where index 1 was removed as duplicate-empty marker.
-        // Glyph 0 must still use index 2 as the closing boundary.
+        // Parser output where index 1 was removed as a duplicate-empty marker, so glyph 0
+        // uses index 2 as the closing boundary.
         $this->setProp($subset, 'fdt', array_merge($this->getDefaultFdt(), [
             'tot_num_glyphs' => 3,
             'short_offset' => false,
@@ -292,7 +384,7 @@ class SubsetTest extends TestUtil
         $subset->run();
         $table = $subset->getTable();
 
-        // Glyph 0 must not be dropped just because index 1 is missing.
+        // glyph 0 is kept although index 1 is missing
         $this->assertNotEmpty($this->getTableRecordString($table, 'glyf', 'data'));
     }
 
@@ -424,11 +516,13 @@ class SubsetTest extends TestUtil
         $this->assertArrayHasKey(6, $newSga);
     }
 
+    /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testAddProcessedTablesCreatesShortLocaAndPadsTables(): void
     {
         $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
             public function __construct() {}
 
+            /** @throws \Com\Tecnick\Pdf\Font\Exception */
             public function run(): void
             {
                 $this->addProcessedTables();
@@ -459,9 +553,55 @@ class SubsetTest extends TestUtil
         $table = $subset->getTable();
 
         $this->assertArrayHasKey('loca', $table);
-        $this->assertSame(4, $this->getTableRecordInt($table, 'loca', 'length'));
-        $this->assertSame(4, $this->getTableRecordInt($table, 'glyf', 'length'));
-        $this->assertSame(0, \strlen($this->getTableRecordString($table, 'loca', 'data')) % 4);
-        $this->assertSame(0, \strlen($this->getTableRecordString($table, 'glyf', 'data')) % 4);
+        // the directory declares the real length of each table, while the emitted bytes
+        // are padded to the next four byte boundary
+        $this->assertSame(2, $this->getTableRecordInt($table, 'loca', 'length'));
+        $this->assertSame(3, $this->getTableRecordInt($table, 'glyf', 'length'));
+        $this->assertSame(4, \strlen($this->getTableRecordString($table, 'loca', 'data')));
+        $this->assertSame(4, \strlen($this->getTableRecordString($table, 'glyf', 'data')));
+    }
+
+    /**
+     * The short format stores the glyph offsets halved as 16-bit values, so the last one it
+     * reaches is 0xFFFF * 2. A larger one is refused rather than truncated into an entry
+     * pointing at the middle of a glyph.
+     *
+     * @throws \Throwable
+     */
+    public function testAddProcessedTablesRejectsAnOffsetTheShortLocaCannotHold(): void
+    {
+        $subset = new class() extends \Com\Tecnick\Pdf\Font\Subset {
+            public function __construct() {}
+
+            /** @throws \Com\Tecnick\Pdf\Font\Exception */
+            public function run(): void
+            {
+                $this->addProcessedTables();
+            }
+        };
+
+        // A single glyph two bytes past 0xFFFF * 2, the largest offset the format holds,
+        // so the second entry of the loca table cannot be written.
+        $length = 131_072;
+        $this->setProp($subset, 'font', \str_repeat("\x00", $length));
+        $this->setProp($subset, 'offset', 0);
+        $this->setProp($subset, 'subglyphs', [0 => true, 1 => true]);
+        $this->setProp($subset, 'fdt', \array_replace_recursive($this->getDefaultFdt(), [
+            'tot_num_glyphs' => 2,
+            'short_offset' => true,
+            'indexToLoc' => [0 => 0, 1 => $length, 2 => $length],
+            'table' => [
+                'glyf' => ['offset' => 0, 'length' => $length, 'checkSum' => 0, 'data' => ''],
+            ],
+        ]));
+
+        $this->assertThrowsMessage(
+            \Com\Tecnick\Pdf\Font\Exception::class,
+            'too large for a short loca table',
+            /** @throws \Throwable */
+            static function () use ($subset): void {
+                $subset->run();
+            },
+        );
     }
 }

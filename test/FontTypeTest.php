@@ -95,8 +95,8 @@ class FontTypeTest extends TestUtil
     }
 
     /**
-     * The widened Import constructor accepts a FontType enum and resolves it the
-     * same way as the equivalent legacy string.
+     * The Import constructor accepts a FontType enum and resolves it like the
+     * equivalent type name.
      *
      * @throws FontException
      * @throws \Com\Tecnick\File\Exception

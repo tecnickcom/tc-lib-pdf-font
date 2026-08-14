@@ -69,6 +69,7 @@ use Com\Tecnick\Unicode\Data\Type as UnicodeType;
  *     'avgwidth': float,
  *     'capheight': float,
  *     'cbbox': array<int, TBBox>,
+ *     'cbboxu': array<int, TBBox>,
  *     'cratio': float,
  *     'cw': array<int, float>,
  *     'cwu': array<int, float>,
@@ -104,6 +105,19 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public const DEFAULT_SIZE = 10;
 
     /**
+     * Codepoints that take no horizontal space.
+     *
+     * 173 = SHY, only rendered when the text is hyphenated at that point.
+     * 8203 = ZWSP, a word boundary with no glyph.
+     *
+     * @var array<int, bool>
+     */
+    protected const ZERO_WIDTH = [
+        173 => true,
+        8203 => true,
+    ];
+
+    /**
      * Array (stack) containing fonts in order of insertion.
      * The last item is the current font.
      *
@@ -117,7 +131,19 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     protected int $index = -1;
 
     /**
+     * Number of font metrics kept in memory.
+     *
+     * Each entry holds the glyph width and bounding box maps of the font scaled to one size,
+     * which is around 1.7 MB for a font carrying six thousand glyphs, and the cache key
+     * includes the size. The least recently used entries beyond this bound are dropped and
+     * recomputed on demand.
+     */
+    protected const METRIC_CACHE_SIZE = 16;
+
+    /**
      * Array containing font metrics for each fontkey-size combination.
+     *
+     * Ordered from the least to the most recently used.
      *
      * @var array<string, TFontMetric>
      */
@@ -145,15 +171,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * @param ?float $stretching Horizontal character stretching ratio.
      * @param string $ifile      The font definition file (or empty for autodetect).
      *                           By default, the name is built from the family and style, in lower case with no spaces.
-     * @param ?bool  $subset     If true embed only a subset of the font (stores only the information related to
-     *                           the used characters); If false embed full font; This option is valid only for
-     *                           TrueTypeUnicode fonts and is disabled for PDF/A. If you want to enable users to
-     *                           modify the document, set this parameter to false. If you subset the font, the person
-     *                           who receives your PDF would need to have your same font in order to make changes to
-     *                           your PDF. The file size of the PDF would also be smaller because you are embedding
-     *                           only a subset.
-     *                           Set this to null to use the default value.
-     *                           NOTE: This option is computational and memory intensive.
+     * @param ?bool  $subset     If true, embed only the characters used by the document.
+     *                           Valid only for TrueTypeUnicode fonts.
+     *                           Set to null to use the default value.
+     *                           Subsetting is computational and memory intensive.
      *
      * @return TFontMetric Font data
      *
@@ -193,7 +214,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         }
 
         if ($err !== null) {
-            throw new FontException($err->getMessage());
+            // the last failure is reported, keeping the original as the cause
+            throw new FontException($err->getMessage(), 0, $err);
         }
 
         // add this font in the stack
@@ -292,11 +314,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Returns the font definition file to use to load a different style of an already loaded font.
      *
-     * The 'ifile' entry of a loaded font is the definition file of its own style,
-     * so it cannot be reused as is for a different style.
-     * The definition file of the requested style is searched in the same directory of the source one;
-     * if it is not there, an empty string is returned to trigger the standard autodetection,
-     * that also provides the artificial style fallback when no styled definition file exists.
+     * The definition file of the requested style is searched in the directory of the source one.
+     * When it is not there, an empty string is returned to trigger the autodetection,
+     * that also provides the artificial style fallback.
      *
      * @param TFontData $data  Data of the source font.
      * @param string    $style Requested font style.
@@ -319,8 +339,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Returns the current font key.
      *
-     * @return string
-     *
      * @throws FontException
      */
     public function getCurrentFontKey(): string
@@ -331,8 +349,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Returns the current font type (i.e.: Core, TrueType, TrueTypeUnicode, Type1).
      *
-     * @return string
-     *
      * @throws FontException
      */
     public function getCurrentFontType(): string
@@ -342,8 +358,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Returns true if a current font is available on the stack.
-     *
-     * @return bool
      */
     public function hasCurrentFont(): bool
     {
@@ -352,8 +366,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Returns the number of fonts currently stored in the stack.
-     *
-     * @return int
      */
     public function getStackSize(): int
     {
@@ -362,8 +374,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Returns the current font index in the stack.
-     *
-     * @return int
      */
     public function getCurrentFontIndex(): int
     {
@@ -372,8 +382,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Returns the PDF code to use the current font.
-     *
-     * @return string
      *
      * @throws FontException
      */
@@ -384,8 +392,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
     /**
      * Returns true if the current font type is Core, TrueType or Type1.
-     *
-     * @return bool
      *
      * @throws FontException
      */
@@ -398,14 +404,101 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Returns true if the current font type is TrueTypeUnicode or cidfont0.
      *
-     * @return bool
-     *
      * @throws FontException
      */
     public function isCurrentUnicodeFont(): bool
     {
         $currentFontType = $this->getCurrentFontType();
         return $currentFontType === 'TrueTypeUnicode' || $currentFontType === 'cidfont0';
+    }
+
+    /**
+     * Returns true if the current font encodes the text as glyph indices (CID == GID).
+     *
+     * @throws FontException
+     */
+    public function isCurrentGidEncoded(): bool
+    {
+        return $this->getFont($this->getCurrentStackItem()['key'])['gidenc'];
+    }
+
+    /**
+     * Returns the glyph index of the specified codepoint in the current font.
+     *
+     * @param int $ord Unicode codepoint.
+     *
+     * @return int The glyph index, or 0 (.notdef) when the font has no glyph for it.
+     *
+     * @throws FontException
+     */
+    public function getGidForOrd(int $ord): int
+    {
+        return $this->getFontGidForOrd($this->getFont($this->getCurrentStackItem()['key']), $ord);
+    }
+
+    /**
+     * Returns the glyph index of the specified codepoint in the given font.
+     *
+     * @param TFontData $font Font data.
+     * @param int       $ord  Unicode codepoint.
+     *
+     * @throws FontException
+     */
+    protected function getFontGidForOrd(array $font, int $ord): int
+    {
+        if ($ord > 0xFFFF) {
+            // Supplementary-plane codepoints do not fit the 16-bit CIDToGIDMap table
+            // and are stored separately by the importer.
+            $gid = (int) ($font['ctgu'][$ord] ?? 0);
+            // this member of the definition file is not bounded by its own format, so an
+            // entry outside the range of a glyph index is reported as .notdef
+            return $gid >= 0 && $gid <= self::MAX_GID ? $gid : 0;
+        }
+
+        if ($ord < 0) {
+            return 0;
+        }
+
+        if ($font['ctg'] === '') {
+            // a Core, Type1 or byte encoded TrueType font ships no CIDToGIDMap artifact,
+            // so it has no glyph index to report
+            return 0;
+        }
+
+        $table = $this->getCtgTable($font);
+        return (\ord($table[$ord * 2]) << 8) | \ord($table[($ord * 2) + 1]);
+    }
+
+    /**
+     * Encode an array of codepoints as the 2-byte glyph indices of the current font.
+     *
+     * Every glyph is recorded on the font, so that the output can build the /W array and the
+     * ToUnicode CMap of the glyphs used by the document, and its codepoint is added to the
+     * subset, so that the embedded program keeps the outline they describe.
+     *
+     * @param array<int, int> $uniarr Array of character codepoints.
+     *
+     * @throws FontException
+     */
+    public function ordArrToGidStr(array $uniarr): string
+    {
+        $fkey = $this->getCurrentStackItem()['key'];
+        $font = $this->getFont($fkey);
+        $subset = $font['subset'];
+        $str = '';
+        foreach ($uniarr as $ord) {
+            $gid = $this->getFontGidForOrd($font, $ord);
+            if ($gid !== 0) {
+                $this->addUsedGid($fkey, $gid, $ord);
+                if ($subset) {
+                    $this->addSubsetChar($fkey, $ord);
+                }
+            }
+
+            $str .= \chr($gid >> 8) . \chr($gid & 0xFF);
+        }
+
+        return $str;
     }
 
     /**
@@ -430,6 +523,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Replace missing characters with selected substitutions
      *
+     * A character is missing when the font has no width for it, under either of the maps
+     * isCharDefined() reads.
+     *
      * @param array<int, int>        $uniarr Array of character codepoints.
      * @param array<int, array<int>> $subs   Array of possible character substitutions.
      *                                       The key is the character to check (integer value),
@@ -443,7 +539,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     {
         $font = $this->getFontMetric($this->index);
         foreach ($uniarr as $pos => $uni) {
-            if (isset($font['cw'][$uni])) {
+            if (isset($font['cwu'][$uni]) || isset($font['cw'][$uni])) {
                 continue;
             }
 
@@ -453,7 +549,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             }
 
             foreach ($alts as $alt) {
-                if (!isset($font['cw'][$alt])) {
+                if (!isset($font['cwu'][$alt]) && !isset($font['cw'][$alt])) {
                     continue;
                 }
 
@@ -470,14 +566,15 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @param int $ord Unicode character value to convert
      *
-     * @return bool
-     *
      * @throws FontException
      */
     public function isCharDefined(int $ord): bool
     {
         $font = $this->getFontMetric($this->index);
-        return isset($font['cw'][$ord]);
+        // The codepoint-keyed map is consulted as well, the way getCharWidth() does: on a
+        // byte encoded font the character code of a glyph is not its codepoint, so a glyph
+        // outside Latin-1 is only reachable through that map.
+        return isset($font['cwu'][$ord]) || isset($font['cw'][$ord]);
     }
 
     /**
@@ -485,15 +582,11 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * @param int $ord Unicode character value.
      *
-     * @return float
-     *
      * @throws FontException
      */
     public function getCharWidth(int $ord): float
     {
-        if ($ord === 173 || $ord === 8203) {
-            // 173 = SHY character is not printed, as it is used for text hyphenation
-            // 8203 = ZWSP character
+        if (isset(self::ZERO_WIDTH[$ord])) {
             return 0;
         }
 
@@ -509,8 +602,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Returns the length of the string specified using an array of codepoints.
      *
      * @param array<int, int> $uniarr Array of character codepoints.
-     *
-     * @return float
      *
      * @throws FontException
      */
@@ -530,6 +621,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getOrdArrDims(array $uniarr): array
     {
+        // the loop below reads the key of each entry as its position in the string and
+        // addresses the appended terminator by count(), so the keys must be consecutive
+        $uniarr = \array_values($uniarr);
         $chars = \count($uniarr); // total number of chars
         $spaces = 0; // total number of spaces
         $totwidth = 0; // total string width
@@ -538,20 +632,14 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $curfont = $this->getFontMetric($this->index);
         $fact = $curfont['spacing'] * $curfont['stretching'];
         $fkey = $curfont['key'];
-        $subset = false;
-        if (
-            isset($this->font[$fkey])
-            && \is_array($this->font[$fkey])
-            && \array_key_exists('subset', $this->font[$fkey])
-            && $this->font[$fkey]['subset'] === true
-        ) {
-            $subset = true;
-        }
-        $uniarr[] = 8203; // add null at the end to ensure that the last word is processed
+        $subset = $this->getFont($fkey)['subset'];
+        $sentinel = \count($uniarr); // position of the appended terminator
+        $uniarr[] = 8203; // append a ZWSP to ensure that the last word is processed
         $split = [];
         $prevtotwidth = 0.0;
         foreach ($uniarr as $idx => $ord) {
-            if ($subset) {
+            // the terminator is internal and must not enter the subset of the font
+            if ($subset && $idx !== $sentinel) {
                 $this->addSubsetChar($fkey, $ord);
             }
 
@@ -559,12 +647,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             // which only holds the ones whose bidirectional type is not L.
             $unitype = UnicodeType::getType($ord);
             $bidiClass = BidiClass::tryFrom($unitype);
-            // Inline the width lookup using the already-resolved $curfont metric: calling
-            // getCharWidth() here would re-resolve getFontMetric($this->index) per character.
-            $chrwidth = match ($ord) {
-                173, 8203 => 0.0, // 173 = SHY (hyphenation), 8203 = ZWSP: not printed
-                default => $curfont['cwu'][$ord] ?? $curfont['cw'][$ord] ?? $curfont['dw'],
-            };
+            // width lookup on the already resolved $curfont metric
+            $chrwidth = isset(self::ZERO_WIDTH[$ord])
+                ? 0.0
+                : $curfont['cwu'][$ord] ?? $curfont['cw'][$ord] ?? $curfont['dw'];
             // Split on paragraph/segment separators (B, S), whitespace (WS) and boundary neutrals (BN).
             if (
                 $bidiClass === BidiClass::B
@@ -572,13 +658,15 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 || $bidiClass === BidiClass::WS
                 || $bidiClass === BidiClass::BN
             ) {
-                $currenttotwidth = $totwidth + ($fact * ($idx - 1));
+                $currenttotwidth = $totwidth + ($fact * \max(0, $idx - 1));
                 $split[$words] = [
                     'pos' => $idx,
                     'ord' => $ord,
                     'spaces' => $spaces,
                     'septype' => $unitype,
-                    'wordwidth' => $words > 0 ? $currenttotwidth - $prevtotwidth : 0,
+                    // width accumulated since the previous split point ($prevtotwidth starts
+                    // at zero, so the first word reports its own width)
+                    'wordwidth' => $currenttotwidth - $prevtotwidth,
                     'totwidth' => $currenttotwidth,
                     'totspacewidth' => $totspacewidth + ($fact * \max(0, $spaces - 1)),
                 ];
@@ -615,7 +703,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public function getCharBBox(int $ord): array
     {
         $font = $this->getFontMetric($this->index);
-        return $font['cbbox'][$ord] ?? [0.0, 0.0, 0.0, 0.0]; // glyph without outline
+        // The codepoint-keyed map is consulted first, as getCharWidth() does with 'cwu':
+        // on a byte encoded font the character code of a glyph is not its codepoint, so
+        // the box of everything outside Latin-1 is only reachable through this map.
+        return $font['cbboxu'][$ord] ?? $font['cbbox'][$ord] ?? [0.0, 0.0, 0.0, 0.0]; // glyph without outline
     }
 
     /**
@@ -653,8 +744,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     protected function getFontMetric(int $idx): array
     {
         $font = $this->getStackItem($idx);
-        // Cheap, collision-free cache key from just the fields the metric depends on,
-        // instead of md5(serialize($font)) which ran on every (mostly cache-hit) call.
+        // Cache key built from the fields the metric depends on. The stack index is not part
+        // of it: the same font at the same size yields the same metric wherever it sits on
+        // the stack, so the entry is shared and only 'idx' is patched on the way out.
         $mkey =
             $font['key']
             . '|'
@@ -666,7 +758,13 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             . '|'
             . $font['style'];
         if (isset($this->metric[$mkey])) {
-            return $this->metric[$mkey];
+            $metric = $this->metric[$mkey];
+            // move the entry back to the most recent end, so that the eviction below
+            // drops the combination the document has moved past and not this one
+            unset($this->metric[$mkey]);
+            $this->metric[$mkey] = $metric;
+            $metric['idx'] = $idx;
+            return $metric;
         }
 
         $fontkey = $font['key'];
@@ -680,8 +778,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $wratio = $cratio * $fontstretching; // horizontal ratio
         $data = $this->getFont($fontkey);
         $desc = $data['desc'];
-        // Build the glyph widths and bounding boxes already scaled to internal units in a
-        // single pass, instead of first casting into intermediate arrays and then rescaling.
+        // glyph widths and bounding boxes scaled to internal units
         $cw = [];
         foreach ($data['cw'] as $cid => $width) {
             $cw[(int) $cid] = (float) $width * $wratio;
@@ -692,20 +789,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             $cwu[(int) $codepoint] = (float) $width * $wratio;
         }
 
-        $cbbox = [];
-        foreach ($data['cbbox'] as $cid => $val) {
-            if (\count($val) !== 4) {
-                continue;
-            }
-
-            $bbox = \array_values($val);
-            $cbbox[(int) $cid] = [
-                0 => (float) $bbox[0] * $wratio,
-                1 => (float) $bbox[1] * $cratio,
-                2 => (float) $bbox[2] * $wratio,
-                3 => (float) $bbox[3] * $cratio,
-            ];
-        }
+        $cbbox = $this->scaleBBoxMap($data['cbbox'], $wratio, $cratio);
+        $cbboxu = $this->scaleBBoxMap($data['cbboxu'], $wratio, $cratio);
 
         $ascent = (float) $desc['Ascent'];
         $descent = (float) $desc['Descent'];
@@ -720,13 +805,17 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $ut = (float) $data['ut'];
         $fonttype = $data['type'];
         $outfont = \sprintf('/F%d %F Tf', (int) $data['i'], $fontsize); // PDF output string
-        $tbox = \array_pad(\explode(' ', \substr($fontbbox, 1, -1)), 4, '0');
+        // the four values may be written with any run of whitespace and with or without
+        // the enclosing brackets
+        $boxsplit = \preg_split('/\s+/', \trim($fontbbox, "[] \t\n\r\0\x0B"), -1, PREG_SPLIT_NO_EMPTY);
+        $tbox = \array_pad(\is_array($boxsplit) ? $boxsplit : [], 4, '0');
         // add this font in the stack with metrics in internal units
         $this->metric[$mkey] = [
             'ascent' => $ascent * $cratio,
             'avgwidth' => $avgwidth * $cratio * $fontstretching,
             'capheight' => $capheight * $cratio,
             'cbbox' => $cbbox,
+            'cbboxu' => $cbboxu,
             'cratio' => $cratio,
             'cw' => $cw,
             'cwu' => $cwu,
@@ -756,15 +845,58 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'ut' => $ut * $cratio,
             'xheight' => $xheight * $cratio,
         ];
+        $this->evictOldestMetrics();
         return $this->metric[$mkey];
+    }
+
+    /**
+     * Drop the least recently used metrics beyond the size of the cache.
+     */
+    protected function evictOldestMetrics(): void
+    {
+        $excess = \count($this->metric) - self::METRIC_CACHE_SIZE;
+        if ($excess <= 0) {
+            return;
+        }
+
+        foreach (\array_slice(\array_keys($this->metric), 0, $excess) as $oldest) {
+            unset($this->metric[$oldest]);
+        }
+    }
+
+    /**
+     * Scale a map of glyph bounding boxes to internal units.
+     *
+     * @param array<int, array<int, int>> $map     Bounding boxes indexed by character code.
+     * @param float                       $wratio  Horizontal ratio.
+     * @param float                       $cratio  Vertical ratio.
+     *
+     * @return array<int, TBBox>
+     */
+    protected function scaleBBoxMap(array $map, float $wratio, float $cratio): array
+    {
+        $scaled = [];
+        foreach ($map as $cid => $val) {
+            if (\count($val) !== 4) {
+                continue;
+            }
+
+            $bbox = \array_values($val);
+            $scaled[(int) $cid] = [
+                0 => (float) $bbox[0] * $wratio,
+                1 => (float) $bbox[1] * $cratio,
+                2 => (float) $bbox[2] * $wratio,
+                3 => (float) $bbox[3] * $cratio,
+            ];
+        }
+
+        return $scaled;
     }
 
     /**
      * Normalize the input size (minimum 0)
      *
      * @param ?float $size Font size in points (set to null to inherit the last font size).
-     *
-     * @return float
      *
      * @throws FontException
      */
@@ -779,15 +911,14 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             return self::DEFAULT_SIZE;
         }
 
-        return \max(0, $size);
+        // the branch above already returned for everything below zero
+        return $size;
     }
 
     /**
      * Normalize the input spacing (minimum 0)
      *
      * @param ?float $spacing Extra spacing between characters.
-     *
-     * @return float
      *
      * @throws FontException
      */
@@ -809,8 +940,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Normalize the input stretching
      *
      * @param ?float $stretching Horizontal character stretching ratio.
-     *
-     * @return float
      *
      * @throws FontException
      */
@@ -875,11 +1004,14 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         }
 
         $keys = [];
-        // remove spaces and symbols
-        $fontfamily = \preg_replace('/[^a-z0-9_\,]/', '', \strtolower($fontfamily));
-        if ($fontfamily === null) {
+        // remove spaces and symbols (the preg_* calls here and below return null or false
+        // only when the PCRE engine hits its backtrack or recursion limits)
+        $filtered = \preg_replace('/[^a-z0-9_\,]/', '', \strtolower($fontfamily));
+        if ($filtered === null) {
             throw new FontException('Invalid font family name');
         }
+
+        $fontfamily = $filtered;
 
         // extract all font names
         $fontslist = \preg_split('/[,]/', $fontfamily);
@@ -897,13 +1029,13 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
 
         // find first valid font name
         foreach ($fontslist as $font) {
-            $font = \preg_replace($fontpattern, $fontreplacement, $font);
-            if ($font === null) {
+            $styled = \preg_replace($fontpattern, $fontreplacement, $font);
+            if ($styled === null) {
                 throw new FontException('Invalid font family name: ' . $fontfamily);
             }
 
             // replace common family names and core fonts
-            $fontkey = \preg_replace($keypattern, $keyreplacement, $font);
+            $fontkey = \preg_replace($keypattern, $keyreplacement, $styled);
             if ($fontkey === null) {
                 throw new FontException('Invalid font family name: ' . $fontfamily);
             }
@@ -918,8 +1050,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      * Returns the normalized font family name or the current font name key.
      *
      * @param string $fontfamily Raw font family name.
-     *
-     * @return string
      *
      * @throws FontException
      */

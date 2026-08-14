@@ -1,4 +1,4 @@
-#:schema https://mago.carthage.software/1.43.0/schema.json
+#:schema https://mago.carthage.software/1.46.0/schema.json
 version = "1"
 php-version = "8.2.0"
 
@@ -33,6 +33,7 @@ no-boolean-flag-parameter = { enabled = false }
 no-else-clause = { enabled = false }
 no-empty = { enabled = false }
 no-empty-catch-clause = { enabled = false }
+no-ini-set = { enabled = false }
 no-isset = { enabled = false }
 readable-literal = { enabled = false }
 str-contains = { enabled = false }

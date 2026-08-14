@@ -20,7 +20,7 @@ use Com\Tecnick\File\Exception as FileException;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
- * Buffer Test
+ * Stack Test
  *
  * @since     2011-05-23
  * @category  Library
@@ -37,6 +37,44 @@ class StackTest extends TestUtil
     private function prepareTestEnvironment(): void
     {
         parent::setupTest();
+    }
+
+    /**
+     * Each split entry reports the width accumulated since the previous split point, the
+     * first word included.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testSplitReportsTheWidthOfTheFirstWord(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'core/Helvetica.afm');
+        $stack->insert($objnum, 'helvetica', '', 10, 0, 1);
+
+        // 'ab cd': the split points are the space and the appended terminator
+        $dims = $stack->getOrdArrDims([97, 98, 32, 99, 100]);
+        $split = $dims['split'];
+        $this->assertCount(2, $split);
+
+        $firstWord = $split[0] ?? null;
+        $secondWord = $split[1] ?? null;
+        $this->assertIsArray($firstWord);
+        $this->assertIsArray($secondWord);
+
+        $first = $stack->getOrdArrDims([97, 98])['totwidth'];
+        $this->bcAssertEqualsWithDelta($first, $firstWord['wordwidth'], 0.0001);
+        // the second word carries the separator that opens it
+        $this->bcAssertEqualsWithDelta(
+            $secondWord['totwidth'] - $firstWord['totwidth'],
+            $secondWord['wordwidth'],
+            0.0001,
+        );
     }
 
     /**
@@ -244,7 +282,7 @@ class StackTest extends TestUtil
     /**
      * Only the paragraph and segment separators, the whitespace and the boundary neutrals
      * split words. The type table lists the code points whose bidirectional type is not L,
-     * so the letters that are missing from it must not be taken as separators.
+     * so the letters missing from it are not separators.
      *
      * @throws FileException
      * @throws FontException
@@ -328,8 +366,8 @@ class StackTest extends TestUtil
     }
 
     /**
-     * Cloning a font with a different style must load the definition file of the
-     * requested style, not reuse the one of the source font (issue #19).
+     * Cloning a font with a different style loads the definition file of the requested
+     * style rather than reusing the one of the source font.
      *
      * @throws FileException
      * @throws FontException
@@ -349,8 +387,8 @@ class StackTest extends TestUtil
         $regular = $stack->insert($objnum, 'freesans', '', 12);
         $this->assertEquals('freesans', $regular['key']);
 
-        // the bold style has never been loaded before: the clone must load it from
-        // the bold definition file found in the same directory of the source font
+        // the bold style has not been loaded yet: the clone loads it from the bold
+        // definition file found in the same directory of the source font
         $clone = $stack->cloneFont($objnum, null, 'B', 12);
         $this->assertEquals('freesansB', $clone['key']);
         $this->assertEquals('B', $clone['style']);
@@ -366,7 +404,7 @@ class StackTest extends TestUtil
         $this->assertGreaterThan(0.0, $regularWidth);
         $this->assertGreaterThan($regularWidth, $cloneWidth);
 
-        // decoration-only style letters must be ignored when resolving the file
+        // decoration-only style letters are ignored when resolving the file
         $clone = $stack->cloneFont($objnum, 0, 'BIUDO', 14);
         $this->assertEquals('freesansBI', $clone['key']);
         $this->assertEquals('BIUDO', $clone['style']);
@@ -378,8 +416,8 @@ class StackTest extends TestUtil
     }
 
     /**
-     * Cloning a font with a different style whose definition file does not exist
-     * must fall back to the autodetection with the artificial style emulation.
+     * Cloning a font with a different style whose definition file does not exist falls
+     * back to the autodetection with the artificial style emulation.
      *
      * @throws FileException
      * @throws FontException
@@ -481,5 +519,257 @@ class StackTest extends TestUtil
 
         $stack->insert($objnum, 'badbbox', '', null, null, null, $this->getFontPath() . 'badbbox.json', null);
         $this->assertSame([0.0, 0.0, 0.0, 0.0], $stack->getCharBBox(65));
+    }
+
+    // -------------------------------------------------------------------------
+    // font metric cache
+    // -------------------------------------------------------------------------
+
+    /**
+     * The cached metric is shared between stack entries and its index is patched on the way
+     * out, so pushing the same font twice yields a metric pointing at the current slot.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testSameFontPushedTwiceGetsItsOwnStackIndex(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+
+        // identical font, size, spacing, stretching and style on both pushes
+        $first = $stack->insert($objnum, 'freesans', '', 12, 0.0, 1.0, '', null);
+        $second = $stack->insert($objnum, 'freesans', '', 12, 0.0, 1.0, '', null);
+
+        $this->assertSame(0, $first['idx']);
+        $this->assertSame(1, $second['idx']);
+        $this->assertSame(1, $stack->getCurrentFontIndex());
+        // everything else about the two metrics is identical
+        $this->assertSame($first['key'], $second['key']);
+        $this->assertSame($first['size'], $second['size']);
+
+        // popLastFont returns the metric of the font being removed
+        $popped = $stack->popLastFont();
+        $this->assertSame(1, $popped['idx']);
+        $this->assertSame(0, $stack->getCurrentFont()['idx']);
+    }
+
+    /**
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testMetricCacheStillReusesEntriesForTheSameStackSlot(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->insert($objnum, 'freesans', '', 12, 0.0, 1.0, '', null);
+
+        // repeated reads of the same slot are served from the cache
+        $this->assertSame($stack->getCurrentFont(), $stack->getCurrentFont());
+
+        $prop = new \ReflectionProperty($stack, 'metric');
+        /** @var array<string, mixed> $metric */
+        $metric = $prop->getValue($stack);
+        $this->assertCount(1, $metric);
+    }
+
+    // -------------------------------------------------------------------------
+    // character spacing on a leading separator
+    // -------------------------------------------------------------------------
+
+    /**
+     * The spacing term of a separator is clamped at zero, so a separator at index 0
+     * contributes no negative width.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testLeadingSeparatorDoesNotProduceANegativeWidth(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        // non-zero character spacing is what makes the term visible
+        $stack->insert($objnum, 'freesans', '', 12, 2.0, 1.0, '', null);
+
+        // a leading space, then 'AB'
+        $dims = $stack->getOrdArrDims([0x20, 0x41, 0x42]);
+
+        /** @var array<int, array<string, float|int>> $split */
+        $split = $dims['split'];
+        $this->assertNotEmpty($split);
+
+        $firstWord = \reset($split);
+        $this->assertIsArray($firstWord);
+        $this->assertSame(0, $firstWord['pos'] ?? null);
+        // the running total at index 0 is the width accumulated so far: zero, never negative
+        $this->assertSame(0.0, (float) ($firstWord['totwidth'] ?? -1));
+
+        foreach ($split as $word) {
+            $this->assertGreaterThanOrEqual(0.0, (float) ($word['totwidth'] ?? -1));
+            $this->assertGreaterThanOrEqual(0.0, (float) ($word['wordwidth'] ?? -1));
+        }
+    }
+
+    /**
+     * A separator that is not first keeps the spacing term it accumulated.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testSeparatorAfterTheFirstCharacterKeepsItsSpacingTerm(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->insert($objnum, 'freesans', '', 12, 2.0, 1.0, '', null);
+
+        // 'A', space, 'B': the separator sits at index 1, so the clamp does not apply
+        $dims = $stack->getOrdArrDims([0x41, 0x20, 0x42]);
+
+        /** @var array<int, array<string, float|int>> $split */
+        $split = $dims['split'];
+        $firstWord = \reset($split);
+        $this->assertIsArray($firstWord);
+        $this->assertSame(1, $firstWord['pos'] ?? null);
+        // width of 'A' plus one spacing unit
+        $this->assertGreaterThan(2.0, (float) ($firstWord['totwidth'] ?? 0));
+    }
+
+    /**
+     * getOrdArrDims() appends a ZWSP internally to close the last word, and that terminator
+     * does not enter the subset of the font.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testTextDimensionsDoNotAddTheInternalTerminatorToTheSubset(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1, true, true, false);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->insert($objnum, 'freesans', '', 12, 0, 1, '', true);
+
+        $stack->getOrdArrDims([0x41, 0x42]);
+
+        $fonts = $stack->getFonts();
+        $subsetchars = $fonts['freesans']['subsetchars'] ?? [];
+
+        $this->assertArrayHasKey(0x41, $subsetchars);
+        $this->assertArrayHasKey(0x42, $subsetchars);
+        // 8203 = ZWSP, the internal terminator
+        $this->assertArrayNotHasKey(8203, $subsetchars);
+    }
+
+    /**
+     * getOrdArrDims() reads the key of each entry as its position in the string and
+     * addresses the internal terminator by count(), so the input is normalised to a list
+     * first.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testTextDimensionsIgnoreTheKeysOfTheCodepointArray(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'core/Helvetica.afm');
+        // a non-zero spacing makes the position of each codepoint observable
+        $stack->insert($objnum, 'helvetica', '', 10, 2, 1);
+
+        $list = $stack->getOrdArrDims([65, 66, 67]);
+        $gappy = $stack->getOrdArrDims([0 => 65, 2 => 66, 5 => 67]);
+
+        $this->assertSame($list['totwidth'], $gappy['totwidth']);
+        $this->assertSame($list['chars'], $gappy['chars']);
+        $this->assertSame($list['words'], $gappy['words']);
+        $this->assertSame($list['split'], $gappy['split']);
+    }
+
+    /**
+     * The terminator is addressed by count(), which on a gapped input would fall on a real
+     * codepoint, so the keys are made consecutive before the loop runs.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testTextDimensionsSubsetEveryCodepointOfAGappedArray(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1, true, true, false);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $stack->insert($objnum, 'freesans', '', 12, 0, 1, '', true);
+
+        // count() is 2, which is also the key of the second codepoint
+        $stack->getOrdArrDims([0 => 0x41, 2 => 0x42]);
+
+        $fonts = $stack->getFonts();
+        $subsetchars = $fonts['freesans']['subsetchars'] ?? [];
+
+        $this->assertArrayHasKey(0x41, $subsetchars);
+        $this->assertArrayHasKey(0x42, $subsetchars);
+        $this->assertArrayNotHasKey(8203, $subsetchars);
+    }
+
+    /**
+     * The metric cache is shared between the stack entries that resolve to the same font,
+     * and each lookup reports the index it was asked for.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testFontMetricReportsTheRequestedStackIndex(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $first = $stack->insert($objnum, 'freesans', '', 12, 0, 1, '', false);
+        $second = $stack->insert($objnum, 'freesans', '', 12, 0, 1, '', false);
+
+        $this->assertSame(0, $first['idx']);
+        $this->assertSame(1, $second['idx']);
+        // the scaled widths are shared, only the index differs
+        $this->assertSame($first['cw'], $second['cw']);
+        $current = $stack->getCurrentFont();
+        $this->assertSame(1, $current['idx']);
+
+        $popped = $stack->popLastFont();
+        $this->assertSame(1, $popped['idx']);
+        $restored = $stack->getCurrentFont();
+        $this->assertSame(0, $restored['idx']);
     }
 }

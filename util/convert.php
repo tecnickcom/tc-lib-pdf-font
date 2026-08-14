@@ -128,6 +128,26 @@ if (empty($argv)) {
     showHelp();
 }
 
+// locate the Composer autoloader of a standalone checkout or of a host project
+$autoloadFound = false;
+foreach (
+    array(
+        \dirname(__DIR__) . '/vendor/autoload.php',    // standalone repository checkout
+        \dirname(__DIR__, 4) . '/vendor/autoload.php', // installed under <project>/vendor/tecnickcom/tc-lib-pdf-font
+    ) as $autoloadFile
+) {
+    if (\is_file($autoloadFile)) {
+        require_once $autoloadFile;
+        $autoloadFound = true;
+        break;
+    }
+}
+
+if (!$autoloadFound) {
+    \fwrite(STDERR, 'ERROR: Composer autoloader not found. Run "composer install" first.'."\n\n");
+    exit(5);
+}
+
 // initialize the array of options
 $options = array(
     'outpath'     => \dirname(__DIR__) . '/target/fonts/',
@@ -160,13 +180,17 @@ $inopt = \getopt($sopt, $lopt);
 
 // import options (with some sanitization)
 foreach ($inopt as $opt => $val) {
+    // getopt() hands over an array when the same option is repeated: the last occurrence
+    // wins, so that a repeated option is not passed on to a function expecting a string.
+    if (\is_array($val)) {
+        $val = \end($val);
+    }
+
     switch ($opt) {
         case 'o':
         case 'outpath':
-            // Keep the raw value when the directory does not exist yet:
-            // realpath() returns false for a missing path and would
-            // otherwise collapse the output path to '/'. The directory is
-            // created and the path normalized further below.
+            // realpath() returns false for a missing directory: in that case the
+            // raw value is kept and normalized below, after the directory is created.
             $resolved = \realpath($val);
             $options['outpath'] = ($resolved !== false) ? $resolved : $val;
             if (\substr($options['outpath'], -1) != '/') {
@@ -175,9 +199,21 @@ foreach ($inopt as $opt => $val) {
             break;
         case 't':
         case 'type':
-            if (\in_array($val, array('TrueTypeUnicode', 'TrueType', 'Type1', 'CID0JP', 'CID0KR', 'CID0CS', 'CID0CT'))) {
-                $options['type'] = $val;
+            // The accepted names are read from the enum the library declares, so that this
+            // list cannot drift from it; an unknown value is reported instead of being
+            // dropped, which used to turn a typo into a silently autodetected font. The
+            // empty case of the enum is the autodetection this option overrides.
+            $valid_types = \array_values(\array_filter(\array_map(
+                static function (\Com\Tecnick\Pdf\Font\FontType $case): string {
+                    return $case->value;
+                },
+                \Com\Tecnick\Pdf\Font\FontType::cases()
+            )));
+            if (!\in_array($val, $valid_types, true)) {
+                \fwrite(STDERR, 'ERROR: unknown font type: '.$val.' (valid: '.\implode(', ', $valid_types).')'."\n\n");
+                exit(6);
             }
+            $options['type'] = $val;
             break;
         case 'e':
         case 'encoding':
@@ -222,7 +258,7 @@ if (!is_dir($options['outpath']) || !\is_writable($options['outpath'])) {
     exit(2);
 }
 
-// the directory now exists: normalize to an absolute path with trailing slash
+// normalize the existing directory to an absolute path with a trailing slash
 $options['outpath'] = \realpath($options['outpath']) . '/';
 
 if (empty($options['fonts'])) {
@@ -235,28 +271,6 @@ if (empty($options['fonts'])) {
 // count conversions
 $convert_errors = 0;
 $convert_success = 0;
-
-// Locate the Composer autoloader, supporting both a standalone checkout
-// (vendor inside the project root) and installation as a dependency
-// (autoloader at the top level of the host project).
-$autoloadFound = false;
-foreach (
-    array(
-        \dirname(__DIR__) . '/vendor/autoload.php',    // standalone repository checkout
-        \dirname(__DIR__, 4) . '/vendor/autoload.php', // installed under <project>/vendor/tecnickcom/tc-lib-pdf-font
-    ) as $autoloadFile
-) {
-    if (\is_file($autoloadFile)) {
-        require_once $autoloadFile;
-        $autoloadFound = true;
-        break;
-    }
-}
-
-if (!$autoloadFound) {
-    \fwrite(STDERR, 'ERROR: Composer autoloader not found. Run "composer install" first.'."\n\n");
-    exit(5);
-}
 
 foreach ($options['fonts'] as $font) {
     try {

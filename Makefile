@@ -96,7 +96,7 @@ PHPDOC=$(shell which phpDocumentor)
 FONTLIST=core pdfa cid0 freefont unifont dejavu noto
 
 # Mago version
-MAGOVERSION=1.43.0
+MAGOVERSION=1.46.0
 
 # --- MAKE TARGETS ---
 
@@ -212,7 +212,8 @@ endif
 ## Format the source code
 .PHONY: format
 format:
-	./vendor/bin/mago fmt src test
+	./vendor/bin/mago --config ./mago.src.toml fmt src
+	./vendor/bin/mago --config ./mago.test.toml fmt test
 
 ## Analyze and Lint the source code
 .PHONY: lint
