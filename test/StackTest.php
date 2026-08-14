@@ -40,6 +40,71 @@ class StackTest extends TestUtil
     }
 
     /**
+     * An AFM file declares the extent of the glyph outlines, not a line metric: Helvetica
+     * states an ascent of 718 against a cap height of 718, so a line box measured from it
+     * would leave no room above a capital. The line box of an AFM based font is taken from
+     * the FontBBox, while the font descriptor keeps the declared values.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testCoreFontLineBoxIsMeasuredFromTheFontBBox(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'core/Helvetica.afm');
+        // a size of 1000 makes the scaling ratio 1, so the metric is in font units
+        $metric = $stack->insert($objnum, 'helvetica', '', 1000);
+
+        $this->assertSame('Core', $metric['type']);
+        $this->assertEqualsWithDelta(931.0, $metric['ascent'], 0.01, 'the ascent is the FontBBox top');
+        $this->assertEqualsWithDelta(-225.0, $metric['descent'], 0.01, 'the descent is the FontBBox bottom');
+        $this->assertEqualsWithDelta(1156.0, $metric['height'], 0.01, 'the line box spans the FontBBox');
+
+        // the declared cap height is untouched, and it now sits below the top of the line
+        // box, so a capital no longer touches it
+        $this->assertEqualsWithDelta(718.0, $metric['capheight'], 0.01);
+        $this->assertGreaterThan($metric['capheight'], $metric['ascent']);
+
+        // the font descriptor keeps the values declared by the AFM file
+        $desc = $stack->getFont($metric['key'])['desc'];
+        $this->assertSame(718, $desc['Ascent'], 'the descriptor /Ascent stays the declared ascent');
+        $this->assertSame(-207, $desc['Descent'], 'the descriptor /Descent stays the declared descent');
+    }
+
+    /**
+     * A TrueType font declares its own line metrics in the 'hhea' table, which already carry
+     * the internal leading, so the line box is measured from them and not from the FontBBox.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testTrueTypeFontLineBoxKeepsTheDeclaredMetrics(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+
+        $objnum = 1;
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(1);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $metric = $stack->insert($objnum, 'freesans', '', 1000);
+
+        $desc = $stack->getFont($metric['key'])['desc'];
+        $this->assertEqualsWithDelta((float) $desc['Ascent'], $metric['ascent'], 0.01);
+        $this->assertEqualsWithDelta((float) $desc['Descent'], $metric['descent'], 0.01);
+        $this->assertGreaterThan(
+            $metric['ascent'],
+            $metric['fbbox'][3] ?? 0.0,
+            'the FontBBox is the taller of the two',
+        );
+    }
+
+    /**
      * Each split entry reports the width accumulated since the previous split point, the
      * first word included.
      *

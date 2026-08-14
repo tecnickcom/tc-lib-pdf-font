@@ -64,6 +64,11 @@ use Com\Tecnick\Unicode\Data\Type as UnicodeType;
  *        'stretching': float,
  *    }
  *
+ * The 'ascent', 'descent' and 'height' members measure the line box of the text and are
+ * not the '/Ascent' and '/Descent' of the font descriptor: an AFM based font declares the
+ * extent of its glyph outlines rather than a line metric, so its line box is measured from
+ * the FontBBox instead. See getFontMetric().
+ *
  * @phpstan-type TFontMetric array{
  *     'ascent': float,
  *     'avgwidth': float,
@@ -809,6 +814,17 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         // the enclosing brackets
         $boxsplit = \preg_split('/\s+/', \trim($fontbbox, "[] \t\n\r\0\x0B"), -1, PREG_SPLIT_NO_EMPTY);
         $tbox = \array_pad(\is_array($boxsplit) ? $boxsplit : [], 4, '0');
+        // An AFM file declares no line layout metric: 'Ascender' and 'Descender' bound the
+        // unaccented glyph outlines, so a line box built from them leaves no room above a
+        // capital (Helvetica declares an ascent of 718 against a cap height of 718). The
+        // FontBBox is the analogue of the TrueType hhea metrics, which do carry the internal
+        // leading, so it provides the vertical extent of the line instead. The descriptor
+        // keeps the declared values: only the layout of the text is measured from the box.
+        if ($fonttype === 'Core' || $fonttype === 'Type1') {
+            $ascent = \max($ascent, \is_numeric($tbox[3]) ? (float) $tbox[3] : 0.0);
+            $descent = \min($descent, \is_numeric($tbox[1]) ? (float) $tbox[1] : 0.0);
+        }
+
         // add this font in the stack with metrics in internal units
         $this->metric[$mkey] = [
             'ascent' => $ascent * $cratio,
