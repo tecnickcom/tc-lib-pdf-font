@@ -34,7 +34,7 @@
         "ext-zlib": "*",
         "tecnickcom/tc-lib-file": "^3.7",
         "tecnickcom/tc-lib-unicode-data": "^3.0",
-        "tecnickcom/tc-lib-pdf-encrypt": "^2.9"
+        "tecnickcom/tc-lib-pdf-encrypt": "^2.10"
     },
     "suggest": {
         "ext-iconv": "Decodes legacy Macintosh (MacRoman) TrueType name strings",

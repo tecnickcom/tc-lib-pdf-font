@@ -24,7 +24,7 @@ Requires:  php-composer(%{c_vendor}/tc-lib-file) >= 3.7.4
 Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) < 3.0.0
 Requires:  php-composer(%{c_vendor}/tc-lib-unicode-data) >= 3.0.3
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) < 3.0.0
-Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 2.9.4
+Requires:  php-composer(%{c_vendor}/tc-lib-pdf-encrypt) >= 2.10.0
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) < 2.0.0
 Requires:  php-composer(%{c_vendor}/tc-lib-pdf-font-data-core) >= 1.8.7
 
