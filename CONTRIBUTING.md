@@ -124,7 +124,6 @@ The `Makefile` exposes all common development tasks:
 | `make format` | Auto-format the code |
 | `make buildall` | Install dependencies, fix style, run QA, and build packages |
 | `make clean` | Remove `vendor/` and `target/` directories |
-| `make server` | Start the built-in PHP development server for the examples |
 
 Run `make help` to see the full list of available targets.
 
