@@ -25,7 +25,7 @@ use Com\Tecnick\Pdf\Font\Stack;
  * WinAnsiEncoding assigns two bytes to the same glyph name, and both carry its metrics.
  *
  * ISO 32000-1 Annex D.2 gives 'space' the codes 32 and 160 and 'hyphen' the codes 45 and
- * 173, and both codes of each pair are recorded with the width of the glyph they select.
+ * 173, and both codes of each pair carry the width of the glyph.
  *
  * @since     2026-08-14
  * @category  Library

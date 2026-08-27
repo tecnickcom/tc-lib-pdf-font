@@ -57,10 +57,7 @@ class FontPaths
 
         $dirobj = new Dir();
         $kpathfonts = \defined('K_PATH_FONTS') ? (string) \constant('K_PATH_FONTS') : '';
-        // Directories where to search for the font file, most specific first. The directory
-        // holding the font definition wins, as the importer stores the artifacts of a font
-        // next to it. The process working directory ('.') is a legacy fallback and is not a
-        // trusted root.
+        // directories to search, most specific first
         $dirs = \array_unique([
             $fontdir,
             $kpathfonts,
@@ -73,8 +70,7 @@ class FontPaths
                 continue;
             }
 
-            $path = $dir . DIRECTORY_SEPARATOR . $file;
-            // a directory is readable too, so the entry must also be a regular file
+            $path = \rtrim($dir, '/\\') . DIRECTORY_SEPARATOR . $file;
             if (\is_file($path) && \is_readable($path)) {
                 return $path;
             }

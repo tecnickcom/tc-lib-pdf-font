@@ -19,8 +19,8 @@ namespace Test;
 /**
  * Minimal reader of the sfnt structures a test needs to inspect an emitted font program.
  *
- * The library itself is what these tests are checking, so the table directory, the loca
- * table and the glyph offsets are read here independently of it.
+ * The table directory, the loca table and the glyph offsets are read here independently of
+ * the library under test.
  *
  * @since     2026-08-14
  * @category  Library

@@ -111,9 +111,8 @@ class TypeOneCharstringWidthTest extends TestUtil
     }
 
     /**
-     * An escaped command is the pair '12 n'. Decoding the second byte as a value of its own
-     * leaves the decoder one byte out of phase for the rest of the charstring, so the two
-     * are consumed together and yield a single decoded entry.
+     * An escaped command is the pair '12 n', consumed together and yielding a single
+     * decoded entry.
      *
      * @throws \Throwable
      */

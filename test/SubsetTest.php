@@ -563,8 +563,7 @@ class SubsetTest extends TestUtil
 
     /**
      * The short format stores the glyph offsets halved as 16-bit values, so the last one it
-     * reaches is 0xFFFF * 2. A larger one is refused rather than truncated into an entry
-     * pointing at the middle of a glyph.
+     * reaches is 0xFFFF * 2 and a larger one is refused.
      *
      * @throws \Throwable
      */

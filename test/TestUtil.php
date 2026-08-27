@@ -41,9 +41,6 @@ class TestUtil extends TestCase
         }
 
         $fontPath = (string) \constant('K_PATH_FONTS');
-        // Removed with PHP rather than by shelling out to 'rm -rf': the path does not have
-        // to survive a trip through a shell, no POSIX utility is required, and the output
-        // of the command does not end up in the middle of the test report.
         self::removeDirectory($fontPath);
         \mkdir($fontPath, 0o755, true);
     }
@@ -103,9 +100,6 @@ class TestUtil extends TestCase
     /**
      * Assert that the callback throws $exception and that the message mentions $needle.
      *
-     * Written as an explicit catch rather than expectExceptionMessage(), which PHPUnit 13
-     * deprecates, and which would also let the assertions after the call be skipped.
-     *
      * @param class-string<\Throwable> $exception
      */
     public function assertThrowsMessage(string $exception, string $needle, callable $callback): void
@@ -123,10 +117,6 @@ class TestUtil extends TestCase
 
     /**
      * Decode a font definition file into an array of members.
-     *
-     * Several tests read back what an import wrote, and every one of them has to state
-     * that the file is valid JSON and that a member holds the type it asserts on; the
-     * helpers below say it once.
      *
      * @return array<string, mixed>
      */

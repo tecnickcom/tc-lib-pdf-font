@@ -40,10 +40,8 @@ class StackTest extends TestUtil
     }
 
     /**
-     * An AFM file declares the extent of the glyph outlines, not a line metric: Helvetica
-     * states an ascent of 718 against a cap height of 718, so a line box measured from it
-     * would leave no room above a capital. The line box of an AFM based font is taken from
-     * the FontBBox, while the font descriptor keeps the declared values.
+     * The line box of an AFM based font is widened to the FontBBox, while the font
+     * descriptor keeps the values the file declares.
      *
      * @throws FileException
      * @throws FontException
@@ -346,8 +344,7 @@ class StackTest extends TestUtil
 
     /**
      * Only the paragraph and segment separators, the whitespace and the boundary neutrals
-     * split words. The type table lists the code points whose bidirectional type is not L,
-     * so the letters missing from it are not separators.
+     * split words.
      *
      * @throws FileException
      * @throws FontException
@@ -586,6 +583,28 @@ class StackTest extends TestUtil
         $this->assertSame([0.0, 0.0, 0.0, 0.0], $stack->getCharBBox(65));
     }
 
+    /**
+     * The metric scales the four corners of every box it is given, and skips a box that
+     * does not hold four.
+     *
+     * @throws FontException
+     */
+    public function testAGlyphBoxWithoutFourCornersIsNotScaled(): void
+    {
+        $harness = new StackTestHarness(1);
+
+        $scaled = $harness->runScaleBBoxMap(
+            [
+                65 => [1, 2, 3],
+                66 => [1, 2, 3, 4],
+            ],
+            2.0,
+            3.0,
+        );
+
+        $this->assertSame([66 => [2.0, 6.0, 6.0, 12.0]], $scaled);
+    }
+
     // -------------------------------------------------------------------------
     // font metric cache
     // -------------------------------------------------------------------------
@@ -749,9 +768,8 @@ class StackTest extends TestUtil
     }
 
     /**
-     * getOrdArrDims() reads the key of each entry as its position in the string and
-     * addresses the internal terminator by count(), so the input is normalised to a list
-     * first.
+     * getOrdArrDims() reads the key of each entry as its position in the string, so the
+     * input is normalised to a list first.
      *
      * @throws FileException
      * @throws FontException

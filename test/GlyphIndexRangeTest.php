@@ -22,9 +22,8 @@ use Com\Tecnick\Pdf\Font\Stack;
 /**
  * A glyph index is a 16-bit value, and everything that records one keeps it in that range.
  *
- * An index above 0xFFFF read from the 'ctgu' member of a definition file is rejected: the
- * ToUnicode CMap declares the '<0000> <FFFF>' codespace range, and ordArrToGidStr() writes
- * the index as two bytes.
+ * An index above 0xFFFF read from the 'ctgu' member of a definition file is reported as
+ * .notdef.
  *
  * @since     2026-08-14
  * @category  Library

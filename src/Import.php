@@ -124,18 +124,18 @@ class Import
         ?ObjFile $fileHelper = null,
     ) {
         if ($flags < 0 || $flags > 0xFFFF_FFFF) {
-            // the descriptor flags are an unsigned 32-bit integer (ISO 32000-1 Table 122),
-            // and a value outside that range would be written verbatim in the definition file
+            // the descriptor flags are an unsigned 32-bit integer (ISO 32000-1 Table 122)
             throw new FontException('the font descriptor flags must fit 32 unsigned bits: ' . $flags);
         }
 
-        // isValidFile() trims its argument and rewrites it into a 'file://' URL, so it is
-        // given a copy: 'input_file' keeps the plain trimmed path.
-        $file = self::resolveInputPath(\trim($file));
         $this->ownsFileHelper = $fileHelper === null;
-        $this->fileHelper = $fileHelper ?? new ObjFile(allowedPaths: self::buildAllowedPaths($file));
-        $validatedFile = $file;
-        if (!$this->fileHelper->isValidFile($validatedFile)) {
+        $this->fileHelper = $fileHelper ?? new ObjFile();
+        $file = $this->fileHelper->resolveLocalPath($file);
+        if ($this->ownsFileHelper) {
+            $this->fileHelper->setAllowedPaths(self::buildAllowedPaths($file));
+        }
+
+        if (!$this->fileHelper->isAllowedFile($file)) {
             throw new FontException('Invalid font file name: ' . $file);
         }
 
@@ -178,16 +178,14 @@ class Import
         $this->fdt['Flags'] = $flags;
         $this->initFlags();
         $this->fdt['enc'] = $this->getEncodingTable($encoding);
-        // 'diff' is derived in saveFontData(), after a processor had the chance to change the type
+        // 'diff' is derived in saveFontData(), where the type is final
         $this->fdt['originalsize'] = \strlen($this->font);
         $this->fdt['ctg'] = $this->fdt['file_name'] . '.ctg.z';
         $this->fdt['platform_id'] = $platform_id;
         $this->fdt['encoding_id'] = $encoding_id;
         $this->fdt['linked'] = $linked;
 
-        // The font program and the CIDToGIDMap are stored before the definition file that
-        // describes them exists, so the artifacts this import creates are removed when it
-        // does not complete.
+        // the artifacts this import creates are removed when it does not complete
         $leftovers = $this->getArtifactPaths();
 
         try {
@@ -204,8 +202,7 @@ class Import
                     ),
                 };
             } catch (\RangeException $exc) {
-                // a truncated or corrupt font program makes the byte reader run past the end:
-                // report it as a font error, the exception type this library contracts
+                // the byte reader ran past the end of a truncated or corrupt font program
                 throw new FontException('Malformed font program: ' . $exc->getMessage(), 0, $exc);
             }
 
@@ -221,8 +218,8 @@ class Import
     /**
      * Returns the artifacts of this import that are not on disk yet, indexed by full path.
      *
-     * Files that already exist are excluded: a symbolic link left by a previous run is
-     * reused by linked mode (see TrueType::setFontFile) and must not be removed.
+     * Files that already exist are excluded, since linked mode reuses an existing symbolic
+     * link (see TrueType::setFontFile).
      *
      * @return array<string, true>
      */
@@ -250,11 +247,7 @@ class Import
      * Returns the name of the symbolic link that linked mode creates for a font program.
      *
      * The extension of the input file is carried over, reduced to lowercase alphanumeric
-     * characters: it ends up both on the filesystem and, unescaped, inside the hand-built
-     * JSON of the definition file.
-     *
-     * Shared by Import, which removes this artifact when the import fails, and TrueType,
-     * which creates it.
+     * characters.
      *
      * @param string $fileName  Sanitized font name stem.
      * @param string $inputFile Path of the input font file.
@@ -274,8 +267,7 @@ class Import
     private static function removeArtifacts(array $paths): void
     {
         foreach (\array_keys($paths) as $path) {
-            // is_link() also answers for a link whose target is gone, which file_exists()
-            // resolves and reports as missing
+            // is_link() also answers for a link whose target is gone
             if (!\file_exists($path) && !\is_link($path)) {
                 continue;
             }
@@ -326,9 +318,7 @@ class Import
         }
 
         // ISO 32000-1 Table 123: Symbolic (bit 3, 4) and Nonsymbolic (bit 6, 32) shall not
-        // both be set nor both be clear. The symbolic one wins, as it is the one this import
-        // states from the font itself, while the nonsymbolic one is the default of the
-        // $flags argument. Core overrides this from the encoding scheme of the AFM.
+        // both be set nor both be clear; the symbolic one wins
         $this->fdt['Flags'] = ($this->fdt['Flags'] & 4) !== 0 ? $this->fdt['Flags'] & ~32 : $this->fdt['Flags'] | 32;
     }
 
@@ -347,44 +337,14 @@ class Import
     }
 
     /**
-     * Anchor a relative font path to the current working directory.
-     *
-     * The trusted root is the directory of the font, and the file helper compares path
-     * strings to decide whether a path is inside a root, so both sides must be absolute.
-     * An already absolute path, or a stream URL the helper rejects on its own, is returned
-     * unchanged.
-     *
-     * @param string $file Font file path as given by the caller.
-     */
-    private static function resolveInputPath(string $file): string
-    {
-        // '/' is absolute on every platform this runs on, DIRECTORY_SEPARATOR covers the
-        // '\' Windows also accepts, and the last pattern its drive-qualified form
-        if (
-            $file === ''
-            || \str_contains($file, '://')
-            || \str_starts_with($file, '/')
-            || \str_starts_with($file, DIRECTORY_SEPARATOR)
-            || \preg_match('#^[a-zA-Z]:[\\\\/]#', $file) === 1
-        ) {
-            return $file;
-        }
-
-        $cwd = \getcwd();
-        return $cwd === false ? $file : \rtrim($cwd, '/\\') . DIRECTORY_SEPARATOR . $file;
-    }
-
-    /**
      * Build trusted roots for local file validation.
      *
      * The roots are the input font directory and, when available, the output directory.
      * Each root is listed both as given and, when resolvable, as its canonical realpath.
      *
-     * TRUST BOUNDARY: the input root is derived from the caller-supplied font path, so this
-     * allowlist authorizes whatever directory it is asked to read. It confines the import to
-     * the font's own directory, but it is not a sandbox against a hostile path: never pass a
-     * path taken from user input. Font loading at render time uses
-     * FontPaths::buildAllowedPaths(), whose roots do not depend on any caller argument.
+     * The input root is derived from the caller-supplied font path, so this allowlist
+     * confines the import to the font's own directory but is not a sandbox against a hostile
+     * path: never pass a path taken from user input.
      *
      * @return array<string>
      */
@@ -431,8 +391,7 @@ class Import
      */
     protected function saveFontData(): void
     {
-        // Re-derived from the final type: a processor may downgrade 'TrueTypeUnicode' to
-        // 'TrueType' (see TrueType::getCIDToGIDMap), and both members depend on it
+        // re-derived here because a processor may downgrade 'TrueTypeUnicode' to 'TrueType'
         $this->fdt['isUnicode'] = $this->isUnicodeType($this->fdt['type']);
         $this->fdt['diff'] = $this->getEncodingDiff();
 
@@ -522,7 +481,7 @@ class Import
             . (string) ($missingWidth ?? 0)
             . '}';
         $pfile .= self::getBBoxMapJson('cbbox', $this->fdt['cbbox']);
-        // the boxes of the same glyphs keyed by codepoint, as 'cwu' does for 'cw'
+        // the same boxes keyed by codepoint, as 'cwu' does for 'cw'
         $pfile .= self::getBBoxMapJson('cbboxu', $this->fdt['cbboxu']);
         $pfile .= self::getWidthMapJson('cw', $this->fdt['cw']);
         $pfile .= self::getWidthMapJson('cwu', $this->fdt['cwu']);
@@ -537,10 +496,8 @@ class Import
      * Store the CIDToGIDMap artifact of a TrueType font and return the definition file
      * members that describe it.
      *
-     * Only a 'TrueTypeUnicode' font reads it: Load::setName() derives the Identity-H
-     * encoding and the glyph index encoding from it for that type alone, and the output of
-     * a simple TrueType font (OutFont::getTrueType) never names it. For any other type the
-     * artifact is not written and 'ctg' is cleared.
+     * The artifact is written only for a 'TrueTypeUnicode' font; for any other type 'ctg'
+     * is cleared.
      *
      * @throws FileException
      * @throws FontException
@@ -548,7 +505,6 @@ class Import
     private function saveCIDToGIDMap(): string
     {
         if ($this->fdt['type'] !== 'TrueTypeUnicode') {
-            // the artifact is not written, so the definition file must not name it either
             $this->fdt['ctg'] = '';
             return '';
         }
@@ -558,8 +514,8 @@ class Import
         $ctgustr = '';
         foreach ($this->fdt['ctgdata'] as $cid => $gid) {
             if ($cid > 0xFFFF) {
-                // Supplementary-plane codepoints do not fit the 16-bit
-                // CIDToGIDMap table and are stored in the definition file.
+                // codepoints above the BMP do not fit the 16-bit CIDToGIDMap table
+                // and are stored in the definition file
                 $ctgustr .= ',"' . $cid . '":' . (int) $gid;
                 continue;
             }
@@ -657,8 +613,7 @@ class Import
     protected function findOutputPath(string $output_path = ''): string
     {
         if ($output_path !== '') {
-            // is_dir() is checked as well because is_writable() is also true for a writable
-            // regular file. An explicit path is reported rather than replaced.
+            // is_writable() is also true for a writable regular file, hence the is_dir() check
             if (self::hasUnsafePath($output_path) || !\is_dir($output_path) || !\is_writable($output_path)) {
                 throw new FontException('The output path is not a writable directory: ' . $output_path);
             }
@@ -675,7 +630,7 @@ class Import
 
         $dirobj = new Dir();
         $dir = $dirobj->findParentDir('fonts', __DIR__);
-        if ($dir === '/') {
+        if ($dir === '') {
             $dir = \sys_get_temp_dir();
         }
 
@@ -684,9 +639,6 @@ class Import
 
     /**
      * Normalize a directory so it can be concatenated with a bare file name.
-     *
-     * Every consumer of 'dir' builds paths as `dir . file`, so the separator is part of
-     * the directory.
      *
      * @param string $dir Directory path.
      */
@@ -711,7 +663,7 @@ class Import
                 return 'Core';
             }
 
-            // Formats carrying a signature this library cannot read, reported by name
+            // formats carrying a signature this library cannot read
             $unsupported = [
                 'OTTO' => 'OpenType with CFF data',
                 'ttcf' => 'TrueType Collection',
@@ -728,7 +680,7 @@ class Import
             }
 
             if (\strlen($this->font) < 4) {
-                // too short to carry a sfnt version, and getULong() would read out of bounds
+                // too short to carry a sfnt version
                 throw new FontException('Unable to detect the font type: the file is too short');
             }
 
@@ -740,8 +692,7 @@ class Import
         }
 
         if (\str_starts_with($font_type, 'CID0')) {
-            // only the four known collections have a CIDSystemInfo block to emit;
-            // any other name would write a definition file with a missing member
+            // only the known collections have a CIDSystemInfo block to emit
             if (!isset(UniToCid::TYPE[$font_type])) {
                 throw new FontException('unknown or unsupported CID-0 font type: ' . $font_type);
             }
@@ -749,8 +700,6 @@ class Import
             return 'cidfont0';
         }
 
-        // The enum lists the type names this class accepts, so it is the one place that
-        // has to know them: an unknown name is refused by it.
         return FontType::fromLoose($font_type)->value;
     }
 
@@ -779,9 +728,6 @@ class Import
         }
 
         if (!isset(Encoding::MAP[$enc])) {
-            // An unknown name would reach the definition file unnoticed: getEncodingDiff()
-            // would emit no /Differences, the font dictionary would declare WinAnsi, and
-            // the Type1 importer would find no glyph name to key the widths by.
             throw new FontException('Unknown encoding name: ' . $encoding);
         }
 
@@ -801,7 +747,6 @@ class Import
             && ($this->fdt['enc'] !== '' && $this->fdt['enc'] !== 'cp1252')
         ) {
             // build differences from reference encoding
-            // ('enc' comes from getEncodingTable(), which only returns a known encoding)
             $enc_ref = Encoding::MAP['cp1252'];
             $enc_target = Encoding::MAP[$this->fdt['enc']];
             $last = 0;
@@ -827,10 +772,8 @@ class Import
     /**
      * Update the CIDToGIDMap string with a new value
      *
-     * The CIDToGIDMap is made up of 16-bit values mapping a zero-based
+     * The CIDToGIDMap is made up of 16-bit big-endian values mapping a zero-based
      * Character Identifier index to its zero-based glyph id index.
-     *
-     * The map is taken by reference to avoid copying the 131072-byte string on every call.
      *
      * @param string $map CIDToGIDMap (binary), modified in place.
      * @param int    $cid CID value.
@@ -838,8 +781,7 @@ class Import
      */
     protected function updateCIDtoGIDmap(string &$map, int $cid, int $gid): void
     {
-        // The CIDToGIDMap is a table of 16-bit big-endian values, so entries outside
-        // the 0..0xFFFF range cannot be represented and are left as 0 (notdef).
+        // entries outside the 0..0xFFFF range are left as 0 (notdef)
         if ($cid >= 0 && $cid <= 0xFFFF && $gid >= 0 && $gid <= 0xFFFF) {
             $map[$cid * 2] = \chr($gid >> 8);
             $map[($cid * 2) + 1] = \chr($gid & 0xFF);

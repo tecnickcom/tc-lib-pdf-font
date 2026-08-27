@@ -19,9 +19,8 @@ namespace Test;
 /**
  * What the Private dict of a Type 1 font states wins over what its blue zones suggest.
  *
- * '/BlueValues' only approximates the cap height and the x-height, and the block reading it
- * runs after the one reading the explicit entries, so it applies only when the dict declares
- * no '/CapHeight'.
+ * '/BlueValues' only approximates the cap height and the x-height, so it applies only when
+ * the dict declares no '/CapHeight'.
  *
  * @since     2026-08-14
  * @category  Library

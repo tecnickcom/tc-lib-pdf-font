@@ -41,9 +41,8 @@ class Core implements ProcessorInterface
     /**
      * Adobe Glyph List subset mapping AFM glyph names to Unicode codepoints.
      *
-     * It covers the glyph names of the Latin text Core14 fonts. The names the two symbol
-     * fonts give to their own glyphs are mostly outside it, which is why the map is only
-     * consulted for a font whose codes are those of a text encoding (see isFontSpecific()).
+     * It covers the glyph names of the Latin text Core14 fonts, and is only consulted for a
+     * font whose codes are those of a text encoding (see isFontSpecific()).
      *
      * @var array<string, int>
      */
@@ -370,7 +369,7 @@ class Core implements ProcessorInterface
      * text encoding, so that the metrics are addressed by glyph name through WinAnsi.
      *
      * Anything else is taken to be the font's own encoding (see isFontSpecific()). The empty
-     * string is listed because the key is optional.
+     * string is listed because the row is optional.
      *
      * @var array<string, bool>
      */
@@ -391,9 +390,8 @@ class Core implements ProcessorInterface
      * WinAnsi (cp1252) glyph name to byte indexes, the inverse of Encoding::MAP['cp1252'].
      * Built once on first use.
      *
-     * A name may be assigned more than one byte: WinAnsiEncoding gives 'space' both 32 and
-     * 160, and 'hyphen' both 45 and 173 (ISO 32000-1 Annex D.2), so every byte is listed
-     * and the metric is recorded under all of them.
+     * A name may be assigned more than one byte (ISO 32000-1 Annex D.2), so every byte it is
+     * assigned is listed.
      *
      * @var array<string, array<int, int>>|null
      */
@@ -448,11 +446,8 @@ class Core implements ProcessorInterface
      * Returns true when the character codes of the AFM are the font's own, rather than
      * those of a Latin text encoding.
      *
-     * The two Core14 symbol fonts are recognised by name. For every other font the answer
-     * comes from the declared EncodingScheme: TEXT_ENCODING_SCHEMES is the closed set of
-     * Latin text schemes, so anything outside it is font-specific.
-     *
-     * The file decides, not the caller: the flags passed to the importer do not take part.
+     * The two Core14 symbol fonts are recognised by name; every other font is classified by
+     * its declared EncodingScheme. The flags passed to the importer do not take part.
      */
     private function isFontSpecific(): bool
     {
@@ -499,9 +494,8 @@ class Core implements ProcessorInterface
     /**
      * Returns the vertical stem width to assume for a font that declares no StdVW.
      *
-     * Neither the AFM nor the Type1 syntax requires the value, while /StemV is a mandatory
-     * font descriptor entry, so it is estimated from the declared weight. 'Weight' carries
-     * the AFM row and 'weight' the Type1 /Weight entry of the FontInfo dictionary.
+     * It is estimated from the declared weight: 'Weight' carries the AFM row and 'weight'
+     * the Type1 /Weight entry of the FontInfo dictionary.
      */
     protected function getDefaultStemV(): int
     {
@@ -524,14 +518,11 @@ class Core implements ProcessorInterface
         $this->fdt['MaxWidth'] = (int) $this->fdt['MissingWidth'];
         $this->fdt['AvgWidth'] = 0;
         $this->fdt['cw'] = [];
-        // only the widths of the emitted single-byte range are averaged, so the divisor
-        // must count them and not every entry of the input map
+        // only the widths of the emitted single-byte range are averaged
         $numWidths = 0;
         for ($cid = 0; $cid <= 255; ++$cid) {
             if (!isset($cwidths[$cid])) {
-                // Only the codes the font defines are recorded, so Stack::isCharDefined()
-                // reports the rest as missing. A Core font carries no /Widths array, and
-                // the /Widths of a Type1 font falls back to /DW.
+                // only the codes the font defines are recorded
                 continue;
             }
 
@@ -551,11 +542,9 @@ class Core implements ProcessorInterface
      * Returns the bytes a PDF content stream may use to select a glyph, in ascending
      * order, or an empty array when the glyph is not reachable through a single-byte code.
      *
-     * A font declaring the FontSpecific encoding (Symbol and ZapfDingbats among the core
-     * fonts) is emitted without an /Encoding entry, so the built-in encoding is the one in
-     * force and the AFM 'C' column already holds the code. Every other core font is emitted
-     * as WinAnsiEncoding, where the glyph name selects the byte and the AFM column, which
-     * describes the AdobeStandardEncoding, must not be used.
+     * A font-specific font is emitted without an /Encoding entry, so the AFM 'C' column
+     * holds the code. Every other font is emitted as WinAnsiEncoding, where the glyph name
+     * selects the byte.
      *
      * @param string $name    Glyph name (the AFM 'N' value).
      * @param string $rawcode Character code declared by the AFM 'C' column ('-1' when the
@@ -566,8 +555,7 @@ class Core implements ProcessorInterface
     private function getMetricCodes(string $name, string $rawcode): array
     {
         if ($this->isFontSpecific()) {
-            // a 'C' group with no value, or with a value that is not a number, declares no
-            // code rather than the code zero
+            // a value that is not a number declares no code rather than the code zero
             if (\preg_match('/^[+-]?[0-9]++$/', $rawcode) !== 1) {
                 return [];
             }
@@ -610,16 +598,13 @@ class Core implements ProcessorInterface
         $this->cbboxu = [];
         $this->fdt['cbbox'] = [];
         $lines = \explode("\n", \str_replace("\r", '', $this->font));
-        // The code space of the metrics is decided by the font name and the encoding
-        // scheme, which the loop below reads from rows of the same file: they are taken
-        // first, so that a file stating either of them after the metrics does not classify
-        // the rows that precede it the other way.
+        // the code space of the metrics is read first, so that it applies to every row
+        // whatever its position in the file
         $this->readCodeSpaceFields($lines);
         // process each row
         foreach ($lines as $line) {
-            // The AFM spec does not require whitespace around the ';' that terminates each
-            // key/value group of a CharMetrics row, so it is isolated into its own token
-            // before splitting; any run of whitespace separates the tokens of an AFM row.
+            // the ';' terminating each key/value group needs no surrounding whitespace, so
+            // it is isolated into its own token before splitting on any run of whitespace
             $col = \preg_split('/\s+/', \trim(\str_replace(';', ' ; ', $line)), -1, PREG_SPLIT_NO_EMPTY);
             if ($col !== false && \count($col) > 1) {
                 $this->processMetricRow($col, $cwd);
@@ -696,9 +681,8 @@ class Core implements ProcessorInterface
     /**
      * Returns the character code a CharMetrics row declares, as a decimal string.
      *
-     * The AFM specification gives it two spellings: 'C' carries a decimal value and 'CH' a
-     * hexadecimal one between angle brackets ('CH <20> ; WX 250 ; N space ;'). An unparsable
-     * value is reported as no value, which getMetricCodes() distinguishes from the code zero.
+     * 'C' carries a decimal value and 'CH' a hexadecimal one between angle brackets
+     * ('CH <20> ; WX 250 ; N space ;'). An unparsable value is reported as no value.
      *
      * @param array<string, array<int, string>> $fields Key/value groups of the row.
      */
@@ -737,10 +721,8 @@ class Core implements ProcessorInterface
                 break;
             case 'C':
             case 'CH':
-                // A CharMetrics row starts with the character code, spelled either 'C' with
-                // a decimal value or 'CH' with a hexadecimal one; the ';'-separated groups
-                // that follow it may come in any order, so they are read by key instead of
-                // by column position.
+                // the ';'-separated groups of a CharMetrics row may come in any order, so
+                // they are read by key instead of by column position
                 $fields = self::splitCharMetrics($col);
                 $name = $fields['N'][0] ?? '';
                 if ($name === '' || $name === '.notdef') {
@@ -759,15 +741,9 @@ class Core implements ProcessorInterface
                     }
                 }
 
-                // Also stored under the Unicode codepoint, for Stack::getCharWidth() and
-                // Stack::getCharBBox(): the encoding byte of a glyph is not its codepoint
-                // (WinAnsi 146 is U+2019).
-                //
-                // Only for a font whose codes are those of a text encoding. The codes of a
-                // font-specific one are its own, and the codepoint the Adobe Glyph List
-                // gives to a glyph name collides with them: Symbol names its glyph 181
-                // 'proportional' while the list puts 'mu' at U+00B5, and the two maps are
-                // consulted in that order.
+                // the metrics are also stored under the Unicode codepoint, as the encoding
+                // byte of a glyph is not its codepoint; the codes of a font-specific font
+                // are its own, so no codepoint is derived for it
                 $unicode = $this->isFontSpecific() ? null : self::getGlyphUnicode($name);
                 if ($unicode !== null) {
                     $this->cwu[$unicode] = $width;
@@ -804,11 +780,8 @@ class Core implements ProcessorInterface
     }
 
     /**
-     * Returns a real number of a font file rounded to the nearest integer.
-     *
-     * The italic angle is a real number in both the AFM and the Type1 syntax, while the
-     * metric it feeds is an integer. Rounding is half away from zero, so an angle of less
-     * than half a degree states an upright font and setFlags() leaves the italic bit clear.
+     * Returns a real number of a font file rounded to the nearest integer, half away from
+     * zero.
      *
      * @param string $value Raw value read from the font file.
      */
@@ -833,8 +806,7 @@ class Core implements ProcessorInterface
         $this->fdt['italicAngle'] = $this->fdt['ItalicAngle'];
         $this->fdt['Ascent'] = $this->fdt['Ascender'];
         $this->fdt['Descent'] = $this->fdt['Descender'];
-        // /StemV is a required font descriptor entry (ISO 32000-1 Table 122) and zero is not
-        // a stem width, so a weight-derived default applies when the AFM omits StdVW
+        // /StemV is a required font descriptor entry (ISO 32000-1 Table 122)
         $this->fdt['StemV'] = $this->fdt['StdVW'] !== 0 ? $this->fdt['StdVW'] : $this->getDefaultStemV();
         $this->fdt['StemH'] = $this->fdt['StdHW'] !== 0 ? $this->fdt['StdHW'] : 30;
 
@@ -844,7 +816,6 @@ class Core implements ProcessorInterface
         }
 
         if ($name === '') {
-            // an unnamed font would be written out with an empty /BaseFont
             throw new FontException('Error getting font name.');
         }
 
@@ -862,9 +833,7 @@ class Core implements ProcessorInterface
             throw new FontException('the AFM file must declare a FontBBox with four values');
         }
 
-        // The AFM rows win when present: the bounding box spans the tallest and deepest
-        // glyph outlines, which overstates the typographic ascent and descent (Helvetica
-        // declares 718/-207 against a 931/-225 box).
+        // the bounding box only applies when the AFM declares no value
         if ($this->fdt['Descender'] === 0) {
             $this->fdt['Descender'] = $this->fdt['FontBBox'][1];
         }

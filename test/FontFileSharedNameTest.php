@@ -24,9 +24,8 @@ use Com\Tecnick\Pdf\Font\Zlib;
 /**
  * Emission of font programs that share a file name.
  *
- * The program of each font is emitted once and referenced by every font backed by it. Two
- * fonts may ship a different program under the same file name in their own directory, so
- * the directory has to take part in the identity of the file.
+ * The program of each font is emitted once and referenced by every font backed by it, and
+ * the directory takes part in the identity of the file.
  *
  * @since     2026-08-14
  * @category  Library

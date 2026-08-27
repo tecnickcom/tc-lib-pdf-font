@@ -23,9 +23,8 @@ use Com\Tecnick\Pdf\Font\Import;
 /**
  * The name of a stored artifact is reduced to a safe alphabet, extension included.
  *
- * Linked mode carries the extension of the input file over to the symbolic link it creates,
- * and the definition file is hand-built JSON, so the extension is reduced to lowercase
- * alphanumeric characters before it reaches either.
+ * The extension of the input file is reduced to lowercase alphanumeric characters before it
+ * reaches the symbolic link of linked mode or the definition file.
  *
  * @since     2026-08-14
  * @category  Library

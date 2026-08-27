@@ -40,9 +40,8 @@ class BufferTest extends TestUtil
     }
 
     /**
-     * Every font metric is scaled by the unit ratio: a zero would raise a
-     * DivisionByZeroError deep inside the conversion, and a negative one would mirror
-     * every glyph. Both are refused as a font error, the only type this library contracts.
+     * Every font metric is scaled by the unit ratio, so a ratio that is not a finite number
+     * greater than zero is refused as a font error.
      *
      * @throws \Throwable
      */

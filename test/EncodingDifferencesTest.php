@@ -22,8 +22,7 @@ use Com\Tecnick\Pdf\Font\Import;
  * Encoding differences of a byte encoded font.
  *
  * The /Differences array names the codes of the font encoding that do not hold the glyph
- * WinAnsi puts at them. A code is written before a name only when it does not follow the
- * code of the name before it, so the runs of consecutive codes are stated once.
+ * WinAnsi puts at them, and states a run of consecutive codes once.
  *
  * @since     2026-08-14
  * @category  Library

@@ -57,10 +57,6 @@ class TrueType implements ProcessorInterface
     /**
      * Minimum byte length of the tables whose fixed-size header is read by this class.
      *
-     * The fields are addressed as raw file offsets, so a record declaring a shorter table
-     * would be parsed out of the bytes that follow it, while subsetting copies the table by
-     * its declared length.
-     *
      * @var array<string, int>
      */
     private const MIN_TABLE_LENGTH = [
@@ -90,12 +86,8 @@ class TrueType implements ProcessorInterface
     /**
      * Maximum number of character codes a cmap subtable may map for each glyph of the font.
      *
-     * A group record of the uint32 based formats states a range of any width in twelve
-     * bytes, while every code point it maps costs an entry of the CIDToGIDMap, a width and
-     * a bounding box: a handful of bytes would otherwise extract hundreds of megabytes of
-     * metrics. The budget follows the number of glyphs the loca table accounts for, so that
-     * the extracted metrics stay proportional to the font program. A many-to-one map is
-     * still admitted, up to this many codes for each glyph.
+     * The budget follows the number of glyphs the loca table accounts for, so that the
+     * extracted metrics stay proportional to the font program.
      */
     private const MAX_CMAP_ENTRIES_PER_GLYPH = 8;
 
@@ -137,10 +129,8 @@ class TrueType implements ProcessorInterface
         [0, 1], // Unicode platform - 1.1 (deprecated)
         [0, 0], // Unicode platform - 1.0 (deprecated)
         [1, 0], // Macintosh Roman (legacy)
-        // Windows Symbol, last because its codes are not code points: a symbolic font maps
-        // its glyphs in the 0xF000..0xF0FF private use range, which is kept as it is read.
-        // Reached only by a font carrying no other subtable, which would otherwise be
-        // refused for having no usable character map.
+        // Windows Symbol, last because its codes are not code points but the
+        // 0xF000..0xF0FF private use range, which is kept as it is read
         [3, 0],
     ];
 
@@ -198,7 +188,6 @@ class TrueType implements ProcessorInterface
         protected bool $subsetting = false,
     ) {
         $this->fileHelper = $fileHelper;
-        // the set is only probed by addCtgItem(), so it is kept in the order it arrives
         $this->subchars = $subchars;
         $this->process();
     }
@@ -226,8 +215,8 @@ class TrueType implements ProcessorInterface
     /**
      * Returns true when the OS/2 licensing bits of this font program allow subsetting.
      *
-     * This reports what the program itself declares, unlike the 'subset' metric, which
-     * carries what the document asked for.
+     * This reports what the program declares, unlike the 'subset' metric, which carries
+     * what the document asked for.
      */
     public function isSubsettingAllowed(): bool
     {
@@ -288,8 +277,7 @@ class TrueType implements ProcessorInterface
     protected function setFontFile(): void
     {
         if ($this->subsetting) {
-            // Subsetting reuses this class over an already imported font: the program is
-            // in memory and the artifacts are on disk, so nothing is written again.
+            // the artifacts of an already imported font are not written again
             $this->fdt['Flags'] = $this->fdt['desc']['Flags'];
             return;
         }
@@ -303,21 +291,18 @@ class TrueType implements ProcessorInterface
             // extension, so the stored program is the raw (uncompressed) font file.
             //
             // The link resolves to the original font directory, which is outside the roots
-            // FontPaths::buildAllowedPaths() trusts at render time. Embedding a linked font
-            // therefore requires either K_PATH_FONTS to cover that directory, or a file
-            // helper passed to Output whose allowlist includes it. This is the "not
-            // transportable" caveat of linked mode.
+            // FontPaths::buildAllowedPaths() trusts at render time: embedding a linked font
+            // requires either K_PATH_FONTS to cover that directory, or a file helper passed
+            // to Output whose allowlist includes it.
             $link = FontImport::linkedFileName($this->fdt['file_name'], $this->fdt['input_file']);
             $target = $this->fdt['dir'] . $link;
-            // a relative input path would be stored verbatim and resolved against the
-            // directory of the link, producing a dangling symlink
+            // a relative input path would produce a dangling symlink
             $source = \realpath($this->fdt['input_file']);
             if ($source === false) {
                 throw new FontException('unable to resolve the font file: ' . $this->fdt['input_file']);
             }
 
-            // an existing link is reused; anything else occupying the name is an error,
-            // and checking first keeps symlink() from emitting a warning for that case
+            // an existing link is reused; anything else occupying the name is an error
             if (!\is_link($target)) {
                 if (\file_exists($target)) {
                     throw new FontException('unable to create the symbolic link: ' . $target);
@@ -326,8 +311,7 @@ class TrueType implements ProcessorInterface
                 $this->createLink($source, $target);
             }
 
-            // no '.z' suffix: the stored program is raw, and Output keys the stream
-            // filter off that suffix
+            // no '.z' suffix, as the stored program is raw
             $this->fdt['file'] = $link;
             return;
         }
@@ -344,9 +328,8 @@ class TrueType implements ProcessorInterface
     /**
      * Create the symbolic link of a linked font.
      *
-     * symlink() emits an E_WARNING before returning false; the reason it carries is more
-     * useful inside the exception than as unhandled output, so it is captured here rather
-     * than silenced with the error-control operator.
+     * The E_WARNING symlink() emits on failure is captured and carried by the exception
+     * message.
      *
      * @param string $source Resolved font file to link to.
      * @param string $target Link to create.
@@ -396,7 +379,7 @@ class TrueType implements ProcessorInterface
         // get number of tables
         $numTables = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
-        // A record is 16 bytes and the directory starts after the 12-byte header, so the
+        // a record is 16 bytes and the directory starts after the 12-byte header, so the
         // count is bounded by the number of records the file can hold
         $numTables = \min($numTables, \intdiv(\max(0, \strlen($this->font) - 12), 16));
 
@@ -411,9 +394,8 @@ class TrueType implements ProcessorInterface
             $tag = \substr($this->font, $this->offset, 4);
             $this->offset += 4;
             if ($tag === (string) (int) $tag) {
-                // PHP turns a decimal string into an integer array key, which would break
-                // the shape of the directory and the ordering the subset relies on. No table
-                // this library reads carries a numeric tag, so the record is dropped.
+                // PHP would turn a numeric tag into an integer array key, breaking the shape
+                // of the directory; no table this library reads carries one
                 $this->offset += 12;
                 continue;
             }
@@ -515,7 +497,6 @@ class TrueType implements ProcessorInterface
         $this->fdt['unitsPerEm'] = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         if ($this->fdt['unitsPerEm'] < 16 || $this->fdt['unitsPerEm'] > 16_384) {
-            // the spec constrains unitsPerEm to 16..16384; 0 would also divide by zero below
             throw new FontException('unitsPerEm must be between 16 and 16384, got: ' . $this->fdt['unitsPerEm']);
         }
 
@@ -535,9 +516,8 @@ class TrueType implements ProcessorInterface
         $this->fdt['bbox'] = $xMin . ' ' . $yMin . ' ' . $xMax . ' ' . $yMax;
         $macStyle = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
-        // PDF font flags: the 'head' table settles the italic bit either way, overriding the
-        // guess Import::initFlags() makes from the file name, as getPostData() does for the
-        // fixed pitch bit
+        // the 'head' table settles the italic bit either way, overriding the guess
+        // Import::initFlags() makes from the file name
         $this->fdt['Flags'] &= ~64;
         if (($macStyle & 2) === 2) {
             // italic flag
@@ -561,22 +541,18 @@ class TrueType implements ProcessorInterface
         // get the offsets to the locations of the glyphs in the font, relative to the beginning of the glyphData table
         $this->fdt['indexToLoc'] = [];
         $this->offset = $this->fdt['table']['loca']['offset'];
-        // The loca table holds exactly numGlyphs + 1 entries; anything past that is padding
-        // and reading it would only build a proportionally large array out of a bogus length.
+        // the loca table holds exactly numGlyphs + 1 entries, anything past that is padding
         $maxEntries = $this->fdt['numGlyphs'] + 1;
-        // Offsets are relative to the start of the glyf table: a corrupt entry pointing past
-        // its end is clamped to the end, which yields an empty glyph instead of a read into
-        // the neighbouring table (or past the end of the file).
+        // offsets are relative to the start of the glyf table, and one pointing past its end
+        // is clamped to the end, which yields an empty glyph
         $glyfLength = $this->fdt['table']['glyf']['length'];
-        // The short format stores halved offsets, so it can only address even ones. The
-        // declared length of the glyf table need not be even, and clamping to an odd value
-        // would give a glyph an odd length, which Subset cannot express in the emitted loca.
+        // the short format stores halved offsets, so it can only address even ones
         if ($this->fdt['short_offset']) {
             $glyfLength &= ~1;
         }
 
         // Offset16 entries are stored halved, so the short format reads two bytes and
-        // doubles them where the long one reads four and takes them as they are.
+        // doubles them where the long one reads four and takes them as they are
         $stride = $this->fdt['short_offset'] ? 2 : 4;
         $this->fdt['tot_num_glyphs'] = (int) \min($maxEntries, \intdiv($this->fdt['table']['loca']['length'], $stride)); // numGlyphs + 1
         for ($idx = 0; $idx < $this->fdt['tot_num_glyphs']; ++$idx) {
@@ -617,10 +593,8 @@ class TrueType implements ProcessorInterface
         // and start after the 4-byte header
         $numEncodingTables = \min($numEncodingTables, \intdiv(\max(0, $this->fdt['table']['cmap']['length'] - 4), 8));
         $this->fdt['encodingTables'] = [];
-        // A subtable starts with a 2-byte format, and every format this class handles reads
-        // at least the 4 bytes of the format and the length that follows it. A record
-        // pointing past that would make the parser read the table that follows the cmap one
-        // as a character map, and build a silently wrong glyph map out of it.
+        // every subtable format this class handles reads at least the 4 bytes of the format
+        // and the length that follows it, so a record pointing past that is dropped
         $maxSubtableOffset = \max(0, $this->fdt['table']['cmap']['length'] - 4);
         $idx = 0;
         for ($rec = 0; $rec < $numEncodingTables; ++$rec) {
@@ -648,8 +622,7 @@ class TrueType implements ProcessorInterface
      * the declared length of the table runs beyond it.
      *
      * Every subtable is addressed within the cmap table, so its entry count is bounded by
-     * this offset: a subtable declaring more entries than it holds would otherwise turn the
-     * bytes of the neighbouring table into glyph indexes.
+     * this offset.
      */
     protected function getCmapEnd(): int
     {
@@ -662,8 +635,7 @@ class TrueType implements ProcessorInterface
     /**
      * Returns how many records of the given size still fit in the cmap table.
      *
-     * Every count a subtable declares is read from the font file and is bounded only by the
-     * space the table has left for it: the arrays of every format are clamped with this.
+     * The arrays of every subtable format are clamped with this.
      *
      * @param int $recordSize Size in bytes of one record of the array being read.
      */
@@ -675,10 +647,8 @@ class TrueType implements ProcessorInterface
     /**
      * Returns how many character codes a cmap subtable is allowed to map.
      *
-     * The glyph count comes from the loca table, which is read before the character map, so
-     * the budget is stated by bytes the font program actually holds. It is never below
-     * MIN_CMAP_ENTRIES, the size of the byte encoded formats, and never above the number of
-     * Unicode code points.
+     * The budget is derived from the glyph count of the loca table, never below
+     * MIN_CMAP_ENTRIES and never above the number of Unicode code points.
      */
     protected function getCmapEntryBudget(): int
     {
@@ -733,9 +703,8 @@ class TrueType implements ProcessorInterface
      */
     protected function getOS2Metrics(): void
     {
-        // OS/2 is optional in some older or non-Windows TrueType fonts.
+        // the OS/2 table is optional, and its metrics have a default
         if (!isset($this->fdt['table']['OS/2'])) {
-            // No OS/2 table present: use conservative metric defaults.
             $this->fdt['AvgWidth'] = 0;
             $this->fdt['StemV'] = 70;
             $this->fdt['StemH'] = 30;
@@ -754,16 +723,13 @@ class TrueType implements ProcessorInterface
 
         $this->offset = $this->fdt['table']['OS/2']['offset'];
         $this->offset += 2; // skip version
-        // xAvgCharWidth: read as signed, and floored at zero because the average width of a
-        // character is not negative and this value is the fallback of the default width
+        // xAvgCharWidth, read as signed and floored at zero
         $this->fdt['AvgWidth'] = \max(0, (int) \round($this->fbyte->getFWord($this->offset) * $this->fdt['urk']));
         $this->offset += 2;
-        // usWeightClass: a weight class in the 1..1000 range, not a value in font design
-        // units, so it must not be scaled by the units ratio
+        // usWeightClass is a weight class in the 1..1000 range, not a value in font design
+        // units, so it is not scaled by the units ratio
         $usWeightClass = \min(1000, \max(1, $this->fbyte->getUShort($this->offset)));
-        // Estimate StemV and StemH (400 = usWeightClass for Normal - Regular font).
-        // Both are floored at one: zero is not a stem width, and a font written on the
-        // legacy 1..9 weight scale would otherwise round the estimate down to it.
+        // estimate StemV and StemH, floored at one (400 = usWeightClass of a Regular font)
         $this->fdt['StemV'] = \max(1, (int) \round((70 * $usWeightClass) / 400));
         $this->fdt['StemH'] = \max(1, (int) \round((30 * $usWeightClass) / 400));
         $this->offset += 2;
@@ -790,7 +756,7 @@ class TrueType implements ProcessorInterface
      */
     protected function applyEmbeddingPolicy(int $fsType): void
     {
-        // Restricted-license: bit 1 set, no permissive override from bits 2 or 3.
+        // restricted license: bit 1 set, no permissive override from bits 2 or 3
         if (($fsType & 0x000E) === 0x0002) {
             throw new FontException(
                 'This Font cannot be modified, embedded or exchanged in any manner'
@@ -798,15 +764,13 @@ class TrueType implements ProcessorInterface
             );
         }
 
-        // Bitmap-embedding-only: incompatible with vector PDF stream embedding.
+        // bitmap embedding only: incompatible with vector PDF stream embedding
         if (($fsType & 0x0200) !== 0) {
             throw new FontException('This font is licensed for bitmap embedding only'
             . ' and cannot be embedded in a vector PDF document.');
         }
 
-        // No-subsetting: embedding is allowed but the font must not be subsetted.
-        // Subset::__construct() reads the restriction back through isSubsettingAllowed()
-        // and embeds the whole program instead.
+        // no subsetting: embedding is allowed but the whole program must be embedded
         if (($fsType & 0x0100) !== 0) {
             $this->subsettingAllowed = false;
             $this->fdt['subset'] = false;
@@ -833,10 +797,8 @@ class TrueType implements ProcessorInterface
             // Convert with iconv (macintosh = MacRoman) if available or mb_convert_encoding using
             // Windows-1252 (closest substitute for MacRoman) if available.
             if ($this->hasIconv()) {
-                // A build whose libiconv does not carry the 'macintosh' charset raises an
-                // E_WARNING before returning false, which the fallback below handles: the
-                // warning is swallowed, so that an application promoting it to an exception
-                // does not turn a name table read into an error of a foreign type.
+                // the E_WARNING a build without the 'macintosh' charset emits is silenced,
+                // and the false it returns falls back to the original string below
                 \set_error_handler(static fn(): bool => true, E_WARNING);
 
                 try {
@@ -874,8 +836,6 @@ class TrueType implements ProcessorInterface
 
     /**
      * Returns true when the iconv extension is available.
-     *
-     * Wrapped in a method so that the fallback path can be exercised on a build that has it.
      */
     protected function hasIconv(): bool
     {
@@ -918,9 +878,8 @@ class TrueType implements ProcessorInterface
         // Number of NameRecords that follow n.
         $numNameRecords = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
-        // bounded by the declared length of the table, for the reason given in
-        // getEncodingTables(): the records are 12 bytes each and start after the 6-byte
-        // header, so anything past that count is not a record of this table
+        // bounded by the declared length of the table: the records are 12 bytes each and
+        // start after the 6-byte header
         $numNameRecords = \min($numNameRecords, \intdiv(\max(0, $this->fdt['table']['name']['length'] - 6), 12));
 
         // Offset to start of string storage (from start of table).
@@ -955,8 +914,6 @@ class TrueType implements ProcessorInterface
              */
             $nameID = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
-            // nameID 6 is the PostScript name and wins outright; 4 (full name) and then
-            // 1 (family name) are fallbacks for a font that does not declare it
             if (!isset(self::NAME_ID_PRIORITY[$nameID])) {
                 $this->offset += 4; // skip String length, String offset
                 continue;
@@ -979,8 +936,7 @@ class TrueType implements ProcessorInterface
             $name = $this->convertStringEncoding($name, $platformId, $encodingId);
             $name = (string) \preg_replace('/[^a-zA-Z0-9_\-]/', '', $name);
 
-            // a record holding nothing usable once sanitized is skipped and the scan goes on;
-            // an empty name is reported at the end, when no record produced one
+            // nameID 6 is the PostScript name and wins outright
             if ($nameID === 6 && $name !== '') {
                 $this->fdt['name'] = $name;
                 return;
@@ -1127,7 +1083,7 @@ class TrueType implements ProcessorInterface
             return null;
         }
 
-        // PDF 32000-1 Table 122 defines /XHeight and /CapHeight as the height of the glyph
+        // ISO 32000-1 Table 122 defines /XHeight and /CapHeight as the height of the glyph
         // above the baseline, so the height is yMax alone
         $yMax = $this->fbyte->getFWord($offset + 8);
         return (int) \round($yMax * $this->fdt['urk']);
@@ -1157,14 +1113,10 @@ class TrueType implements ProcessorInterface
     protected function getWidths(): void
     {
         if ($this->fdt['numHMetrics'] < 1) {
-            // hhea.numberOfHMetrics must be at least 1: the hmtx table has no trailing
-            // width to repeat otherwise, and every glyph would end up without an advance
             throw new FontException('hhea.numberOfHMetrics must be greater than zero');
         }
 
-        // hhea.numberOfHMetrics is a uint16 read from another table: without this clamp a
-        // font declaring more metrics than hmtx can hold would turn the bytes that follow
-        // it into advance widths
+        // bounded by the declared length of the hmtx table: each metric is 4 bytes
         $this->fdt['numHMetrics'] = \min($this->fdt['numHMetrics'], \intdiv($this->fdt['table']['hmtx']['length'], 4));
         if ($this->fdt['numHMetrics'] < 1) {
             throw new FontException('the hmtx table is too short to hold a single metric');
@@ -1183,17 +1135,14 @@ class TrueType implements ProcessorInterface
             $chw = \array_pad($chw, $this->fdt['numGlyphs'], $chw[$this->fdt['numHMetrics'] - 1]);
         }
 
-        // numHMetrics is at least 1, so the first advance width is always there; the
-        // fallback only states that to the static analyser, which cannot infer it
         $this->fdt['MissingWidth'] = $chw[0] ?? 0;
         $this->fdt['cw'] = [];
         $this->fdt['cbbox'] = [];
         // ctgdata is built in ascending CID order, so cw and cbbox are filled in the same order
         foreach ($this->fdt['ctgdata'] as $cid => $gid) {
             if ($gid === 0) {
-                // A cmap may map a codepoint to .notdef explicitly. No width is declared for
-                // it, so Stack::isCharDefined() reports it as missing. The ctgdata entry is
-                // kept as a faithful copy of the cmap.
+                // a codepoint mapped to .notdef gets no width; the ctgdata entry is kept
+                // as a faithful copy of the cmap
                 continue;
             }
 
@@ -1340,8 +1289,7 @@ class TrueType implements ProcessorInterface
             return;
         }
 
-        // A byte encoded font is one whose character codes all fit a single byte, so the
-        // highest code is checked as well as the number of entries.
+        // a byte encoded font is one whose character codes all fit a single byte
         if (\max(\array_keys($this->fdt['ctgdata'])) > 0xFF) {
             return;
         }
@@ -1359,8 +1307,7 @@ class TrueType implements ProcessorInterface
     protected function processFormat0(): void
     {
         $this->offset += 4; // skip length and version/language
-        // a subtable holding fewer than the 256 documented bytes stops where it ends,
-        // rather than reading the table that follows it
+        // a subtable holding fewer than the 256 documented bytes stops where it ends
         $entries = \min(256, $this->getCmapCapacity(1));
         for ($chr = 0; $chr < $entries; ++$chr) {
             $gid = $this->fbyte->getByte($this->offset);
@@ -1393,9 +1340,7 @@ class TrueType implements ProcessorInterface
         // cmap table like every other array of this subtable
         $numKeys = \min(256, $this->getCmapCapacity(2));
         for ($chr = 0; $chr < $numKeys; ++$chr) {
-            // Array that maps high bytes to subHeaders: value is subHeader index * 8.
-            // intdiv keeps the value an integer: it is used as an array key below, and a
-            // float key would both raise a deprecation and break the '=== 0' comparison.
+            // the stored value is the subHeader index * 8
             $subHeaderKeys[$chr] = \intdiv($this->fbyte->getUShort($this->offset), 8);
             $this->offset += 2;
             if ($numSubHeaders < $subHeaderKeys[$chr]) {
@@ -1405,12 +1350,11 @@ class TrueType implements ProcessorInterface
 
         // the number of subHeaders is equal to the max of subHeaderKeys + 1
         ++$numSubHeaders;
-        // Each record is 8 bytes, and the declared count comes from the file: it stops at the
-        // end of the cmap table. A sub-header the table has no room for is left out, and the
-        // high bytes keyed to it map no glyph.
+        // each record is 8 bytes, and the array stops at the end of the cmap table; the high
+        // bytes keyed to a sub-header the table has no room for map no glyph
         $numSubHeaders = \min($numSubHeaders, $this->getCmapCapacity(8));
-        // read subHeader structures. Keyed by index rather than as a list, because the
-        // lookup below indexes it with a value read from the font file.
+        // keyed by index rather than as a list, as the lookup below indexes it with a value
+        // read from the font file
         /** @var array<int, array{firstCode: int, entryCount: int, idDelta: int, idRangeOffset: int}> $subHeaders */
         $subHeaders = [];
         $numGlyphIndexArray = 0;
@@ -1435,20 +1379,16 @@ class TrueType implements ProcessorInterface
             $numGlyphIndexArray += $entryCount;
         }
 
-        // The entry counts are summed from up to 256 uint16 fields. This is the size of the
-        // shared glyph index array, not a number of mapped codes, so it is bounded by the
-        // absolute ceiling rather than by the entry budget of the font.
+        // this is the size of the shared glyph index array, not a number of mapped codes, so
+        // it is bounded by the absolute ceiling rather than by the entry budget of the font
         if ($numGlyphIndexArray > self::MAX_CMAP_ENTRIES) {
             throw new FontException('cmap format 2 subtable declares too many glyph indexes');
         }
 
-        // Sub-headers may address overlapping ranges of the shared glyph index array, so the
-        // sum of their entry counts over-estimates its real size. The array stops at the end
-        // of the cmap table and at the end of the buffer.
+        // sub-headers may address overlapping ranges of the shared glyph index array, so the
+        // sum of their entry counts over-estimates its real size
         $numGlyphIndexArray = \min($numGlyphIndexArray, $this->getCmapCapacity(2));
 
-        // the array is addressed through the '?? 0' fallback below, so it needs no
-        // placeholder entry when empty
         $glyphIndexArray = [];
         for ($gid = 0; $gid < $numGlyphIndexArray; ++$gid) {
             $glyphIndexArray[$gid] = $this->fbyte->getUShort($this->offset);
@@ -1457,28 +1397,21 @@ class TrueType implements ProcessorInterface
 
         for ($chr = 0; $chr < $numKeys; ++$chr) {
             $shk = $subHeaderKeys[$chr];
-            // The record is present unless the cmap table had no room for it, in which case
-            // the high bytes keyed to it map no glyph.
             $subHeader = $subHeaders[$shk] ?? null;
             if ($subHeader === null) {
                 continue;
             }
 
             if ($shk === 0) {
-                // One byte code: subHeaders[0] describes the single-byte range and the
-                // code is its own low byte (a code outside the range has no glyph).
+                // one byte code: subHeaders[0] describes the single-byte range and the
+                // code is its own low byte
                 $this->addCtgItem($chr, $this->getFormat2Glyph($subHeader, $chr, $glyphIndexArray));
                 continue;
             }
 
-            // Two bytes code. The range is a run of low bytes, so it stops at 256: a longer
-            // one would combine into the code block of the next high byte and overwrite the
-            // entries of another sub-header.
+            // two bytes code: the range is a run of low bytes, so it stops at 256
             $start_byte = \min($subHeader['firstCode'], 256);
             $end_byte = \min($start_byte + $subHeader['entryCount'], 256);
-            // The range stopping at 256 is what bounds the whole subtable: the outer loop
-            // runs over the 256 high bytes, so no more than 65536 code points are mapped
-            // however large the declared entry counts are.
             for ($jdx = $start_byte; $jdx < $end_byte; ++$jdx) {
                 // combine high and low bytes
                 $cdx = ($chr << 8) + $jdx;
@@ -1502,8 +1435,8 @@ class TrueType implements ProcessorInterface
             return 0;
         }
 
-        // idRangeOffset comes from the font file: a truncated or hostile cmap
-        // can point outside the glyph index array, so fall back to notdef
+        // idRangeOffset comes from the font file, so an entry outside the glyph index
+        // array falls back to notdef
         $glyphIndex = $glyphIndexArray[$subHeader['idRangeOffset'] + $entry] ?? 0;
         // a zero entry encodes missingGlyph and must not be shifted by idDelta
         return $glyphIndex === 0 ? 0 : ($glyphIndex + $subHeader['idDelta']) % 65_536;
@@ -1530,14 +1463,11 @@ class TrueType implements ProcessorInterface
         $length = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
         $this->offset += 2; // skip version/language
-        // intdiv keeps the count an integer: it is used in the glyph index arithmetic below,
-        // where a float would propagate into the array indexes
         $segCount = \intdiv($this->fbyte->getUShort($this->offset), 2);
         $this->offset += 2;
         $this->offset += 6; // skip searchRange, entrySelector, rangeShift
-        // The four parallel arrays that follow hold one uint16 per segment each, plus the
-        // reserved pad between the first two: the declared count comes from the file and is
-        // bounded by the room the cmap table has left for them.
+        // the four parallel arrays that follow hold one uint16 per segment each, plus the
+        // reserved pad between the first two
         $segCount = \min($segCount, \intdiv(\max(0, $this->getCmapCapacity(2) - 1), 4));
         $endCount = []; // array of end character codes for each segment
         for ($kdx = 0; $kdx < $segCount; ++$kdx) {
@@ -1564,9 +1494,8 @@ class TrueType implements ProcessorInterface
             $this->offset += 2;
         }
 
-        // The size is derived from the declared subtable length, and the array also stops at
-        // the end of the cmap table and of the buffer. Segments indexing past it resolve to
-        // notdef through the fallback below.
+        // the size is derived from the declared subtable length, and the array also stops at
+        // the end of the cmap table; a segment indexing past it resolves to notdef
         $gidlen = \min(\max(0, \intdiv($length, 2) - 8 - (4 * $segCount)), $this->getCmapCapacity(2));
         $glyphIdArray = []; // glyph index array
         for ($kdx = 0; $kdx < $gidlen; ++$kdx) {
@@ -1576,12 +1505,9 @@ class TrueType implements ProcessorInterface
 
         $budget = $this->getCmapEntryBudget();
         for ($kdx = 0; $kdx < $segCount; ++$kdx) {
-            // The mandatory 0xFFFF -> 0xFFFF segment closes the table and maps nothing (see
-            // the check below), so it is not charged: a subtable covering exactly the budget
-            // would otherwise be refused for the one code the terminator adds to it.
+            // the mandatory 0xFFFF -> 0xFFFF segment closes the table and maps nothing,
+            // so it is not charged to the budget
             if ($startCount[$kdx] !== 0xFFFF || $endCount[$kdx] !== 0xFFFF) {
-                // segments may overlap and each may span the whole BMP, so the same entry
-                // budget as formats 8/12/13 applies
                 $budget -= \max(0, $endCount[$kdx] - $startCount[$kdx] + 1);
                 if ($budget < 0) {
                     throw new FontException('cmap format 4 subtable maps too many code points');
@@ -1593,16 +1519,15 @@ class TrueType implements ProcessorInterface
                     $gid = ($idDelta[$kdx] + $chr) % 65_536;
                 } else {
                     $gid = \intdiv($idRangeOffset[$kdx], 2) + ($chr - $startCount[$kdx]) - ($segCount - $kdx);
-                    // idRangeOffset comes from the font file: a truncated or hostile cmap
-                    // can point outside the glyph index array, so fall back to notdef
+                    // idRangeOffset comes from the font file, so an entry outside the glyph
+                    // index array falls back to notdef
                     $glyphIndex = $glyphIdArray[$gid] ?? 0;
                     // a zero entry encodes missingGlyph and must not be shifted by idDelta
                     $gid = $glyphIndex === 0 ? 0 : ($glyphIndex + $idDelta[$kdx]) % 65_536;
                 }
 
                 if ($chr === 0xFFFF && $gid === 0) {
-                    // the mandatory 0xFFFF -> 0xFFFF terminating segment closes the table,
-                    // it does not map the noncharacter U+FFFF to the notdef glyph
+                    // the terminating segment closes the table, it does not map U+FFFF
                     continue;
                 }
 
@@ -1627,15 +1552,14 @@ class TrueType implements ProcessorInterface
         $this->offset += 2;
         $entryCount = $this->fbyte->getUShort($this->offset);
         $this->offset += 2;
-        // the subrange stops at the end of the cmap table, as in every other format
+        // the subrange stops at the end of the cmap table
         $entryCount = \min($entryCount, $this->getCmapCapacity(2));
         for ($kdx = 0; $kdx < $entryCount; ++$kdx) {
             $chr = $kdx + $firstCode;
             $gid = $this->fbyte->getUShort($this->offset);
             $this->offset += 2;
             if ($chr > 0xFFFF) {
-                // format 6 addresses its subrange with uint16 codes, so a code past the
-                // BMP is not a character code of this subtable
+                // format 6 addresses its subrange with uint16 codes
                 continue;
             }
 
@@ -1661,16 +1585,15 @@ class TrueType implements ProcessorInterface
     protected function processFormat8(): void
     {
         $this->offset += 10; // skip reserved, length and version/language
-        // The is32 bit array only tells whether a group's bounds were written as 16 or 32 bit
-        // values; the bounds are full code points either way, so the array is skipped. Its
-        // last byte is read to reject a subtable truncated inside it.
+        // the is32 bit array only tells whether a group's bounds were written as 16 or 32 bit
+        // values, which does not change them, so it is skipped; its last byte is read to
+        // reject a subtable truncated inside it
         $this->fbyte->getByte($this->offset + 8191);
         $this->offset += 8192;
 
         $nGroups = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
-        // each record is 12 bytes, and the declared count comes from the file: it stops at
-        // the end of the cmap table, as in every other format
+        // each record is 12 bytes, and the array stops at the end of the cmap table
         $nGroups = \min($nGroups, $this->getCmapCapacity(12));
         $budget = $this->getCmapEntryBudget();
         for ($idx = 0; $idx < $nGroups; ++$idx) {
@@ -1714,12 +1637,11 @@ class TrueType implements ProcessorInterface
         $this->offset += 4;
         $numChars = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
-        // the same entry budget and Unicode clamp as the other uint32-based formats
         if ($numChars > $this->getCmapEntryBudget()) {
             throw new FontException('cmap format 10 subtable maps too many code points');
         }
 
-        // the covered range stops at the end of the cmap table, as in every other format
+        // the covered range stops at the end of the cmap table
         $numChars = \min($numChars, $this->getCmapCapacity(2));
         for ($kdx = 0; $kdx < $numChars; ++$kdx) {
             $chr = $kdx + $startCharCode;
@@ -1752,8 +1674,7 @@ class TrueType implements ProcessorInterface
         $this->offset += 10; // skip length and version/language
         $nGroups = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
-        // each record is 12 bytes, and the declared count comes from the file: it stops at
-        // the end of the cmap table, as in every other format
+        // each record is 12 bytes, and the array stops at the end of the cmap table
         $nGroups = \min($nGroups, $this->getCmapCapacity(12));
         $budget = $this->getCmapEntryBudget();
         for ($kdx = 0; $kdx < $nGroups; ++$kdx) {
@@ -1799,8 +1720,7 @@ class TrueType implements ProcessorInterface
         $this->offset += 10; // skip reserved, length and language
         $nGroups = $this->fbyte->getULong($this->offset);
         $this->offset += 4;
-        // each record is 12 bytes, and the declared count comes from the file: it stops at
-        // the end of the cmap table, as in every other format
+        // each record is 12 bytes, and the array stops at the end of the cmap table
         $nGroups = \min($nGroups, $this->getCmapCapacity(12));
         $budget = $this->getCmapEntryBudget();
         for ($kdx = 0; $kdx < $nGroups; ++$kdx) {

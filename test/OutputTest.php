@@ -18,6 +18,7 @@ namespace Test;
 
 use Com\Tecnick\File\Exception as FileException;
 use Com\Tecnick\Pdf\Encrypt\Encrypt;
+use Com\Tecnick\Pdf\Encrypt\Exception as EncException;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
 /**
@@ -365,6 +366,9 @@ class OutputTest extends TestUtil
         $this->assertArrayNotHasKey(9999, $first);
     }
 
+    /**
+     * @throws EncException
+     */
     public function testUniToCidPreservesNumericCidKeys(): void
     {
         $outfont = new OutputTestOutFont();
@@ -392,8 +396,9 @@ class OutputTest extends TestUtil
 
     /**
      * After the conversion the width map is keyed by CID, so the original Unicode keys
-     * must be gone: keeping them emitted every codepoint into the /W array as though it
-     * were a CID, giving thousands of unrelated glyphs a wrong advance width.
+     * are gone.
+     *
+     * @throws EncException
      */
     public function testUniToCidDropsTheOriginalUnicodeKeys(): void
     {
@@ -417,6 +422,9 @@ class OutputTest extends TestUtil
         $this->assertArrayNotHasKey(19968, $font['cw']);
     }
 
+    /**
+     * @throws EncException
+     */
     public function testUniToCidKeepsUnmappedLowCodepointsAndAppliesTheOffset(): void
     {
         $outfont = new OutputTestOutFont();
@@ -440,6 +448,8 @@ class OutputTest extends TestUtil
     /**
      * Without a uni2cid table there is nothing to convert, and the widths are already
      * keyed the way they will be emitted.
+     *
+     * @throws EncException
      */
     public function testUniToCidLeavesWidthsUntouchedWithoutAMapping(): void
     {
@@ -459,7 +469,10 @@ class OutputTest extends TestUtil
         $this->assertSame([32 => 250, 960 => 500, 8776 => 600], $font['cw']);
     }
 
-    /** @throws \Com\Tecnick\Pdf\Font\Exception */
+    /**
+     * @throws EncException
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
     public function testGetFontFullPathThrowsForMissingFile(): void
     {
         $this->setupTest();
@@ -525,6 +538,9 @@ class OutputTest extends TestUtil
         $this->assertStringContainsString('/Encoding /WinAnsiEncoding', $block);
     }
 
+    /**
+     * @throws EncException
+     */
     public function testGetKeyValOutFormatsFloatValues(): void
     {
         $outfont = new OutputTestOutFont();
@@ -535,6 +551,8 @@ class OutputTest extends TestUtil
     /**
      * The ToUnicode CMap of a GID encoded font is written in UTF-16BE, so a codepoint
      * above the Unicode range is clamped to U+10FFFF.
+     *
+     * @throws EncException
      */
     public function testUtf16beHexNeverEmitsAnInvalidSurrogatePair(): void
     {
@@ -810,8 +828,7 @@ class OutputTest extends TestUtil
 
     /**
      * ISO 32000-1 9.6.4 reserves the six-letter prefix of the font name for a program that
-     * really is a subset. A font sharing its file with a reference that wants the whole
-     * program is emitted in full, so it must lose the prefix it asked for.
+     * is a subset, so a font emitted in full carries no prefix.
      *
      * @throws FileException
      * @throws FontException

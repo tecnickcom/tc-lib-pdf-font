@@ -26,10 +26,8 @@ use Com\Tecnick\Pdf\Font\Stack;
 /**
  * The stored font program is inflated under the size the definition file declares for it.
  *
- * Subsetting uncompresses the '.z' artifact before it can read the program, bounded by the
- * size the definition file records for it ('originalsize' for a TrueType one, 'size1' plus
- * 'size2' for a Type 1 one, both normalized into 'length1' and 'length2' by
- * Load::setFileData). A stream expanding past it is rejected.
+ * Subsetting uncompresses the '.z' artifact bounded by the lengths the definition file
+ * records for the program, and rejects a stream expanding past them.
  *
  * @since     2026-08-14
  * @category  Library

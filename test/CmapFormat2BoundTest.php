@@ -22,9 +22,8 @@ use Com\Tecnick\Pdf\Font\Import\TrueType;
 /**
  * The glyph index array of a format 2 cmap stops at the end of the cmap table.
  *
- * The array is clamped with 'min(cmapEnd, strlen(font))', as format 4 does, so the entry
- * counts the sub-headers declare cannot pull the bytes of whatever table follows the cmap
- * in as glyph indexes.
+ * The array is clamped with 'min(cmapEnd, strlen(font))', whatever entry counts the
+ * sub-headers declare.
  *
  * @since     2026-08-14
  * @category  Library
@@ -39,9 +38,8 @@ class CmapFormat2BoundTest extends TestUtil
     /**
      * Build a format 2 subtable whose single sub-header claims $entryCount glyph indexes.
      *
-     * All 256 high bytes map to sub-header 0, so the codes are single-byte ones. The
-     * sub-header covers codes 0..entryCount-1 and reads them from the shared glyph index
-     * array that follows it.
+     * All 256 high bytes map to sub-header 0, which covers codes 0..entryCount-1 and reads
+     * them from the shared glyph index array that follows it.
      */
     private function subtable(int $entryCount): string
     {
@@ -150,8 +148,7 @@ class CmapFormat2BoundTest extends TestUtil
 
     /**
      * The array of high byte keys is read from the cmap table as well, so a table with room
-     * for fewer than the 256 the format documents stops where it ends instead of reading
-     * past the end of the font file.
+     * for fewer than the 256 the format documents stops where it ends.
      */
     public function testTheKeyArrayStopsAtTheEndOfTheCmapTable(): void
     {

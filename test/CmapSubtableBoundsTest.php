@@ -175,8 +175,7 @@ class CmapSubtableBoundsTest extends TestUtil
 
     /**
      * Format 4 declares its segment count in the header, and the four parallel arrays that
-     * follow hold one entry per segment each. A count the table cannot carry would read the
-     * segments of the next table.
+     * follow hold one entry per segment each, so the count is bounded by the table.
      */
     public function testFormat4SegmentArraysStopAtTheEndOfTheCmapTable(): void
     {

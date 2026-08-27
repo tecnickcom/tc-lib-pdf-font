@@ -28,7 +28,7 @@ use Com\Tecnick\Pdf\Font\Subset;
  * Subsetting of a font whose license does not allow it.
  *
  * Bit 8 of the OS/2 fsType field ("No Subsetting") permits embedding but forbids emitting
- * a reduced program: the whole font is embedded instead.
+ * a reduced program, so the whole font is embedded.
  *
  * @since     2026-08-14
  * @category  Library

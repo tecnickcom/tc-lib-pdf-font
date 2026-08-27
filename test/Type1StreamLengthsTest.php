@@ -25,7 +25,7 @@ use Com\Tecnick\Pdf\Font\Stack;
  * Segment lengths of an embedded Type1 program.
  *
  * A Type1 stream declares the length of the clear text portion as /Length1 and the length
- * of the eexec encrypted one as /Length2, whichever way the program is stored.
+ * of the eexec encrypted one as /Length2, however the program is stored.
  *
  * @since     2026-08-14
  * @category  Library

@@ -91,14 +91,7 @@ abstract class OutUtil
     }
 
     /**
-     * Returns a glyph width as the integer the /W array is made of.
-     *
-     * The /W array holds integers, and the value is compared with the integer default width
-     * and counted by array_count_values() in formatWidthRanges(), which only counts integers
-     * and strings.
-     *
-     * The /Widths array of a simple font is built from the same integers, so that one
-     * definition file yields one width whichever dictionary carries it.
+     * Returns a glyph width as the integer the /W and /Widths arrays are made of.
      *
      * @param mixed $width Raw width read from the font definition.
      */

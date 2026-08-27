@@ -25,11 +25,9 @@ use Com\Tecnick\Pdf\Font\Stack;
 /**
  * A Type1 font is measurable by codepoint, and .notdef claims no character code.
  *
- * The importer fills the map keyed by codepoint as well as the one keyed by encoding byte:
- * Stack::getCharWidth() consults the codepoint-keyed one first, and the two differ over the
- * whole 0x80-0x9F block of WinAnsiEncoding, which is how a Type1 font is emitted. The
- * '.notdef' glyph name resolves to no character code, although every encoding map lists
- * that name at index 0.
+ * The importer fills the map keyed by codepoint as well as the one keyed by encoding byte,
+ * and the two differ over the whole 0x80-0x9F block of WinAnsiEncoding. The '.notdef' glyph
+ * name resolves to no character code.
  *
  * @since     2026-08-14
  * @category  Library
@@ -110,9 +108,8 @@ class TypeOneUnicodeMetricsTest extends TestUtil
             );
         }
 
-        // Without the map the codepoint falls back to the default width, so the assertions
-        // above only mean something for a glyph that is not that wide. The euro sign sits
-        // at 128, in the block where the WinAnsi byte and the codepoint differ.
+        // the euro sign sits at 128, in the block where the WinAnsi byte and the codepoint
+        // differ, and is not as wide as the default
         $this->assertNotEquals($metric['dw'], $metric['cw'][128] ?? null);
     }
 

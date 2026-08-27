@@ -23,13 +23,12 @@ use Com\Tecnick\Pdf\Font\Import\TypeOne;
 use Com\Tecnick\Pdf\Font\Stack;
 
 /**
- * A PCRE call can fail at run time instead of returning a result: the engine gives up when
- * a pattern exhausts the backtrack limit. Every such call in the library reports the failure
- * as a font exception rather than carrying a null through, and each of those guards is
- * exercised here by shrinking the limit around the call.
+ * A PCRE call fails at run time when a pattern exhausts the backtrack limit. Every such
+ * call in the library reports the failure as a font exception, and each guard is exercised
+ * here by shrinking the limit around the call.
  *
- * The JIT compiler has its own limits and does not honour pcre.backtrack_limit, so it is
- * turned off for the duration of each test.
+ * The JIT compiler does not honour pcre.backtrack_limit, so it is turned off for the
+ * duration of each test.
  *
  * @since     2026-08-14
  * @category  Library

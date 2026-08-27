@@ -24,8 +24,7 @@ use Com\Tecnick\Pdf\Font\Load;
  * Budget of character codes a cmap subtable may map.
  *
  * The budget bounds the metrics extracted from a font program by the number of glyphs it
- * carries. The mandatory 0xFFFF terminating segment of a format 4 subtable maps nothing, so
- * a font whose segments fill the budget exactly is still imported.
+ * carries. The terminating segment of a format 4 subtable maps nothing and is not charged.
  *
  * @since     2026-08-14
  * @category  Library
@@ -119,9 +118,8 @@ class CmapEntryBudgetTest extends TestUtil
     }
 
     /**
-     * A font of 32 glyphs gets the smallest budget, 256 codes. A segment covering exactly
-     * that many codes fits it, and the terminating segment that closes the table does not
-     * take the count past it.
+     * A font of 32 glyphs gets the smallest budget, 256 codes, which a segment covering
+     * exactly that many codes fits.
      */
     public function testASegmentFillingTheBudgetIsMappedAlongWithTheTerminatingSegment(): void
     {

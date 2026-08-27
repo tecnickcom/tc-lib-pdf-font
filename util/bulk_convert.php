@@ -61,8 +61,7 @@ $inopt = \getopt($sopt, $lopt);
 
 // import options (with some sanitization)
 foreach ($inopt as $opt => $val) {
-    // getopt() hands over an array when the same option is repeated: the last occurrence
-    // wins, so that a repeated option is not passed on to a function expecting a string.
+    // getopt() hands over an array when the same option is repeated: the last occurrence wins
     if (\is_array($val)) {
         $val = \end($val);
     }
@@ -70,8 +69,7 @@ foreach ($inopt as $opt => $val) {
     switch ($opt) {
         case 'o':
         case 'outpath':
-            // realpath() returns false for a missing directory: in that case the
-            // raw value is kept and normalized below, after the directory is created.
+            // a missing directory keeps its raw value and is normalized below, once created
             $resolved = \realpath($val);
             $options['outpath'] = ($resolved !== false) ? $resolved : $val;
             if (\substr($options['outpath'], -1) != '/') {
@@ -127,8 +125,7 @@ if (!$autoloadFound) {
     exit(5);
 }
 
-// scandir() returns false for a directory it cannot read, which array_diff() would
-// reject with a TypeError instead of the message below
+// scandir() returns false for a directory it cannot read
 $entries = \scandir($ttfdir);
 if ($entries === false) {
     \fwrite(STDERR, 'ERROR: Unable to read the '.$ttfdir.' directory.'."\n\n");
@@ -188,8 +185,6 @@ foreach ($fontdir as $dir) {
     foreach ($fonts as $font) {
         if (\substr($font, -4) == '.otf') {
             // OTF fonts are unsupported: convert them to TTF using FontForge
-            // escapeshellarg (not escapeshellcmd): $font is a single argument and may
-            // contain spaces, which escapeshellcmd would leave unquoted
             \system('fontforge -script otf2ttf.ff '.\escapeshellarg((string) $font), $err);
             if ($err != 0) {
                 \fwrite(STDERR, "\033[31m".'Unable to convert: '.$font."\033[m");

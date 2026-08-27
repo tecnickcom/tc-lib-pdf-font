@@ -23,9 +23,8 @@ use Com\Tecnick\Pdf\Font\Load;
 /**
  * A codepoint a cmap maps to .notdef declares no metrics.
  *
- * A TrueType cmap may point a codepoint at glyph 0 explicitly. No advance and no bounding
- * box are recorded for it, so Stack::isCharDefined() reports it as missing and
- * Stack::replaceMissingChars() can substitute a fallback.
+ * A TrueType cmap may point a codepoint at glyph 0 explicitly: no advance and no bounding
+ * box are recorded for it, so it is reported as missing and can be substituted.
  *
  * @since     2026-08-14
  * @category  Library

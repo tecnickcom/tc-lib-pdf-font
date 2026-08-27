@@ -24,8 +24,7 @@ use Com\Tecnick\Pdf\Font\Import;
  * The Symbolic and Nonsymbolic descriptor flags are mutually exclusive.
  *
  * ISO 32000-1 Table 123: bit 3 (Symbolic, 4) and bit 6 (Nonsymbolic, 32) shall not both be
- * set nor both be clear. The caller's default flags carry Nonsymbolic, so raising the
- * symbolic bit clears it.
+ * set nor both be clear.
  *
  * @since     2026-08-14
  * @category  Library
@@ -148,8 +147,7 @@ class FontDescriptorFlagsTest extends TestUtil
     }
 
     /**
-     * A TrueType or Type 1 font takes no decision of its own on the pair, so the request of
-     * the caller is the one normalized: the symbolic bit wins over the nonsymbolic default,
+     * A TrueType or Type 1 font normalizes the flags of the caller: the symbolic bit wins,
      * and a request carrying neither states the nonsymbolic one.
      *
      * @throws FileException

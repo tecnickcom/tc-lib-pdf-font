@@ -16,6 +16,7 @@
 
 namespace Test;
 
+use Com\Tecnick\File\Exception as FileException;
 use Com\Tecnick\Pdf\Font\Import;
 
 /**
@@ -299,9 +300,10 @@ class ImportInternalsTest extends TestUtil
     }
 
     /**
-     * A processor may downgrade 'TrueTypeUnicode' to 'TrueType' after isUnicode was first
-     * computed (TrueType::getCIDToGIDMap does exactly that for 256-entry cmaps).
-     * saveFontData must re-derive the flag so the emitted file never contradicts itself.
+     * A processor may downgrade 'TrueTypeUnicode' to 'TrueType', so saveFontData() re-derives
+     * the isUnicode flag from the final type.
+     *
+     * @throws FileException
      */
     public function testSaveFontDataRederivesIsUnicodeFromTheFinalType(): void
     {
@@ -334,6 +336,9 @@ class ImportInternalsTest extends TestUtil
         $this->assertFalse($decoded['isUnicode'] ?? null);
     }
 
+    /**
+     * @throws FileException
+     */
     public function testSaveFontDataKeepsIsUnicodeForTrueTypeUnicode(): void
     {
         $dir = dirname(__DIR__) . '/target/tmptest/saveisunicode2/';

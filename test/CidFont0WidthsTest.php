@@ -23,9 +23,8 @@ use Com\Tecnick\Pdf\Font\Stack;
 /**
  * The /W array of a CID-0 font.
  *
- * A CID-0 font is not embedded, so there is no program to subset, and its widths are
- * emitted by CID while the subset list is keyed by Unicode codepoint. The subset flag is
- * therefore cleared for these fonts.
+ * A CID-0 font is not embedded, so there is no program to subset and the subset flag is
+ * cleared. Its widths are emitted by CID.
  *
  * @since     2026-08-14
  * @category  Library

@@ -19,9 +19,8 @@ namespace Test;
 /**
  * Reads the Private dict of a Type 1 font from a plain string.
  *
- * extractEplainInfo() decrypts the eexec portion itself, so the fixtures of the tests below
- * are supplied in its place: what they exercise is how the entries of the decrypted dict are
- * read, not the decryption.
+ * extractEplainInfo() decrypts the eexec portion itself, so the fixtures are supplied in
+ * its place and exercise how the entries of the decrypted dict are read.
  *
  * @since     2026-08-14
  * @category  Library

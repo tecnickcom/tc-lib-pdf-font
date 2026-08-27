@@ -23,8 +23,8 @@ namespace Com\Tecnick\Pdf\Font\Import;
  *
  * What Import expects of the class it hands a font program to.
  *
- * The three processors parse unrelated formats and take different constructor arguments, so
- * this names only the call Import makes on whichever of them the font type selects.
+ * The processors take different constructor arguments, so only the call Import makes on the
+ * one the font type selects is named here.
  *
  * @since     2026-08-14
  * @category  Library

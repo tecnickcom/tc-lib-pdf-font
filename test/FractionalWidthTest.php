@@ -16,14 +16,13 @@
 
 namespace Test;
 
+use Com\Tecnick\Pdf\Encrypt\Exception as EncException;
+
 /**
  * The /W array is built from integers, whatever the definition file spells the widths as.
  *
- * A font definition is not always one this library wrote, and nothing validates it, so the
- * 'array<int, int>' the type declares is a description and not a guarantee: the fixtures
- * below hand over the shapes a hand-written file can carry. Each width is rounded to an
- * integer before it reaches array_count_values(), which counts only integers and strings,
- * and before it is compared with the integer default width.
+ * A definition file may spell a width as a float or as a numeric string, and each width is
+ * rounded to an integer before it reaches the /W array.
  *
  * @since     2026-08-14
  * @category  Library
@@ -103,8 +102,7 @@ class FractionalWidthTest extends TestUtil
 
     /**
      * A definition file may also spell a width as a numeric string; anything that is not a
-     * number at all has no width to report and reads as zero rather than as whatever a cast
-     * of the raw value would produce.
+     * number reads as zero.
      */
     public function testNonNumericWidthsAreReadAsZero(): void
     {
@@ -117,6 +115,8 @@ class FractionalWidthTest extends TestUtil
     /**
      * The /Widths array of a simple font is built from the same integers, so a fractional
      * width is rounded there too rather than truncated.
+     *
+     * @throws EncException
      */
     public function testTheWidthsArrayOfASimpleFontIsRoundedTheSameWay(): void
     {

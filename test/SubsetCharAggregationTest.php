@@ -24,8 +24,7 @@ use Com\Tecnick\Pdf\Font\Zlib;
  * Collection of the characters a font program is subset to.
  *
  * A program shared by several fonts is emitted once, so the characters used by all of them
- * are collected together, and only the enabled entries are kept: the reader that turns them
- * into glyphs tests them with isset().
+ * are collected together, and only the enabled entries are kept.
  *
  * @since     2026-08-14
  * @category  Library

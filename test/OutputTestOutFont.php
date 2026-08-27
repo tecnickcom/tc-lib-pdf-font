@@ -16,6 +16,9 @@
 
 namespace Test;
 
+use Com\Tecnick\Pdf\Encrypt\Encrypt;
+use Com\Tecnick\Pdf\Encrypt\Exception as EncException;
+
 /**
  * Test helper exposing the protected members of OutFont.
  *
@@ -31,6 +34,17 @@ namespace Test;
  */
 class OutputTestOutFont extends \Com\Tecnick\Pdf\Font\OutFont
 {
+    /**
+     * The output methods escape the PDF name objects through the encrypt object, so it
+     * is provided here as Output does.
+     *
+     * @throws EncException
+     */
+    public function __construct()
+    {
+        $this->enc = new Encrypt();
+    }
+
     /**
      * @param TFontData $font
      */
@@ -65,5 +79,18 @@ class OutputTestOutFont extends \Com\Tecnick\Pdf\Font\OutFont
         $this->pon = $pon;
 
         return $this->getTrueType($font);
+    }
+
+    /**
+     * @param TFontData $font
+     *
+     * @throws EncException
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
+    public function runGetTrueTypeUnicode(array $font, int $pon = 1): string
+    {
+        $this->pon = $pon;
+
+        return $this->getTrueTypeUnicode($font);
     }
 }

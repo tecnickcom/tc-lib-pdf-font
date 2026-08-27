@@ -22,8 +22,7 @@ use Com\Tecnick\Unicode\Data\Encoding;
 
 /**
  * The /Widths array of an emitted Type 1 font is indexed by the encoding the font
- * dictionary declares, which overrides the built-in encoding array of the program, so the
- * widths must follow the declared encoding wherever the two disagree.
+ * dictionary declares, which overrides the built-in encoding array of the program.
  *
  * @since     2026-08-14
  * @category  Library
@@ -71,8 +70,8 @@ class TypeOneDeclaredEncodingWidthsTest extends TestUtil
 
     /**
      * An original Adobe Type 1 places 'quoteright' at 39 through its own array, while
-     * WinAnsi names 39 'quotesingle' and puts 'quoteright' at 146. The declared encoding
-     * decides, otherwise the width lands on a code that renders another glyph.
+     * WinAnsi names 39 'quotesingle' and puts 'quoteright' at 146: the declared encoding
+     * decides.
      *
      * @throws \Throwable
      */
@@ -94,8 +93,7 @@ class TypeOneDeclaredEncodingWidthsTest extends TestUtil
 
     /**
      * The declared encoding may not name a glyph the font carries under one of its other
-     * Adobe Glyph List names ('micro' for 'mu'). The built-in array reports the code of
-     * such a glyph, which would otherwise carry no width at all.
+     * Adobe Glyph List names ('micro' for 'mu'), whose code the built-in array reports.
      *
      * @throws \Throwable
      */

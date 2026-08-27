@@ -64,10 +64,8 @@ use Com\Tecnick\Unicode\Data\Type as UnicodeType;
  *        'stretching': float,
  *    }
  *
- * The 'ascent', 'descent' and 'height' members measure the line box of the text and are
- * not the '/Ascent' and '/Descent' of the font descriptor: an AFM based font declares the
- * extent of its glyph outlines rather than a line metric, so its line box is measured from
- * the FontBBox instead. See getFontMetric().
+ * The 'ascent', 'descent' and 'height' members measure the line box of the text and are not
+ * the '/Ascent' and '/Descent' of the font descriptor. See getFontMetric().
  *
  * @phpstan-type TFontMetric array{
  *     'ascent': float,
@@ -138,10 +136,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Number of font metrics kept in memory.
      *
-     * Each entry holds the glyph width and bounding box maps of the font scaled to one size,
-     * which is around 1.7 MB for a font carrying six thousand glyphs, and the cache key
-     * includes the size. The least recently used entries beyond this bound are dropped and
-     * recomputed on demand.
+     * Each entry holds the glyph width and bounding box maps of the font scaled to one size.
      */
     protected const METRIC_CACHE_SIZE = 16;
 
@@ -452,11 +447,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     protected function getFontGidForOrd(array $font, int $ord): int
     {
         if ($ord > 0xFFFF) {
-            // Supplementary-plane codepoints do not fit the 16-bit CIDToGIDMap table
-            // and are stored separately by the importer.
+            // codepoints above the BMP are stored in the 'ctgu' member of the definition file
             $gid = (int) ($font['ctgu'][$ord] ?? 0);
-            // this member of the definition file is not bounded by its own format, so an
-            // entry outside the range of a glyph index is reported as .notdef
+            // an entry outside the range of a glyph index is reported as .notdef
             return $gid >= 0 && $gid <= self::MAX_GID ? $gid : 0;
         }
 
@@ -465,8 +458,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         }
 
         if ($font['ctg'] === '') {
-            // a Core, Type1 or byte encoded TrueType font ships no CIDToGIDMap artifact,
-            // so it has no glyph index to report
+            // no CIDToGIDMap artifact, hence no glyph index to report
             return 0;
         }
 
@@ -477,9 +469,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Encode an array of codepoints as the 2-byte glyph indices of the current font.
      *
-     * Every glyph is recorded on the font, so that the output can build the /W array and the
-     * ToUnicode CMap of the glyphs used by the document, and its codepoint is added to the
-     * subset, so that the embedded program keeps the outline they describe.
+     * Every glyph is recorded on the font, and its codepoint is added to the subset.
      *
      * @param array<int, int> $uniarr Array of character codepoints.
      *
@@ -528,8 +518,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Replace missing characters with selected substitutions
      *
-     * A character is missing when the font has no width for it, under either of the maps
-     * isCharDefined() reads.
+     * A character is missing when the font has no width for it (see isCharDefined()).
      *
      * @param array<int, int>        $uniarr Array of character codepoints.
      * @param array<int, array<int>> $subs   Array of possible character substitutions.
@@ -576,9 +565,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public function isCharDefined(int $ord): bool
     {
         $font = $this->getFontMetric($this->index);
-        // The codepoint-keyed map is consulted as well, the way getCharWidth() does: on a
-        // byte encoded font the character code of a glyph is not its codepoint, so a glyph
-        // outside Latin-1 is only reachable through that map.
+        // on a byte encoded font a glyph outside Latin-1 is only listed in the
+        // codepoint-keyed map
         return isset($font['cwu'][$ord]) || isset($font['cw'][$ord]);
     }
 
@@ -626,8 +614,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getOrdArrDims(array $uniarr): array
     {
-        // the loop below reads the key of each entry as its position in the string and
-        // addresses the appended terminator by count(), so the keys must be consecutive
+        // the loop below reads the key of each entry as its position in the string
         $uniarr = \array_values($uniarr);
         $chars = \count($uniarr); // total number of chars
         $spaces = 0; // total number of spaces
@@ -648,11 +635,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 $this->addSubsetChar($fkey, $ord);
             }
 
-            // getType() resolves the code points that are not listed in the type table,
-            // which only holds the ones whose bidirectional type is not L.
-            $unitype = UnicodeType::getType($ord);
-            $bidiClass = BidiClass::tryFrom($unitype);
-            // width lookup on the already resolved $curfont metric
+            $bidiClass = UnicodeType::getBidiClass($ord);
             $chrwidth = isset(self::ZERO_WIDTH[$ord])
                 ? 0.0
                 : $curfont['cwu'][$ord] ?? $curfont['cw'][$ord] ?? $curfont['dw'];
@@ -668,9 +651,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                     'pos' => $idx,
                     'ord' => $ord,
                     'spaces' => $spaces,
-                    'septype' => $unitype,
-                    // width accumulated since the previous split point ($prevtotwidth starts
-                    // at zero, so the first word reports its own width)
+                    'septype' => $bidiClass->value,
+                    // width accumulated since the previous split point
                     'wordwidth' => $currenttotwidth - $prevtotwidth,
                     'totwidth' => $currenttotwidth,
                     'totspacewidth' => $totspacewidth + ($fact * \max(0, $spaces - 1)),
@@ -708,9 +690,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     public function getCharBBox(int $ord): array
     {
         $font = $this->getFontMetric($this->index);
-        // The codepoint-keyed map is consulted first, as getCharWidth() does with 'cwu':
-        // on a byte encoded font the character code of a glyph is not its codepoint, so
-        // the box of everything outside Latin-1 is only reachable through this map.
+        // on a byte encoded font a glyph outside Latin-1 is only listed in the
+        // codepoint-keyed map
         return $font['cbboxu'][$ord] ?? $font['cbbox'][$ord] ?? [0.0, 0.0, 0.0, 0.0]; // glyph without outline
     }
 
@@ -749,9 +730,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     protected function getFontMetric(int $idx): array
     {
         $font = $this->getStackItem($idx);
-        // Cache key built from the fields the metric depends on. The stack index is not part
-        // of it: the same font at the same size yields the same metric wherever it sits on
-        // the stack, so the entry is shared and only 'idx' is patched on the way out.
+        // cache key built from the fields the metric depends on; the stack index is not one
+        // of them and is patched on the way out
         $mkey =
             $font['key']
             . '|'
@@ -764,8 +744,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             . $font['style'];
         if (isset($this->metric[$mkey])) {
             $metric = $this->metric[$mkey];
-            // move the entry back to the most recent end, so that the eviction below
-            // drops the combination the document has moved past and not this one
+            // move the entry to the most recent end
             unset($this->metric[$mkey]);
             $this->metric[$mkey] = $metric;
             $metric['idx'] = $idx;
@@ -814,12 +793,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         // the enclosing brackets
         $boxsplit = \preg_split('/\s+/', \trim($fontbbox, "[] \t\n\r\0\x0B"), -1, PREG_SPLIT_NO_EMPTY);
         $tbox = \array_pad(\is_array($boxsplit) ? $boxsplit : [], 4, '0');
-        // An AFM file declares no line layout metric: 'Ascender' and 'Descender' bound the
-        // unaccented glyph outlines, so a line box built from them leaves no room above a
-        // capital (Helvetica declares an ascent of 718 against a cap height of 718). The
-        // FontBBox is the analogue of the TrueType hhea metrics, which do carry the internal
-        // leading, so it provides the vertical extent of the line instead. The descriptor
-        // keeps the declared values: only the layout of the text is measured from the box.
+        // an AFM based font declares no line layout metric, so the line box is widened to
+        // the FontBBox; the descriptor keeps the declared values
         if ($fonttype === 'Core' || $fonttype === 'Type1') {
             $ascent = \max($ascent, \is_numeric($tbox[3]) ? (float) $tbox[3] : 0.0);
             $descent = \min($descent, \is_numeric($tbox[1]) ? (float) $tbox[1] : 0.0);
@@ -912,13 +887,15 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Normalize the input size (minimum 0)
      *
+     * A value that is not a finite number is treated as no value.
+     *
      * @param ?float $size Font size in points (set to null to inherit the last font size).
      *
      * @throws FontException
      */
     protected function getInputSize(?float $size = null): float
     {
-        if ($size === null || $size < 0) {
+        if ($size === null || !\is_finite($size) || $size < 0) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
                 return $this->getCurrentStackItem()['size'];
@@ -927,12 +904,13 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             return self::DEFAULT_SIZE;
         }
 
-        // the branch above already returned for everything below zero
         return $size;
     }
 
     /**
      * Normalize the input spacing (minimum 0)
+     *
+     * A value that is not a finite number is treated as no value.
      *
      * @param ?float $spacing Extra spacing between characters.
      *
@@ -940,7 +918,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     protected function getInputSpacing(?float $spacing = null): float
     {
-        if ($spacing === null) {
+        if ($spacing === null || !\is_finite($spacing)) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
                 return $this->getCurrentStackItem()['spacing'];
@@ -955,13 +933,15 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     /**
      * Normalize the input stretching
      *
+     * A value that is not a finite number is treated as no value.
+     *
      * @param ?float $stretching Horizontal character stretching ratio.
      *
      * @throws FontException
      */
     protected function getInputStretching(?float $stretching = null): float
     {
-        if ($stretching === null) {
+        if ($stretching === null || !\is_finite($stretching)) {
             if ($this->index >= 0) {
                 // inherit the size of the last inserted font
                 return $this->getCurrentStackItem()['stretching'];
@@ -1020,8 +1000,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         }
 
         $keys = [];
-        // remove spaces and symbols (the preg_* calls here and below return null or false
-        // only when the PCRE engine hits its backtrack or recursion limits)
+        // remove spaces and symbols
         $filtered = \preg_replace('/[^a-z0-9_\,]/', '', \strtolower($fontfamily));
         if ($filtered === null) {
             throw new FontException('Invalid font family name');

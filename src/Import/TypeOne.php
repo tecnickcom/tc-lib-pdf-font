@@ -41,8 +41,6 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 {
     /**
      * True when the Private dict of the font states '/CapHeight' itself.
-     *
-     * Set by extractStem() and read by the BlueValues fallback that follows it.
      */
     private bool $hasDeclaredHeights = false;
 
@@ -54,11 +52,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * Returns the part of the font program the PostScript directives are read from.
      *
-     * The header states the font info and the internal encoding map, while the eexec
-     * encrypted portion that follows it carries no readable directive: matching the whole
-     * file would scan the binary as well, and a byte sequence in it that happens to read
-     * as a 'dup' directive would enter the encoding map. The whole program is returned
-     * while the segments have not been read, so that the header can be parsed on its own.
+     * The clear text header holds the font info and the internal encoding map, so the eexec
+     * encrypted portion is left out of the scan. The whole program is returned while the
+     * segments have not been read yet.
      */
     private function clearText(): string
     {
@@ -75,8 +71,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     {
         [$clear, $encrypted] = $this->readPfbSegments();
 
-        // the ASCII header and the eexec encrypted portion are both required: a font
-        // missing either one carries no charstrings to render
+        // the ASCII header and the eexec encrypted portion are both required
         if ($clear === '' || $encrypted === '') {
             throw new FontException('Font file is not a valid binary Type1');
         }
@@ -99,11 +94,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      * Read the PFB segments and return the clear-text and the eexec encrypted portions.
      *
      * A PFB file is a sequence of [0x80, type, uint32 length] segments: type 1 is ASCII,
-     * type 2 is binary and type 3 marks the end of the file. The eexec data is allowed to
-     * span several type-2 segments (writers that cap a segment at 64KB produce exactly
-     * that), so every segment is read instead of assuming a single ASCII/binary pair.
-     * The ASCII trailer that follows the binary portion is dropped: it is the fixed
-     * 512-zeros block, which is emitted as '/Length3 0'.
+     * type 2 is binary and type 3 marks the end of the file. The eexec data may span several
+     * type-2 segments, so every segment is read. The ASCII trailer that follows the binary
+     * portion is dropped and emitted as '/Length3 0'.
      *
      * @return array{0: string, 1: string} Clear-text portion and encrypted portion.
      *
@@ -116,9 +109,6 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $encrypted = '';
         $pos = 0;
         while ($pos < $fontlen) {
-            // an incomplete header is checked before unpack(), which would emit a warning
-            // before returning false: an error handler could turn it into the wrong
-            // exception type
             if (($pos + 2) > $fontlen || \ord($this->font[$pos]) !== 128) {
                 throw new FontException('Font file is not a valid binary Type1');
             }
@@ -132,8 +122,6 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
                 throw new FontException('Font file is not a valid binary Type1');
             }
 
-            // the check above guarantees the four bytes of the length field are present,
-            // so unpack() always succeeds here
             /** @var array{'size': int} $dat */
             $dat = \unpack('Vsize', \substr($this->font, $pos + 2, 4));
             $size = $dat['size'];
@@ -171,7 +159,6 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         }
 
         $name = \preg_replace('/[^a-zA-Z0-9_\-]/', '', $matches[1]);
-        // a name made only of stripped characters leaves nothing to write as /BaseFont
         if ($name === null || $name === '') {
             throw new FontException('Unable to extract font name');
         }
@@ -196,7 +183,6 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $this->fdt['Descent'] = $bvl[1];
 
         // the italic angle is a real number, so the decimal point is part of the pattern
-        // and the value is rounded rather than truncated
         $this->fdt['italicAngle'] = \preg_match('#/ItalicAngle[\s]*+([0-9\+\-\.]*+)#', $this->clearText(), $matches)
         === 1
             ? self::roundedValue($matches[1])
@@ -299,8 +285,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             // the values may be separated by any run of whitespace
             $split = \preg_split('/\s+/', \trim($matches[1]), -1, PREG_SPLIT_NO_EMPTY);
             $bvl = \is_array($split) ? $split : [];
-            // The blue zones only approximate the two heights, so they are read as a
-            // fallback: a Private dict that states /CapHeight has already given the value.
+            // the blue zones only apply when the Private dict declares no height
             if (\count($bvl) >= 6 && !$this->hasDeclaredHeights) {
                 $vl1 = (int) $bvl[2];
                 $vl2 = (int) $bvl[4];
@@ -329,11 +314,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             ? (int) $matches[1]
             : 30;
 
-        // whether the Private dict states the height explicitly is remembered, so that the
-        // BlueValues fallback of extractEplainInfo() does not replace a declared value.
-        // Unlike '/StdVW' and '/StdHW', which the Type1 specification defines as arrays,
-        // '/CapHeight' is written as a plain number ('/CapHeight 700 def'); both spellings
-        // are accepted here.
+        // '/CapHeight' is written as a plain number ('/CapHeight 700 def'), unlike the
+        // '/StdVW' and '/StdHW' arrays above; both spellings are accepted here
         $this->hasDeclaredHeights = \preg_match('#/CapHeight[\s]*+\[?[\s]*+([-+]?[0-9]++)#', $eplain, $matches) === 1;
         $this->fdt['CapHeight'] = $this->hasDeclaredHeights ? (int) $matches[1] : (int) $this->fdt['Ascent'];
 
@@ -351,8 +333,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     {
         $this->fdt['lenIV'] = 4;
         $matches = [];
-        // at least one digit is required, so an entry without a non-negative value keeps
-        // the default
+        // an entry without a non-negative value keeps the default
         if (\preg_match('#/lenIV[\s]++([\d]++)#', $eplain, $matches) === 1) {
             $this->fdt['lenIV'] = (int) $matches[1];
         }
@@ -393,10 +374,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * Scan the '/name length RD <binary> ND' entries of a CharStrings dictionary.
      *
-     * 'RD' and 'ND' are locally defined procedure names: the URW/Ghostscript fonts spell
-     * them '-|' and '|-', so both conventions are accepted. Only the entry header is
-     * matched, and the declared byte count delimits the binary data, which may itself
-     * contain the closing 'ND' bytes.
+     * 'RD' and 'ND' are locally defined procedure names, also spelled '-|' and '|-', so both
+     * conventions are accepted. Only the entry header is matched, and the declared byte count
+     * delimits the binary data.
      *
      * @param string $eplain Decoded eexec encrypted part, from the CharStrings dictionary on.
      *
@@ -411,7 +391,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         $found = [];
         while (true) {
             // a PostScript name is any run of characters other than whitespace and the
-            // delimiters, which includes '_' and '-' (ligature names such as 'f_i')
+            // delimiters, '_' and '-' included (ligature names such as 'f_i')
             $res = \preg_match(
                 '#/([^\s/{}\[\]()<>%]*+)[\s]([0-9]++)[\s](?:RD|-\|)[\s]#',
                 $eplain,
@@ -431,7 +411,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             $start = (int) $found[0][1] + \strlen($found[0][0]);
             $charstring = \substr($eplain, $start, $length);
             if (\strlen($charstring) !== $length) {
-                // the declared length runs past the end: the dictionary is truncated
+                // the declared length runs past the end of a truncated dictionary
                 return $entries;
             }
 
@@ -447,12 +427,9 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     /**
      * Returns every character code a charstring glyph name is encoded at.
      *
-     * An encoding may give one name more than one code: WinAnsi assigns 'space' both 32 and
-     * 160 and 'hyphen' both 45 and 173 (ISO 32000-1 Annex D.2), so every code is reported.
-     * This mirrors what Core::getWinAnsiByName() does for the AFM importer.
-     *
-     * The codes are those of the encoding the emitted font declares, and those of the
-     * built-in encoding array of the program only when it declares none.
+     * An encoding may give one name more than one code (ISO 32000-1 Annex D.2), so every
+     * code is reported. The codes are those of the encoding the emitted font declares, and
+     * those of the built-in encoding array of the program only when it declares none.
      *
      * @param array<string, int> $imap Internal encoding map
      * @param array<int, string> $val  Charstring match (name and encrypted data)
@@ -463,15 +440,12 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
     protected function getCids(array $imap, array $val): array
     {
         if ($val[1] === '.notdef') {
-            // '.notdef' is the name of the glyph a code falls back to, not a character,
-            // although the encoding maps list it at index 0
+            // '.notdef' names the fallback glyph, not a character
             return [];
         }
 
-        // The encoding the font dictionary declares overrides the built-in array of the
-        // program, and the /Widths of the emitted font are indexed by it, so it answers
-        // first. Some encoding maps (e.g. 'symbol') also list glyph names above the
-        // single-byte range, which a Type1 font cannot address.
+        // the declared encoding answers first, as the /Widths of the emitted font are
+        // indexed by it; a Type1 font cannot address a code above the single-byte range
         $cids = [];
         foreach (\array_keys($this->fdt['enc_map'], $val[1], true) as $cid) {
             if ($cid < 0 || $cid > 255) {
@@ -486,10 +460,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
             return $cids;
         }
 
-        // The declared encoding does not name this glyph. It may still be the glyph the
-        // font itself places at a code under one of its other Adobe Glyph List names
-        // ('micro' for 'mu', 'ssharp' for 'germandbls'), which the built-in array reports.
-        // When no encoding is declared, 'enc_map' is empty and this is the only source.
+        // the declared encoding does not name this glyph, so the built-in array of the
+        // program answers; it is the only source when no encoding is declared
         if (isset($imap[$val[1]])) {
             $own = $imap[$val[1]];
             return $own >= 0 && $own <= 255 ? [$own] : [];
@@ -519,8 +491,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
                 throw new FontException('Truncated Type1 charstring number operand');
             }
 
-            // Type 1 charstring 255 operands are 32-bit big-endian two's complement:
-            // the four bytes are assembled unsigned and the sign is restored below.
+            // a 255 operand is a 32-bit big-endian two's complement value
             $uval = ($ccom[$idx + 1] << 24) | ($ccom[$idx + 2] << 16) | ($ccom[$idx + 3] << 8) | $ccom[$idx + 4];
             $cdec[$cck] = $uval >= 0x8000_0000 ? $uval - 0x1_0000_0000 : $uval;
             return $idx + 5;
@@ -551,17 +522,14 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
 
         $cdec[$cck] = $ccom[$idx];
         if ($ccom[$idx] === 12) {
-            // An escaped command is the two byte sequence '12 n'. Both bytes are consumed
-            // here: decoding the second one as a value of its own would leave the decoder
-            // one byte out of phase for the rest of the charstring.
+            // an escaped command is the two byte sequence '12 n', both consumed here
             if (!isset($ccom[$idx + 1])) {
                 throw new FontException('Truncated Type1 charstring escaped command');
             }
 
             if ($ccom[$idx + 1] === 7 && $cck >= 4) {
-                // sbw command: 'sbx sby wx wy sbw', so the horizontal width is the third
-                // of the four operands. With fewer than four on the stack the value there
-                // is a sidebearing and not a width, so the glyph keeps none.
+                // sbw command: 'sbx sby wx wy sbw', the horizontal width is the third
+                // of the four operands
                 $cwidths[$cid] = $cdec[$cck - 2];
             }
 
@@ -573,8 +541,7 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
         }
 
         if ($cck >= 2) {
-            // hsbw command: 'sbx wx hsbw', so the width is the second of the two operands.
-            // With a single operand on the stack that value is the sidebearing.
+            // hsbw command: 'sbx wx hsbw', the width is the second of the two operands
             $cwidths[$cid] = $cdec[$cck - 1];
         }
 
@@ -629,8 +596,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
                     ++$cck;
                 }
             } catch (FontException $exc) {
-                // a truncated operand ends this charstring only: the width its hsbw command
-                // may already have recorded is kept and the next glyph is decoded
+                // a truncated operand ends this charstring only, keeping the width already
+                // recorded for it
                 unset($exc);
             }
 
@@ -650,12 +617,8 @@ class TypeOne extends \Com\Tecnick\Pdf\Font\Import\Core
      * Record the glyph widths under the Unicode codepoint of their glyph name.
      *
      * A Type1 font is emitted with a single-byte encoding, where the character code of a
-     * glyph is not its codepoint (WinAnsi 146 is U+2019), while Stack::getCharWidth()
-     * measures by codepoint and consults this map first.
-     *
-     * The map is left empty for a font emitted without an encoding: its codes are its own,
-     * and the codepoint the Adobe Glyph List gives to a glyph name collides with them (a
-     * Symbol font names its glyph 181 'proportional' while the list puts 'mu' at U+00B5).
+     * glyph is not its codepoint. The map is left empty for a font emitted without an
+     * encoding, whose codes are its own.
      *
      * @param array<int, int>    $cwidths    Character widths indexed by character code.
      * @param array<int, string> $glyphNames Glyph names indexed by character code.

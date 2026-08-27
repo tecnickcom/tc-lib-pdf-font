@@ -86,10 +86,7 @@ class LoadTest extends TestUtil
 
         $dirs = $load->exposeFontDirectories();
 
-        // An empty entry makes findFontFile() probe the filesystem root
-        // (is_readable('' . DIRECTORY_SEPARATOR . $file) === is_readable('/<font>.json')),
-        // which fails and emits a warning under open_basedir restrictions.
-        // See https://github.com/tecnickcom/tc-lib-pdf/issues/238
+        // an empty entry would make the lookup probe the filesystem root
         $this->assertNotContains('', $dirs);
     }
 

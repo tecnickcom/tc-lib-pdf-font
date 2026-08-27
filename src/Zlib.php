@@ -38,9 +38,7 @@ final class Zlib
     /**
      * Uncompress a zlib stream.
      *
-     * gzuncompress() emits an E_WARNING before returning false for a corrupt stream, which
-     * is silenced here: the callers turn that false into a FontException carrying the
-     * offending file name.
+     * The E_WARNING gzuncompress() emits for a corrupt stream is silenced.
      *
      * @param string $data      Compressed data.
      * @param int    $maxLength Maximum size of the uncompressed data, or 0 for no limit.
@@ -62,13 +60,11 @@ final class Zlib
     /**
      * Compress data as a zlib stream.
      *
-     * Every font artifact and PDF stream of this library is deflated here. Any warning
-     * gzcompress() may emit is silenced, as in uncompress().
+     * Any warning gzcompress() may emit is silenced, as in uncompress().
      *
      * @param string $data    Data to compress.
      * @param string $message Message of the exception raised when the data cannot be compressed.
-     * @param int    $level   Compression level (-1 for the zlib default, 0 to 9). Any other
-     *                        value is refused here, as gzcompress() would raise a ValueError.
+     * @param int    $level   Compression level (-1 for the zlib default, 0 to 9).
      *
      * @return string The compressed data.
      *
@@ -77,8 +73,7 @@ final class Zlib
     public static function compress(string $data, string $message, int $level = -1): string
     {
         if ($level < -1 || $level > 9) {
-            // gzcompress() raises a ValueError for any other level, which is not the
-            // exception type this library contracts
+            // gzcompress() would raise a ValueError instead of a FontException
             throw new FontException($message . ': invalid compression level ' . $level);
         }
 
@@ -90,8 +85,7 @@ final class Zlib
             \restore_error_handler();
         }
 
-        // the only input zlib rejects is the compression level refused above; every other
-        // error condition it reports ends the process rather than returning false
+        // the compression level refused above is the only input gzcompress() rejects
         /** @var string $compressed */
         return $compressed;
     }

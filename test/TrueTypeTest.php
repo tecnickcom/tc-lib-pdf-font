@@ -162,9 +162,8 @@ class TrueTypeTest extends TestUtil
     }
 
     /**
-     * A format 14 subtable maps Unicode Variation Sequences, not characters: its records
-     * pair a base codepoint and a variation selector with a glyph, so it is refused as the
-     * character map of the font.
+     * A format 14 subtable maps Unicode Variation Sequences, not characters, so it is
+     * refused as the character map of the font.
      */
     public function testGetCIDToGIDMapRejectsFormat14AsTheCharacterMap(): void
     {
@@ -742,10 +741,7 @@ class TrueTypeTest extends TestUtil
     /**
      * Complete the table records of a fixture with the length getTables() always records.
      *
-     * A record read from a real font directory carries all four fields, and the parser
-     * bounds what it reads by the declared length. A fixture that states only the offset
-     * would exercise a record shape the importer never produces, so the length of the
-     * synthetic program stands in for the missing value.
+     * The length of the synthetic program stands in for the missing value.
      *
      * @param array<string, mixed> $fdt    Font data of the fixture.
      * @param int                  $length Length of the synthetic font program.
@@ -992,9 +988,8 @@ class TrueTypeTest extends TestUtil
         // All 256 subHeaderKeys = 0  → single-byte codes, one subHeader at index 0.
         // subHeaders[0]: firstCode=0, entryCount=1, idDelta=0, idRangeOffset=2
         //   Adjusted idRangeOffset = 2 − (2 + (1−0−1)×8) = 0  →  /2 = 0
-        // subHeaders[0] covers the single-byte range, so only the codes it declares
-        // (firstCode=0, entryCount=1, that is code 0) are mapped: code 0 → glyph 99,
-        // every other byte is outside the range and resolves to notdef.
+        // Only code 0 is inside the declared range: it maps to glyph 99, and every other
+        // byte resolves to notdef.
         $subHeaderKeys = str_repeat("\x00\x00", 256); // 512 bytes
         $subHeader = "\x00\x00\x00\x01\x00\x00\x00\x02";
         $glyphIdArray = "\x00\x63"; // glyph 99
@@ -1031,7 +1026,7 @@ class TrueTypeTest extends TestUtil
         // subHeaders[0]: firstCode=65, entryCount=2, idDelta=10, idRangeOffset=2
         //   Adjusted idRangeOffset = 2 − (2 + (1−0−1)×8) = 0  →  /2 = 0
         // glyphIndexArray = [7, 0]: code 65 → 7 + idDelta, code 66 → 0 (missingGlyph,
-        // which the spec keeps as notdef instead of shifting it by idDelta).
+        // which is kept as notdef instead of being shifted by idDelta).
         $font = $this->buildFormat2([], [[65, 2, 10, 2]], [7, 0]);
 
         $instance = $this->buildTrueType($font, $this->cmapFdt());
@@ -1116,8 +1111,8 @@ class TrueTypeTest extends TestUtil
     public function testProcessFormat8MapsSingleByteChar(): void
     {
         // numGroups=1: chars 65..65 → glyph 5. is32[8]=0 → single-byte char.
-        // Per the cmap format 8 spec the character maps to its real glyph id
-        // (startGlyphID = 5), and subglyphs contains glyph 5 when subchars[65] is set.
+        // The character maps to startGlyphID, and subglyphs holds glyph 5 when
+        // subchars[65] is set.
         $is32 = str_repeat("\x00", 8192);
         $font =
             "\x00\x08" // format = 8
@@ -1528,10 +1523,8 @@ class TrueTypeTest extends TestUtil
     }
 
     /**
-     * The short format stores the offsets halved, so it can only address even ones. A glyf
-     * table of odd declared length is clamped to the even offset below it, otherwise the
-     * glyph length derived from the clamp would be odd and the subset loca could not
-     * express it.
+     * The short format stores the offsets halved, so it can only address even ones: a glyf
+     * table of odd declared length is clamped to the even offset below it.
      */
     public function testGetIndexToLocClampsShortOffsetsToAnEvenLength(): void
     {
@@ -1726,9 +1719,8 @@ class TrueTypeTest extends TestUtil
     }
 
     /**
-     * PDF 32000-1 Table 122 defines /XHeight and /CapHeight as heights above the baseline.
-     * Measuring the vertical extent of the glyph instead inflated both by the overshoot of
-     * a rounded 'x' or of an 'H' dipping below the baseline.
+     * ISO 32000-1 Table 122 defines /XHeight and /CapHeight as heights above the baseline,
+     * so both are the yMax of the glyph alone.
      */
     public function testGetHeightsMeasuresFromTheBaselineNotTheGlyphExtent(): void
     {
@@ -1794,8 +1786,7 @@ class TrueTypeTest extends TestUtil
 
     /**
      * The mandatory 0xFFFF -> 0xFFFF terminating segment of a format 4 subtable closes the
-     * table and is not recorded: it does not map the noncharacter U+FFFF to the notdef
-     * glyph.
+     * table and is not recorded, so U+FFFF is not mapped.
      */
     public function testProcessFormat4DropsTheTerminatingSegment(): void
     {
@@ -1825,10 +1816,8 @@ class TrueTypeTest extends TestUtil
     }
 
     /**
-     * A byte encoded font is one whose character codes all fit a single byte. Counting the
-     * cmap entries alone was not enough: a segmented subtable mapping exactly 256 code
-     * points anywhere in the BMP was written out as a simple single-byte font, and every
-     * code above 255 became unreachable at render time.
+     * A byte encoded font is one whose character codes all fit a single byte, so the
+     * highest code is checked as well as the number of cmap entries.
      */
     public function testUnicodeTypeSurvivesACmapOf256CodesAboveTheByteRange(): void
     {
@@ -1904,9 +1893,8 @@ class TrueTypeTest extends TestUtil
 
     public function testProcessFormat2HandlesSubHeaderKeysThatAreNotMultiplesOfEight(): void
     {
-        // subHeaderKeys[2] = 10. The spec says the value is "subHeader index x 8", but a
-        // font may store a value that is not an exact multiple: intdiv() keeps the index an
-        // integer, so 10 selects subHeader 1 and yields two subHeaders in total.
+        // subHeaderKeys[2] = 10. The spec says the value is "subHeader index x 8", and a
+        // value that is not an exact multiple is divided down: 10 selects subHeader 1.
         $font = $this->buildFormat2(
             [2 => 10],
             [
@@ -1932,8 +1920,8 @@ class TrueTypeTest extends TestUtil
 
     /**
      * Sub-headers may address overlapping ranges of the shared glyph index array, so the
-     * sum of their entry counts over-estimates its size and a valid cmap can ask for more
-     * entries than the font holds. The array stops at the end of the font.
+     * sum of their entry counts over-estimates its size and the array stops at the end of
+     * the cmap table.
      */
     public function testProcessFormat2StopsTheGlyphIndexArrayAtTheEndOfTheFont(): void
     {
@@ -2016,9 +2004,7 @@ class TrueTypeTest extends TestUtil
 
     public function testProcessFormat2KeepsASubHeaderInsideItsOwnHighByte(): void
     {
-        // High byte 2 declares 65535 low bytes, which is 255 times the range a low byte
-        // can hold: the run must stop at 0x02FF rather than spill into the code blocks of
-        // the high bytes that follow it.
+        // high byte 2 declares 65535 low bytes, and the run stops at 0x02FF
         $glyphs = \array_fill(0, 300, 7);
         $font = $this->buildFormat2([2 => 8], [[0, 0, 0, 2], [0, 65_535, 0, 2]], $glyphs);
 
@@ -2095,9 +2081,8 @@ class TrueTypeTest extends TestUtil
 
     public function testProcessFormat4KeepsTheNotdefEntriesOfTheGlyphIdArray(): void
     {
-        // A zero entry of the glyphIdArray encodes missingGlyph: the spec adds idDelta
-        // only to the entries that are not zero, so the unmapped code point stays notdef
-        // instead of picking up the glyph at the delta.
+        // a zero entry of the glyphIdArray encodes missingGlyph and is not shifted by
+        // idDelta, so the code point stays notdef
         $font = $this->buildFormat4(65, 66, 100, 2, [7, 0]);
 
         $instance = $this->buildTrueType($font, $this->cmapFdt());
@@ -2110,8 +2095,7 @@ class TrueTypeTest extends TestUtil
 
     /**
      * The glyph index array is sized from the declared subtable length and stops at the end
-     * of the cmap table, so a length claiming more entries than the table holds does not
-     * reach the bytes of the table that follows it.
+     * of the cmap table.
      */
     public function testProcessFormat4StopsTheGlyphIdArrayAtTheEndOfTheCmapTable(): void
     {
@@ -2225,9 +2209,8 @@ class TrueTypeTest extends TestUtil
     }
 
     /**
-     * The budget follows the number of glyphs the loca table accounts for: twelve bytes of
-     * group record would otherwise state a range of any width, and every code point it maps
-     * costs an entry of the CIDToGIDMap, a width and a bounding box.
+     * The budget follows the number of glyphs the loca table accounts for, so a subtable
+     * declaring more codes than that is refused.
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('groupedCmapFormatProvider')]
     public function testGroupedCmapRejectsMoreCodePointsThanTheGlyphCountAllows(int $format): void
@@ -2279,8 +2262,7 @@ class TrueTypeTest extends TestUtil
 
     /**
      * A group whose end precedes its start maps nothing and does not give the entry budget
-     * back. Formats 8 and 13 share the same accounting; only format 12 is exercised here,
-     * as each case walks the whole budget.
+     * back. Formats 8 and 13 share the same accounting.
      */
     public function testGroupedCmapDoesNotCreditTheBudgetForAReversedGroup(): void
     {
@@ -2317,8 +2299,7 @@ class TrueTypeTest extends TestUtil
 
     /**
      * The is32 bitmap of format 8 only records whether a group wrote its bounds as 16 or
-     * 32 bit values: the bounds are full code points either way, so a code point above
-     * the BMP is mapped as-is and no surrogate conversion takes place.
+     * 32 bit values, so a code point above the BMP is mapped as it is read.
      */
     public function testProcessFormat8MapsA32BitCodePointDirectly(): void
     {
@@ -2532,8 +2513,7 @@ class TrueTypeTest extends TestUtil
 
     /**
      * usWeightClass is a weight class in the 1..1000 range, not a value in font design
-     * units: scaling it by the units ratio gave a bold font a thinner stem than a
-     * regular one on every font whose unitsPerEm is not 1000.
+     * units, so the stem estimate does not depend on unitsPerEm.
      */
     public function testGetOS2MetricsDoesNotScaleTheWeightClass(): void
     {
@@ -2591,8 +2571,7 @@ class TrueTypeTest extends TestUtil
 
     /**
      * A font written on the legacy 1..9 weight scale rounds the stem estimate down to
-     * zero, which is not a stem width: ISO 32000-1 Table 122 requires /StemV of every
-     * font descriptor.
+     * zero, which is floored at one.
      */
     public function testGetOS2MetricsKeepsAStemWidthForALowWeightClass(): void
     {
@@ -2847,8 +2826,7 @@ class TrueTypeTest extends TestUtil
 
     /**
      * The fixed-size headers of head, hhea, maxp, post, cmap, name and hmtx are addressed
-     * as raw file offsets, so an undersized record would parse out of the bytes that follow
-     * it while subsetting copies the table by its declared length.
+     * as raw file offsets, so a record declaring a shorter table is refused.
      */
     public function testCheckTableBoundsRejectsAnUndersizedFixedTable(): void
     {

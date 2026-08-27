@@ -23,10 +23,8 @@ use Com\Tecnick\Pdf\Font\Import;
 /**
  * An AFM is font-specific unless it names one of the Latin text encoding schemes.
  *
- * A re-issued symbol font names its scheme after itself ('Symbol', 'Zapfdingbats' in the
- * mirror this repository imports from), and every other symbol typeface names it after
- * whatever its vendor chose, so the known Latin text schemes are the closed set and anything
- * outside it reads its codes from the AFM 'C' column and carries a Symbolic descriptor.
+ * The known Latin text schemes are the closed set: anything outside it reads its codes from
+ * the AFM 'C' column and carries a Symbolic descriptor.
  *
  * @since     2026-08-14
  * @category  Library
@@ -45,9 +43,8 @@ class SymbolicEncodingSchemeTest extends TestUtil
     /**
      * Write a minimal AFM declaring the given name and encoding scheme.
      *
-     * The two glyphs are chosen so that the branch taken is visible in the result: 'alpha'
-     * has no cp1252 code, so it only gets a metric when the 'C' column is read, while
-     * 'space' is reachable either way.
+     * 'alpha' has no cp1252 code, so it only gets a metric when the 'C' column is read,
+     * while 'space' is reachable either way.
      */
     private function writeAfm(string $file, string $fontName, string $scheme): string
     {
@@ -186,8 +183,7 @@ class SymbolicEncodingSchemeTest extends TestUtil
 
     /**
      * The scheme decides how the code of every metric row is read, so it is taken from the
-     * whole file before the rows are processed: a file stating it after the metrics would
-     * otherwise read the rows that precede it as text encoded.
+     * whole file before the rows are processed.
      *
      * @throws FileException
      * @throws FontException

@@ -21,8 +21,8 @@ use Com\Tecnick\File\File as ObjFile;
 /**
  * File helper handing out a handle that cannot be written to.
  *
- * A stream that refuses the data is how a full disk, an exceeded quota or a failing
- * device surfaces to fwrite(), and the only way to reach that path deterministically.
+ * A stream that refuses the data is how a full disk, an exceeded quota or a failing device
+ * surfaces to fwrite().
  *
  * @since     2026-08-14
  * @category  Library

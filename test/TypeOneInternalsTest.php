@@ -333,8 +333,7 @@ class TypeOneInternalsTest extends TestUtil
 
     /**
      * The italic angle is a real number, and the italic bit of the font descriptor is
-     * derived from it: a pattern that could not match the decimal point read '-0.5' as
-     * '-0' and left the font declared upright.
+     * derived from it, so the fractional part takes part in the reading.
      */
     public function testExtractFontInfoReadsAFractionalItalicAngle(): void
     {
@@ -493,9 +492,8 @@ class TypeOneInternalsTest extends TestUtil
     }
 
     /**
-     * The declared byte count delimits the charstring: the ' ND' terminator also occurs
-     * inside the encrypted data, where reading up to it would cut the glyph short and
-     * resume the scan in the middle of the binary.
+     * The declared byte count delimits the charstring, whose encrypted data may itself
+     * contain the ' ND' terminator.
      */
     public function testGetCharstringDataTakesTheDeclaredNumberOfBytes(): void
     {
@@ -572,8 +570,7 @@ class TypeOneInternalsTest extends TestUtil
 
     /**
      * The values may be separated by any run of whitespace, and the capture starts right
-     * after the bracket: splitting on a single space turns the spacing into empty tokens
-     * and shifts every index, storing the wrong pair of blue values.
+     * after the bracket.
      */
     public function testExtractEplainInfoReadsSpacedBlueValues(): void
     {
@@ -650,9 +647,7 @@ class TypeOneInternalsTest extends TestUtil
     }
 
     /**
-     * An unencoded glyph has no character code. Reporting 0 for it made every one of them
-     * write its hsbw width to cw[0], which ended up holding the width of the last
-     * unencoded glyph of the CharStrings dictionary.
+     * An unencoded glyph has no character code, so no width is recorded for it.
      */
     public function testGetCidsReturnsNothingWhenEncMapEmpty(): void
     {

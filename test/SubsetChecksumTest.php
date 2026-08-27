@@ -22,9 +22,8 @@ use Com\Tecnick\Pdf\Font\Import;
 use Com\Tecnick\Pdf\Font\Subset;
 
 /**
- * Every table checksum of a subset font program is computed from the bytes it emits, so a
- * font shipping a checksum that does not match its own table does not propagate it, and the
- * edited 'head' table carries a checksum of its edited form.
+ * Every table checksum of a subset font program is computed from the bytes it emits, the
+ * edited 'head' table included.
  *
  * @since     2026-08-14
  * @category  Library

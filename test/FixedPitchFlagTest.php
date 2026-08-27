@@ -23,9 +23,8 @@ use Com\Tecnick\Pdf\Font\Import;
 /**
  * The 'post' table settles the FixedPitch flag, in both directions.
  *
- * Import::initFlags() guesses it from substrings of the file name ('mono', 'courier',
- * 'fixed') before the program is read, and getPostData() then clears or raises the bit
- * according to what the table declares.
+ * Import::initFlags() guesses it from substrings of the file name, and getPostData() then
+ * clears or raises the bit according to what the table declares.
  *
  * @since     2026-08-14
  * @category  Library

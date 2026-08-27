@@ -39,12 +39,8 @@ final class FileWriter
     /**
      * Write a font artifact, raising an exception when it cannot be stored in full.
      *
-     * A short write (full disk, exceeded quota, failing stream) leaves a truncated artifact
-     * behind, so the number of bytes written is compared with the size of the data.
-     *
-     * fwrite() reports why the stream refused the data as a diagnostic (a notice for a
-     * failing file descriptor, a warning for the stream wrappers) before returning false.
-     * That reason is captured and carried by the exception.
+     * The number of bytes written is compared with the size of the data, and the diagnostic
+     * fwrite() emits on failure is captured and carried by the exception message.
      *
      * @param ObjFile $fileHelper File helper used to open the file.
      * @param string  $file       Full path of the file to write.

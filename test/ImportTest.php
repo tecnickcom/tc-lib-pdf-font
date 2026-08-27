@@ -544,9 +544,8 @@ class ImportTest extends TestUtil
     }
 
     /**
-     * is_writable() is true for a writable regular file too, which is not a directory and
-     * is refused as an output path. A path the caller named explicitly is reported rather
-     * than replaced by one of the fallbacks.
+     * A writable regular file is not a directory and is refused as an output path, which is
+     * reported rather than replaced by one of the fallbacks.
      *
      * @throws FileException
      * @throws FontException

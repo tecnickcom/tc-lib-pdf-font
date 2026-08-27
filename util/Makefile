@@ -74,7 +74,7 @@ PATHDEBPKG=$(CURRENTDIR)/../target/DEB_FONTS/$(PKGFONTDIR)
 PATHBZ2PKG=$(CURRENTDIR)/../target/BZ2_FONTS/$(PKGFONTDIR)
 
 
-# Composer executable (disable APC to as a work-around of a bug)
+# Composer executable (APC disabled to work around a bug)
 COMPOSER=$(shell which php) -d "apc.enable_cli=0" $(shell which composer)
 
 # sed argument for in-place substitutions

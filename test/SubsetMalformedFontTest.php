@@ -118,11 +118,11 @@ class SubsetMalformedFontTest extends TestUtil
      * reader consumes whole.
      *
      * The new table is appended to the file and the directory record is repointed at it, so
-     * the table itself is in bounds and the directory bounds check passes: the byte reader
-     * is the one that runs past the end of the string.
+     * the directory bounds check passes and the byte reader is the one that runs past the
+     * end of the string.
      *
-     * A format 8 subtable carries an 8192 byte is32 array, whose last byte is read to reject
-     * a subtable truncated inside it. The appended table stops right after the header.
+     * A format 8 subtable carries an 8192 byte is32 array, whose last byte is read; the
+     * appended table stops right after the header.
      */
     public static function corruptCmapSubtableOffsets(string $program): string
     {
@@ -151,8 +151,7 @@ class SubsetMalformedFontTest extends TestUtil
 
     /**
      * A table record that is in bounds but points the character map elsewhere makes the
-     * byte reader run past the end of the string: the RangeException it raises is reported
-     * as a FontException, the exception type this library contracts.
+     * byte reader run past the end of the string, which is reported as a FontException.
      *
      * @throws \Throwable
      */
@@ -173,9 +172,8 @@ class SubsetMalformedFontTest extends TestUtil
     }
 
     /**
-     * The table directory declares the real length of each table; only the physical bytes
-     * are padded to the next four byte boundary, so 'head' is emitted as the 54 bytes the
-     * specification fixes for it.
+     * The table directory declares the real length of each table, so 'head' is emitted as
+     * the 54 bytes the specification fixes for it.
      *
      * @throws \Throwable
      */
@@ -259,9 +257,8 @@ class SubsetMalformedFontTest extends TestUtil
     }
 
     /**
-     * A loca table whose offsets run backwards yields a negative glyph length, which
-     * substr() would read as an offset from the end of the string, so the length is
-     * clamped to zero and the glyph contributes nothing.
+     * A loca table whose offsets run backwards yields a negative glyph length, which is
+     * clamped to zero so the glyph contributes nothing.
      */
     /** @throws \Com\Tecnick\Pdf\Font\Exception */
     public function testProcessedTablesIgnoreANonMonotonicLocaTable(): void

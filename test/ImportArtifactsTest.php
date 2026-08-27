@@ -22,9 +22,7 @@ use Com\Tecnick\Pdf\Font\Import;
 /**
  * The files an import leaves in the output directory.
  *
- * The font program and the CIDToGIDMap are stored before the definition file that names
- * them exists, and the "already imported" guard keys on that definition file, so a failed
- * import removes the artifacts it created.
+ * A failed import removes the artifacts it created.
  *
  * @since     2026-08-14
  * @category  Library
@@ -39,9 +37,8 @@ class ImportArtifactsTest extends TestUtil
     private const MIRROR = '/util/vendor/tecnickcom/tc-font-mirror/';
 
     /**
-     * A TrueType font whose header and table directory are valid but whose tables are not:
-     * setFontFile() stores the program before anything is parsed, so the failure happens
-     * after the artifact is on disk.
+     * A TrueType font whose header and table directory are valid but whose tables are not,
+     * so the program is stored before the parsing fails.
      */
     private function buildUnparsableTrueType(): string
     {
@@ -77,9 +74,8 @@ class ImportArtifactsTest extends TestUtil
     }
 
     /**
-     * Only the files the failed import created are removed. A linked font reuses the
-     * symbolic link of a previous run instead of creating one, so that link belongs to the
-     * font that is already imported and must survive.
+     * Only the files the failed import created are removed: a linked font reuses an
+     * existing symbolic link, which is left in place.
      *
      * @throws \Throwable
      */
@@ -126,9 +122,8 @@ class ImportArtifactsTest extends TestUtil
     }
 
     /**
-     * A byte encoded font addresses its glyphs by character code, so nothing ever reads
-     * its CIDToGIDMap: building it cost a 128 KiB buffer, a deflate pass and a file write
-     * for an artifact no font dictionary names.
+     * A byte encoded font addresses its glyphs by character code, so no CIDToGIDMap
+     * artifact is written for it.
      *
      * @throws \Throwable
      */

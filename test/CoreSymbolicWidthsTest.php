@@ -21,10 +21,9 @@ use Com\Tecnick\Pdf\Font\Import;
 /**
  * The character codes of an AFM core font.
  *
- * A font declaring the FontSpecific encoding is emitted without an /Encoding entry, so a
- * content stream selects its glyphs through the built-in encoding declared by the AFM 'C'
- * column. Every other core font is emitted as WinAnsiEncoding, where the glyph name
- * selects the byte.
+ * A font declaring the FontSpecific encoding is emitted without an /Encoding entry, so the
+ * AFM 'C' column holds the code. Every other core font is emitted as WinAnsiEncoding, where
+ * the glyph name selects the byte.
  *
  * @since     2026-08-14
  * @category  Library
@@ -54,9 +53,7 @@ class CoreSymbolicWidthsTest extends TestUtil
     }
 
     /**
-     * Symbol declares 'C 65 ; WX 722 ; N Alpha', so byte 65 is 722 wide. Keying the width
-     * on the WinAnsi byte of the glyph name instead files it under a byte no content
-     * stream of this font can select, and leaves 65 with the default width.
+     * Symbol declares 'C 65 ; WX 722 ; N Alpha', so byte 65 is 722 wide.
      *
      * @throws \Throwable
      */
@@ -87,9 +84,8 @@ class CoreSymbolicWidthsTest extends TestUtil
     }
 
     /**
-     * A text core font is emitted as WinAnsiEncoding, so the glyph name keeps selecting
-     * the byte: the AFM column, which describes the AdobeStandardEncoding, must not be
-     * used. 'quoteright' is the clearest case: AFM code 39, WinAnsi byte 146.
+     * A text core font is emitted as WinAnsiEncoding, so the glyph name selects the byte
+     * rather than the AFM column: 'quoteright' is AFM code 39 and WinAnsi byte 146.
      *
      * @throws \Throwable
      */

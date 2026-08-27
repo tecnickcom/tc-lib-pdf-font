@@ -24,9 +24,8 @@ use Com\Tecnick\Pdf\Font\Stack;
 /**
  * The cache of scaled font metrics is bounded.
  *
- * Every entry holds a copy of the glyph width and bounding box maps of the font scaled to
- * one size, and the cache key includes that size, so the least recently used entries beyond
- * the bound are dropped.
+ * Every entry holds the glyph width and bounding box maps of the font scaled to one size,
+ * and the least recently used entries beyond the bound are dropped.
  *
  * @since     2026-08-14
  * @category  Library

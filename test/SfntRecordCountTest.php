@@ -22,9 +22,8 @@ use Com\Tecnick\Pdf\Font\Import\TrueType;
 /**
  * A declared record count is believed only as far as the bytes that can hold the records.
  *
- * checkTableBounds() proves that each table of the directory lies inside the file, and says
- * nothing about the counts stored inside those tables, so each count is clamped to the
- * number of records its table can hold.
+ * checkTableBounds() says nothing about the counts stored inside the tables, so each count
+ * is clamped to the number of records its table can hold.
  *
  * @since     2026-08-14
  * @category  Library
@@ -122,8 +121,7 @@ class SfntRecordCountTest extends TestUtil
 
     /**
      * A record whose subtable does not fit the declared length of the cmap table is
-     * discarded: following it would read the table that comes after the cmap one as a
-     * character map.
+     * discarded.
      */
     public function testACmapRecordPointingOutsideTheTableIsDiscarded(): void
     {
@@ -186,9 +184,8 @@ class SfntRecordCountTest extends TestUtil
 
     /**
      * A tag made of digits would be stored as an integer array key, which is not the shape
-     * the directory declares and would make the ordering of the emitted subset undefined.
-     * No table this library reads carries such a tag, so the record is dropped and the
-     * records that follow it are still read.
+     * the directory declares, so the record is dropped and the ones that follow it are
+     * still read.
      */
     public function testSfntDirectoryDropsANumericTableTag(): void
     {

@@ -23,9 +23,8 @@ use Com\Tecnick\Pdf\Font\Import;
 /**
  * A font path relative to the working directory is imported like an absolute one.
  *
- * The trusted root of an import is the directory of the font, and the file helper compares
- * path strings to decide whether a path is inside a root, so a relative path is anchored to
- * the working directory before the allowlist is built.
+ * The trusted root of an import is the directory of the font, so the path is resolved to
+ * its canonical form before the allowlist is built.
  *
  * @since     2026-08-14
  * @category  Library
@@ -98,7 +97,7 @@ class RelativeFontPathTest extends TestUtil
     }
 
     /**
-     * An absolute path is left exactly as it was given.
+     * An already canonical absolute path is left as it was given.
      *
      * @throws FileException
      * @throws FontException

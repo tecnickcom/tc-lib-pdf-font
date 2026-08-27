@@ -133,8 +133,8 @@ class Subset
             );
             $this->fdt = $trueType->getFontMetrics();
             if (!$trueType->isSubsettingAllowed()) {
-                // the OS/2 fsType of this program carries the "No Subsetting" bit, while
-                // embedding is still permitted, so the whole program is returned untouched
+                // the OS/2 fsType carries the "No Subsetting" bit, so the whole program
+                // is returned untouched
                 $this->subfont = $font;
                 return;
             }
@@ -145,8 +145,7 @@ class Subset
             $this->removeUnusedTables();
             $this->buildSubsetFont();
         } catch (\RangeException $exc) {
-            // a truncated or corrupt font program makes the byte reader run past the end:
-            // report it as a font error, the exception type this library contracts
+            // the byte reader ran past the end of a truncated or corrupt font program
             throw new FontException('Malformed font program: ' . $exc->getMessage(), 0, $exc);
         }
     }
@@ -176,8 +175,7 @@ class Subset
             // OpenType checksums use zero-padding for trailing partial words
             $chunk = \str_pad(\substr($table, $offset, 4), 4, "\0", STR_PAD_RIGHT);
             $sum += (\ord($chunk[0]) << 24) | (\ord($chunk[1]) << 16) | (\ord($chunk[2]) << 8) | \ord($chunk[3]);
-            // the sum is truncated to 32 bits at every word, so that it cannot grow past
-            // the integer range of the platform on a large table
+            // the sum is truncated to 32 bits at every word
             $sum &= 0xFFFF_FFFF;
             $offset += 4;
         }
@@ -295,9 +293,8 @@ class Subset
      */
     protected function removeUnusedTables(): void
     {
-        // The sfnt specification requires the table directory to be sorted in ascending
-        // order by tag. Sorting here precedes the offsets of the new layout assigned below,
-        // and buildSubsetFont() emits the directory and the table data in this same order.
+        // the sfnt specification requires the table directory to be sorted by tag in
+        // ascending order, which is also the order buildSubsetFont() emits
         \ksort($this->fdt['table']);
 
         // get the tables to preserve
@@ -310,8 +307,6 @@ class Subset
                 continue;
             }
 
-            // $tag comes from array_keys() of this very array and was not unset above,
-            // so the record is always present here
             $isSubsetTable = $tag === 'loca' || $tag === 'glyf';
             if (!$isSubsetTable) {
                 $this->fdt['table'][$tag]['data'] = \substr(
@@ -325,8 +320,7 @@ class Subset
                 }
 
                 if ($tag === 'head') {
-                    // set the checkSumAdjustment to 0, replacing the four bytes in place so
-                    // that the data cannot come out of this a different length than declared
+                    // set the checkSumAdjustment to 0, replacing the four bytes in place
                     $this->fdt['table'][$tag]['data'] = \substr_replace(
                         $this->fdt['table'][$tag]['data'],
                         "\x0\x0\x0\x0",
@@ -335,9 +329,8 @@ class Subset
                     );
                 }
 
-                // The checksum is computed from the bytes actually emitted, rather than
-                // copied from the directory of the input font: the 'head' table is edited
-                // above, and a font may ship a checksum that does not match its own table.
+                // the checksum is computed from the bytes emitted, not copied from the
+                // directory of the input font
                 $this->fdt['table'][$tag]['checkSum'] = $this->getTableChecksum(
                     $this->fdt['table'][$tag]['data'],
                     $this->fdt['table'][$tag]['length'],
@@ -353,9 +346,8 @@ class Subset
     /**
      * Pad the data of a table to the next four byte boundary.
      *
-     * A table must start on a four byte boundary, so the gap to the next one is filled with
-     * zeroes. Only the physical bytes are padded: the table directory keeps advertising the
-     * real length of the table, as the sfnt specification requires.
+     * The gap to the next boundary is filled with zeroes. The table directory keeps
+     * advertising the real length of the table.
      *
      * @param string $tag Tag of the table to pad.
      */
@@ -386,16 +378,13 @@ class Subset
             $nextidx = $this->getNextLocaIndex($i + 1);
             $length = 0;
             if (isset($this->subglyphs[$i], $this->fdt['indexToLoc'][$i]) && $nextidx !== null) {
-                // a non-monotonic loca table would give a negative length, which substr()
-                // reads as an offset from the end of the string
+                // a non-monotonic loca table would give a negative length
                 $length = \max(0, $this->fdt['indexToLoc'][$nextidx] - $this->fdt['indexToLoc'][$i]);
                 $glyf .= \substr($this->font, $glyf_offset + $this->fdt['indexToLoc'][$i], $length);
             }
 
             if ($this->fdt['short_offset']) {
                 if ($this->offset > self::MAX_SHORT_LOCA_OFFSET) {
-                    // pack('n') would keep the low 16 bits and every following entry would
-                    // point into the middle of a glyph
                     throw new FontException('The subset glyph data is too large for a short loca table');
                 }
 
@@ -407,9 +396,7 @@ class Subset
             $this->offset += $length;
         }
 
-        // Add loca and glyf. Both records exist because checkRequiredTables() rejects a font
-        // without them, and their offsets are assigned by removeUnusedTables(), which lays
-        // out the whole directory right after this method.
+        // add loca and glyf; removeUnusedTables() assigns their offsets
         $this->fdt['table']['loca']['data'] = $loca;
         $this->fdt['table']['loca']['length'] = \strlen($loca);
         $this->padTable('loca');
@@ -450,8 +437,7 @@ class Subset
         $this->subfont .= \pack('N', 0x1_0000); // sfnt version
         $numTables = \count($this->fdt['table']);
         $this->subfont .= \pack('n', $numTables); // numTables
-        // entrySelector = floor(log2(numTables)): the highest power of two that fits the
-        // table count, computed by shifting so that the header stays in integer arithmetic
+        // entrySelector = floor(log2(numTables))
         $entrySelector = 0;
         while ((2 << $entrySelector) <= $numTables) {
             ++$entrySelector;
@@ -462,9 +448,8 @@ class Subset
         $this->subfont .= \pack('n', $searchRange); // searchRange
         $this->subfont .= \pack('n', $entrySelector); // entrySelector
         $this->subfont .= \pack('n', $rangeShift); // rangeShift
-        // Table offsets stored in $this->fdt start after the 12-byte sfnt header.
-        // The full output adds the table directory immediately after that header,
-        // so both directory offsets and in-buffer table positions must include this base.
+        // the offsets stored in $this->fdt start after the 12-byte sfnt header, so they are
+        // shifted by the size of the table directory that follows it
         $tableDataBaseOffset = $numTables * 16;
         foreach ($this->fdt['table'] as $tag => $data) {
             $this->subfont .= $tag; // tag

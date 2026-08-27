@@ -22,9 +22,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 /**
  * Reading the font bounding box of a definition file.
  *
- * The four values are written as a PDF array literal, which the library emits as '[a b c d]'
- * but which a hand written or third party definition file may space differently, so any run
- * of whitespace separates them and the brackets are optional.
+ * The four values are written as a PDF array literal: any run of whitespace separates them
+ * and the brackets are optional.
  *
  * @since     2026-08-14
  * @category  Library

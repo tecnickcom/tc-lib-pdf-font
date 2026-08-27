@@ -16,13 +16,13 @@
 
 namespace Test;
 
+use Com\Tecnick\Pdf\Encrypt\Exception as EncException;
+
 /**
  * Emission of the entries of a font descriptor.
  *
- * The font definition file is merged into the font data as it is decoded, so an entry of
- * the descriptor may carry any JSON value. Only a number or a non empty string has a form
- * in the dictionary: everything else is dropped, as a key left without a value would take
- * the name of the next one as its value.
+ * An entry of the descriptor may carry any JSON value. Only a number or a non empty string
+ * has a form in the dictionary; everything else is dropped.
  *
  * @since     2026-08-14
  * @category  Library
@@ -34,6 +34,9 @@ namespace Test;
  */
 class FontDescriptorValueTest extends TestUtil
 {
+    /**
+     * @throws EncException
+     */
     public function testANumericValueIsWrittenAsANumber(): void
     {
         $outfont = new OutputTestOutFont();
@@ -42,6 +45,9 @@ class FontDescriptorValueTest extends TestUtil
         $this->assertSame(' /ItalicAngle -11.000000', $outfont->runGetKeyValOut('ItalicAngle', -11.0));
     }
 
+    /**
+     * @throws EncException
+     */
     public function testAStringValueIsWrittenAsItIs(): void
     {
         $outfont = new OutputTestOutFont();
@@ -52,6 +58,8 @@ class FontDescriptorValueTest extends TestUtil
     /**
      * An array has no form in the dictionary, and casting it would emit the literal
      * 'Array' along with a PHP warning.
+     *
+     * @throws EncException
      */
     public function testAnArrayValueIsDropped(): void
     {
@@ -63,6 +71,8 @@ class FontDescriptorValueTest extends TestUtil
     /**
      * A boolean, a null or an empty string would leave the key without a value, so the
      * name of the next key would be read as the value of this one.
+     *
+     * @throws EncException
      */
     public function testAValueWithoutAPdfFormIsDropped(): void
     {
@@ -113,9 +123,8 @@ class FontDescriptorValueTest extends TestUtil
         $output = new \Com\Tecnick\Pdf\Font\Output($stack->getFonts(), $objnum, $encrypt, null);
         $block = $output->getFontsBlock();
 
-        // the key is dropped: keeping it would write '/Flags  /FontBBox', so the box would
-        // be read as the value of the flags
-        $this->assertStringNotContainsString('/Flags', $block);
+        // the entry falls back to the default of the font data
+        $this->assertStringContainsString('/Flags 0', $block);
         $this->assertStringContainsString('/FontBBox [0 0 1000 1000]', $block);
         $this->assertStringContainsString('/Ascent 800', $block);
     }

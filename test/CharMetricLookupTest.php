@@ -24,9 +24,8 @@ use Com\Tecnick\Pdf\Font\Stack;
 /**
  * Looking up the metrics of a character on a byte encoded font.
  *
- * The character code of a glyph is not its codepoint on these fonts (WinAnsi 146 is
- * U+2019), and a font only declares the glyphs it carries: both the "is this character
- * available" question and the glyph box must answer accordingly.
+ * The character code of a glyph is not its codepoint on these fonts, and a font only
+ * declares the glyphs it carries.
  *
  * @since     2026-08-14
  * @category  Library
@@ -77,9 +76,8 @@ class CharMetricLookupTest extends TestUtil
     }
 
     /**
-     * The character code of a glyph in a byte encoded font is not its codepoint, so a glyph
-     * outside Latin-1 is only reachable through the codepoint-keyed map. It is defined all
-     * the same, and the width and the box reported for it are its own.
+     * A glyph outside Latin-1 is only listed in the codepoint-keyed map, and is reported as
+     * defined with its own width and box.
      *
      * @throws FileException
      * @throws FontException

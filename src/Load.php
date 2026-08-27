@@ -391,7 +391,7 @@ abstract class Load
             throw new FontException('The font definition file has a bad format: ' . $this->data['ifile']);
         }
 
-        $merged = \array_replace_recursive($this->data, $fdtdata);
+        $merged = \array_replace_recursive($this->data, Definition::normalize($fdtdata));
         /** @var TFontData $merged */
         $this->data = $merged;
     }
@@ -416,8 +416,8 @@ abstract class Load
             }
         }
 
-        $parent_font_dir = $dir->findParentDir('fonts', __DIR__);
-        if ($parent_font_dir !== '' && $parent_font_dir !== '/') {
+        $parent_font_dir = \rtrim($dir->findParentDir('fonts', __DIR__), '/\\');
+        if ($parent_font_dir !== '') {
             $dirs[] = $parent_font_dir;
             $glb = \glob($parent_font_dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
             if ($glb !== false) {
@@ -486,9 +486,7 @@ abstract class Load
             return;
         }
 
-        // a definition file stating a width below zero is treated as stating none: a
-        // negative default width would move the text backwards
-
+        // a width below zero is treated as unset
         if ($this->data['desc']['MissingWidth'] > 0) {
             $this->data['dw'] = $this->data['desc']['MissingWidth'];
         } elseif (($this->data['cw'][32] ?? 0) > 0) {
@@ -526,16 +524,15 @@ abstract class Load
             $this->data['subset'] = false;
         } elseif ($this->data['type'] === 'TrueTypeUnicode') {
             $this->data['enc'] = 'Identity-H';
-            // The character codes are glyph indices (CID == GID) when the CIDToGIDMap
-            // artifact is available to translate the codepoints at encoding time.
+            // the character codes are glyph indices (CID == GID) when a CIDToGIDMap
+            // artifact is available to translate the codepoints
             $this->data['gidenc'] = $this->data['ctg'] !== '';
         } elseif ($this->data['type'] === 'cidfont0') {
             if ($this->data['pdfa']) {
                 throw new FontException('CID0 fonts are not supported, all fonts must be embedded in PDF/A mode!');
             }
 
-            // A CID-0 font is not embedded, so there is no program to subset, and the widths
-            // are emitted by CID (see OutFont::uniToCid) rather than by codepoint.
+            // a CID-0 font is not embedded, so there is no program to subset
             $this->data['subset'] = false;
         }
 
@@ -560,8 +557,6 @@ abstract class Load
         // artificial italic
         if ($this->data['mode']['italic']) {
             $this->data['name'] .= 'Italic';
-            // both operations reach the same value from an unset field: 0 - 11 is -11 and
-            // 0 | 64 is 64
             $this->data['desc']['ItalicAngle'] -= 11;
             $this->data['desc']['Flags'] |= 64; //bit 7
         }

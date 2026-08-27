@@ -28,10 +28,9 @@ use Com\Tecnick\Pdf\Font\Zlib;
 /**
  * Encoding a string as glyph indices feeds the subset.
  *
- * Stack::ordArrToGidStr() records the glyph, which the /W array and the ToUnicode CMap
- * describe, and the codepoint, which decides the outlines the embedded program keeps.
- * Font::__construct() seeds the subset with the codes 0..255, so only a character above
- * 255 depends on the codepoint being recorded.
+ * Stack::ordArrToGidStr() records the glyph and the codepoint it was encoded from. The
+ * subset is seeded with the codes 0..255, so only a character above 255 depends on the
+ * codepoint being recorded.
  *
  * @since     2026-08-14
  * @category  Library

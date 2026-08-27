@@ -23,8 +23,7 @@ use Com\Tecnick\Pdf\Font\Stack;
  * A font whose character codes are its own must not carry the codepoint keyed metric maps.
  *
  * The Adobe Glyph List codepoint of a glyph name has no relation to the code such a font
- * gives that glyph, and it collides with the real codes of the font. Stack reads 'cwu'
- * before 'cw' and 'cbboxu' before 'cbbox', so a collision decides the measurement.
+ * gives that glyph, and Stack reads 'cwu' before 'cw' and 'cbboxu' before 'cbbox'.
  *
  * @since     2026-08-14
  * @category  Library

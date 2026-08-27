@@ -80,14 +80,9 @@ class Font extends \Com\Tecnick\Pdf\Font\Load
             throw new FontException('empty font family name');
         }
 
-        // isValidFile() trims its argument and rewrites it into a 'file://' URL, so it is
-        // given a copy: this class records the plain trimmed path.
         $ifile = \trim($ifile);
-        if ($ifile !== '') {
-            $validatedIfile = $ifile;
-            if (!$this->fileHelper->isValidFile($validatedIfile)) {
-                throw new FontException('Invalid font ifile: ' . $ifile);
-            }
+        if ($ifile !== '' && !$this->fileHelper->isAllowedFile($ifile)) {
+            throw new FontException('Invalid font ifile: ' . $ifile);
         }
 
         $this->data['ifile'] = $ifile;

@@ -180,8 +180,7 @@ $inopt = \getopt($sopt, $lopt);
 
 // import options (with some sanitization)
 foreach ($inopt as $opt => $val) {
-    // getopt() hands over an array when the same option is repeated: the last occurrence
-    // wins, so that a repeated option is not passed on to a function expecting a string.
+    // getopt() hands over an array when the same option is repeated: the last occurrence wins
     if (\is_array($val)) {
         $val = \end($val);
     }
@@ -189,8 +188,7 @@ foreach ($inopt as $opt => $val) {
     switch ($opt) {
         case 'o':
         case 'outpath':
-            // realpath() returns false for a missing directory: in that case the
-            // raw value is kept and normalized below, after the directory is created.
+            // a missing directory keeps its raw value and is normalized below, once created
             $resolved = \realpath($val);
             $options['outpath'] = ($resolved !== false) ? $resolved : $val;
             if (\substr($options['outpath'], -1) != '/') {
@@ -199,10 +197,8 @@ foreach ($inopt as $opt => $val) {
             break;
         case 't':
         case 'type':
-            // The accepted names are read from the enum the library declares, so that this
-            // list cannot drift from it; an unknown value is reported instead of being
-            // dropped, which used to turn a typo into a silently autodetected font. The
-            // empty case of the enum is the autodetection this option overrides.
+            // the accepted names are read from the enum the library declares; its empty
+            // case is filtered out, being the autodetection this option overrides
             $valid_types = \array_values(\array_filter(\array_map(
                 static function (\Com\Tecnick\Pdf\Font\FontType $case): string {
                     return $case->value;

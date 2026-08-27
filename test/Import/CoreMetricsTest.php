@@ -16,6 +16,7 @@
 
 namespace Test\Import;
 
+use Com\Tecnick\File\Exception as FileException;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 use Com\Tecnick\Pdf\Font\Import\Core;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -197,7 +198,10 @@ class CoreMetricsTest extends TestCase
         ];
     }
 
-    /** @throws FontException */
+    /**
+     * @throws FileException
+     * @throws FontException
+     */
     #[DataProvider('provideHelveticaWinAnsiWidths')]
     public function testHelveticaWinAnsiWidth(int $cid, int $expected): void
     {
@@ -233,7 +237,10 @@ class CoreMetricsTest extends TestCase
         ];
     }
 
-    /** @throws FontException */
+    /**
+     * @throws FileException
+     * @throws FontException
+     */
     #[DataProvider('provideHelveticaUnicodeWidths')]
     public function testHelveticaUnicodeWidth(int $codepoint, int $expected): void
     {
@@ -246,7 +253,10 @@ class CoreMetricsTest extends TestCase
         );
     }
 
-    /** @throws FontException */
+    /**
+     * @throws FileException
+     * @throws FontException
+     */
     public function testGetFontMetricsHandlesAfmWithoutCharMetrics(): void
     {
         // an AFM with zero "C" lines must not trigger a DivisionByZeroError in setCharWidths
@@ -300,6 +310,7 @@ class CoreMetricsTest extends TestCase
     /**
      * Extra trailing columns are tolerated: only the first four are meaningful.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testGetFontMetricsIgnoresExtraFontBBoxColumns(): void
@@ -315,6 +326,7 @@ class CoreMetricsTest extends TestCase
      * Ascender and Descender are read from FontBBox[3] and FontBBox[1], so a missing or
      * short row fails the import.
      *
+     * @throws FileException
      * @throws FontException
      */
     #[DataProvider('provideBrokenFontBBox')]
@@ -336,6 +348,7 @@ class CoreMetricsTest extends TestCase
      * The bounding box spans the tallest and deepest outlines of the font, so it overstates
      * the typographic ascent and descent: the values the AFM declares win over it.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testGetFontMetricsKeepsTheAscenderAndDescenderDeclaredByTheAfm(): void
@@ -367,6 +380,7 @@ class CoreMetricsTest extends TestCase
      * The AFM spec does not require whitespace around the ';' separating the pairs of a
      * CharMetrics row, so the separator is isolated before the row is split.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testGetFontMetricsReadsCharMetricsRowsWithoutSpacesAroundTheSeparator(): void
@@ -392,6 +406,8 @@ class CoreMetricsTest extends TestCase
 
     /**
      * An AFM declaring neither FontName nor FullName has no name to write as /BaseFont.
+     *
+     * @throws FileException
      */
     public function testGetFontMetricsRejectsAnAfmWithoutAFontName(): void
     {
@@ -414,7 +430,10 @@ class CoreMetricsTest extends TestCase
         $this->fail('an AFM without a font name must be rejected');
     }
 
-    /** @throws FontException */
+    /**
+     * @throws FileException
+     * @throws FontException
+     */
     public function testGetFontMetricsDerivesAscenderAndDescenderFromFontBBox(): void
     {
         $core = new Core($this->buildAfm('0 -200 1000 700'), self::$fdtTemplate, new \Com\Tecnick\File\File());
@@ -430,6 +449,7 @@ class CoreMetricsTest extends TestCase
     /**
      * Rows for .notdef and for glyphs with no name carry no width to record.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testGetFontMetricsSkipsNamelessAndNotdefCharMetrics(): void
@@ -459,6 +479,7 @@ class CoreMetricsTest extends TestCase
     /**
      * @return TFontData
      *
+     * @throws FileException
      * @throws FontException
      */
     private function getHelveticaMetrics(): array
@@ -475,6 +496,7 @@ class CoreMetricsTest extends TestCase
      * The AFM spec allows the ';'-separated pairs of a CharMetrics row in any order, so
      * they must be read by key and not by column position.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testGetFontMetricsReadsCharMetricsPairsByKey(): void
@@ -505,6 +527,7 @@ class CoreMetricsTest extends TestCase
      * Only the widths of the emitted single-byte range are averaged: a width recorded for
      * a code above 255 is excluded from the sum and must be excluded from the divisor too.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testAverageWidthCountsOnlyTheEmittedRange(): void
@@ -531,6 +554,7 @@ class CoreMetricsTest extends TestCase
      * FontName is the PostScript name a PDF /BaseFont expects; FullName is a
      * human-readable variant that may hold several words.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testFontNameIsPreferredOverTheFullName(): void
@@ -556,6 +580,7 @@ class CoreMetricsTest extends TestCase
      * Only the codes the AFM declares get a width, so Stack::isCharDefined() reports the
      * WinAnsi .notdef slots and the control codes as missing.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testOnlyTheDeclaredCodesGetAWidth(): void
@@ -576,6 +601,7 @@ class CoreMetricsTest extends TestCase
      * The boxes are keyed by codepoint as well as by encoding byte, the way the widths are:
      * the byte of a glyph is not its codepoint (WinAnsi 146 is U+2019).
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testGlyphBoundingBoxesAreAlsoKeyedByCodepoint(): void
@@ -593,6 +619,7 @@ class CoreMetricsTest extends TestCase
      * The italic angle is a real number, and the italic flag of the descriptor is derived
      * from it, so it is rounded rather than truncated.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testFractionalItalicAngleIsRoundedAndKeepsTheItalicFlag(): void
@@ -618,6 +645,7 @@ class CoreMetricsTest extends TestCase
     /**
      * An upright font keeps the flag off.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testNegligibleItalicAngleRoundsToZeroAndLeavesTheFlagOff(): void
@@ -644,6 +672,7 @@ class CoreMetricsTest extends TestCase
      * A 'C' group with no value declares no character code rather than the code zero, so
      * the glyph gets no width and no bounding box.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testUnencodedFontSpecificGlyphDoesNotTakeTheNotdefSlot(): void
@@ -693,6 +722,7 @@ class CoreMetricsTest extends TestCase
     /**
      * The stem widths an AFM declares are the ones reported.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testTheDeclaredStemWidthsAreKept(): void
@@ -709,10 +739,9 @@ class CoreMetricsTest extends TestCase
     }
 
     /**
-     * /StemV is a required font descriptor entry (ISO 32000-1 Table 122) and zero is not a
-     * stem width, while an AFM is not required to declare StdVW, so the weight-derived
-     * fallback of the Type1 importer applies.
+     * An AFM is not required to declare StdVW, so the weight-derived fallback applies.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testAnAfmWithoutStemWidthsFallsBackByWeight(): void
@@ -729,6 +758,7 @@ class CoreMetricsTest extends TestCase
     /**
      * The Core 14 files all declare the row, which the fallback does not displace.
      *
+     * @throws FileException
      * @throws FontException
      */
     public function testHelveticaKeepsTheStemWidthsOfItsAfm(): void

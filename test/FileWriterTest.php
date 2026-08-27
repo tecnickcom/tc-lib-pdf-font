@@ -24,8 +24,7 @@ use Com\Tecnick\Pdf\Font\FontPaths;
 /**
  * Storage of the font artifacts.
  *
- * A short write leaves a truncated artifact behind, so it is reported as an exception when
- * it happens.
+ * A short write is reported as an exception.
  *
  * @since     2026-08-14
  * @category  Library

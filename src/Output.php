@@ -157,7 +157,6 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         $data = [];
         foreach ($keys as $key) {
             if (!isset($this->fonts[$key])) {
-                // an unknown key would emit a dangling '/F0 0 0 R' reference
                 throw new FontException('The font ' . $key . ' has not been loaded');
             }
 
@@ -201,8 +200,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             if ($font['file'] !== '') {
                 $file_key = $this->fontFileKey($font);
                 $this->filesubset[$file_key] = ($this->filesubset[$file_key] ?? true) && $font['subset'];
-                // only the enabled entries are collected: the subsetting reader tests them
-                // with isset()
+                // only the enabled entries are collected, as they are tested with isset()
                 $this->subchars[$file_key] ??= [];
                 foreach ($font['subsetchars'] as $cid => $enabled) {
                     if (!$enabled) {
@@ -242,8 +240,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         $done = []; // store processed items to avoid duplication
         foreach ($this->fonts as $fkey => $font) {
             if ($font['file'] === '') {
-                // there is no embedded program to subset, and a viewer resolves the font
-                // against a substitute
+                // there is no embedded program to subset
                 $this->fonts[$fkey]['subset'] = false;
                 continue;
             }
@@ -256,20 +253,15 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     throw new FontException('Unable to read font file: ' . $fontfile);
                 }
 
-                // A font stored by Import carries a '.z' suffix and is zlib compressed;
-                // a linked font is the raw program. The emitted stream always declares
-                // /Filter /FlateDecode, so a raw program has to be compressed below.
+                // a font stored by Import carries a '.z' suffix and is zlib compressed,
+                // a linked font is the raw program
                 $compressed = \str_ends_with($font['file'], '.z');
 
                 // the file is shared, so the aggregated flag decides, not this font's own
-                // ($dkey is always present: getEncodingDiffs() sets it for every font with a file)
                 if ($this->filesubset[$dkey]) {
                     if ($compressed) {
-                        // The expansion is bounded by the size the definition file records
-                        // for the program ('originalsize' for a TrueType one, 'size1' plus
-                        // 'size2' for a Type 1 one, both normalized into the lengths below
-                        // by Load::setFileData). A font array declaring no length is
-                        // uncompressed unbounded.
+                        // the expansion is bounded by the lengths the definition file records
+                        // for the program, or unbounded when it records none
                         $font_data = Zlib::uncompress($font_data, $font['length1'] + $font['length2']);
                         if ($font_data === false) {
                             throw new FontException('Unable to uncompress font file: ' . $fontfile);
@@ -294,12 +286,8 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     }
 
                     if ($subsetFont === $font_data) {
-                        // The program was returned untouched, as its OS/2 fsType carries the
-                        // "No Subsetting" bit. The complete font is embedded, so it must not
-                        // be named with the six letter tag ISO 32000-1 9.6.4 reserves for a
-                        // reduced program, and its widths must not be cut to the requested
-                        // characters. The comparison also settles a cache hit, as the cached
-                        // value is the program the subsetting step returned.
+                        // the program was returned untouched, so the complete font is
+                        // embedded and is not marked as a subset
                         $this->filesubset[$dkey] = false;
                     }
 
@@ -307,9 +295,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     $font_data = $this->compressFontData($subsetFont, $fontfile);
                 } elseif (!$compressed) {
                     if ($font['type'] !== 'Type1') {
-                        // A Type1 stream declares the length of the clear text portion as
-                        // /Length1 and the length of the encrypted one as /Length2, both
-                        // recorded by the import: the size of the file is neither of them.
+                        // a Type1 stream keeps the /Length1 and /Length2 the import recorded
                         $font['length1'] = \strlen($font_data);
                     }
 
@@ -329,8 +315,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     . ' /Length1 '
                     . $font['length1'];
                 if ($font['type'] === 'Type1') {
-                    // Length2/Length3 are only valid for Type1 FontFile streams,
-                    // not for TrueType (FontFile2) or CFF (FontFile3) programs.
+                    // Length2/Length3 are only valid for Type1 FontFile streams
                     $out .= ' /Length2 ' . $font['length2'] . ' /Length3 0';
                 }
 
@@ -339,9 +324,8 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             }
 
             $this->fonts[$fkey]['file_n'] = $done[$dkey];
-            // The program is emitted once for every font backed by it, so the aggregated
-            // decision is recorded: it drives the six-letter name prefix ISO 32000-1 9.6.4
-            // reserves for a reduced program, and the extent of the /W array.
+            // the program is emitted once for every font backed by it, so the aggregated
+            // decision is recorded
             $this->fonts[$fkey]['subset'] = $this->filesubset[$dkey];
         }
 

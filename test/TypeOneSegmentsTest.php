@@ -23,8 +23,7 @@ use Com\Tecnick\Pdf\Font\Zlib;
  * Segment structure of a binary Type1 (PFB) font.
  *
  * A PFB file is a sequence of [0x80, type, uint32 length] segments: the eexec data may span
- * several binary segments, and an ASCII trailer closes the font. Every segment is read, so
- * the whole glyph program is stored.
+ * several binary segments, and an ASCII trailer closes the font.
  *
  * @since     2026-08-14
  * @category  Library
@@ -140,9 +139,8 @@ class TypeOneSegmentsTest extends TestUtil
     }
 
     /**
-     * The PostScript directives are read from the clear text portion alone. The eexec
-     * encrypted portion holds no readable directive, and a byte sequence in it that happens
-     * to read as one must not enter the encoding map of the font.
+     * The PostScript directives are read from the clear text portion alone, so a byte
+     * sequence of the eexec encrypted portion never enters the encoding map of the font.
      *
      * @throws \Throwable
      */

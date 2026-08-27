@@ -20,8 +20,8 @@ namespace Test;
  * Test helper running a callback with a PCRE backtrack limit small enough to make the
  * engine give up, so that the failure branch of a preg_* call can be reached.
  *
- * The limit is a runtime setting rather than a fixture, and the JIT compiler does not
- * honour it, so both are set around the call and restored afterwards.
+ * The limit and the JIT compiler, which does not honour it, are set around the call and
+ * restored afterwards.
  *
  * @since     2026-08-14
  * @category  Library

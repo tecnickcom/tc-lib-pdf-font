@@ -52,16 +52,12 @@ abstract class Buffer
     /**
      * Number of CIDToGIDMap tables kept in memory.
      *
-     * Each table is CTG_TABLE_SIZE bytes, so the cache is bounded to one megabyte. The
-     * least recently used entries beyond this bound are dropped and read again on demand.
+     * Each table is CTG_TABLE_SIZE bytes, so the cache is bounded to one megabyte.
      */
     protected const CTG_CACHE_SIZE = 8;
 
     /**
-     * Highest glyph index an sfnt program can address.
-     *
-     * A glyph index is a 16-bit value everywhere in the format, and the content stream of a
-     * composite font addresses it with exactly two bytes.
+     * Highest glyph index an sfnt program can address, as a 16-bit value.
      */
     protected const MAX_GID = 0xFFFF;
 
@@ -136,9 +132,7 @@ abstract class Buffer
         ?ObjFile $fileHelper = null,
     ) {
         if ($kunit <= 0 || !\is_finite($kunit)) {
-            // Every font metric is divided by this ratio. NAN passes every comparison, so it
-            // is refused by the finiteness test rather than by the one above, and INF would
-            // collapse every metric to zero.
+            // every font metric is divided by this ratio
             throw new FontException('The unit of measure conversion ratio must be a finite number greater than zero');
         }
 
@@ -237,8 +231,7 @@ abstract class Buffer
         $cachekey = $font['dir'] . '|' . $ctg;
         if (isset($this->ctgtable[$cachekey])) {
             $table = $this->ctgtable[$cachekey];
-            // move the entry back to the most recent end, so that the eviction below drops
-            // the table the document has moved past and not this one
+            // move the entry to the most recent end
             unset($this->ctgtable[$cachekey]);
             $this->ctgtable[$cachekey] = $table;
             return $table;
@@ -256,15 +249,13 @@ abstract class Buffer
         }
 
         if (\str_ends_with($ctgfile, '.z')) {
-            // the table has a fixed size, so the expansion is bounded by it
             $content = Zlib::uncompress($content, self::CTG_TABLE_SIZE);
             if ($content === false) {
                 throw new FontException('Unable to uncompress font file: ' . $ctgfile);
             }
         }
 
-        // the table is addressed by a 16-bit codepoint: a short artifact is completed with
-        // notdef entries and a long one is cut to the documented size
+        // a short artifact is padded with notdef entries and a long one is truncated
         $content = \strlen($content) < self::CTG_TABLE_SIZE
             ? \str_pad($content, self::CTG_TABLE_SIZE, "\x00")
             : \substr($content, 0, self::CTG_TABLE_SIZE);
@@ -307,9 +298,6 @@ abstract class Buffer
         }
 
         if ($gid < 0 || $gid > self::MAX_GID) {
-            // the index is emitted as a CID of the /W array and as a code of the ToUnicode
-            // CMap, whose codespace range is <0000> <FFFF>, and referenced by two bytes of
-            // the content stream
             throw new FontException('The glyph index ' . $gid . ' is outside the 0..65535 range');
         }
 
@@ -357,11 +345,12 @@ abstract class Buffer
             $subset = $this->subset;
         }
 
-        // The font key depends only on (family, style, unicode, pdfa), so an already
-        // resolved key can be reused when the definition file is autodetected.
+        // the font key depends only on (family, style, unicode, pdfa), so an already
+        // resolved key is reused when the definition file is autodetected
         if ($ifile === '' && isset($this->fontKeyCache[$font][$style])) {
             $cachedKey = $this->fontKeyCache[$font][$style];
             if (isset($this->font[$cachedKey])) {
+                $this->aggregateSubset($cachedKey, $subset);
                 return $cachedKey;
             }
         }
@@ -373,6 +362,7 @@ abstract class Buffer
         }
 
         if (isset($this->font[$key])) {
+            $this->aggregateSubset($key, $subset);
             return $key;
         }
 
@@ -385,6 +375,19 @@ abstract class Buffer
         $this->font[$key]['n'] = ++$objnum;
 
         return $key;
+    }
+
+    /**
+     * Record the subsetting mode requested for a font that is already in the buffer.
+     *
+     * The font is subset only when every request for it asked for a subset.
+     *
+     * @param string $key    Font key.
+     * @param bool   $subset True if this request asked for a subset.
+     */
+    protected function aggregateSubset(string $key, bool $subset): void
+    {
+        $this->font[$key]['subset'] = $this->font[$key]['subset'] && $subset;
     }
 
     /**
