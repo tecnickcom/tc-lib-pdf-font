@@ -268,8 +268,10 @@ class StackTest extends TestUtil
         $this->assertEquals(0.7, $font['spacing']);
         $this->assertEquals(1.3, $font['stretching']);
 
+        // only the regular FreeSans is imported, so the bold-italic clone above reused it
+        // and the current font key is the one of the base family
         $fname = $stack->getFontFamilyName('unknown');
-        $this->assertEquals('freesansBI', $fname);
+        $this->assertEquals('freesans', $fname);
 
         new \Com\Tecnick\Pdf\Font\Import($indir . 'pdfa/pfb/PDFACourier.pfb');
         $bfont = $stack->insert($objnum, 'courier', '', null, null, null, '', null);
@@ -478,14 +480,43 @@ class StackTest extends TestUtil
     }
 
     /**
-     * Cloning a font with a different style whose definition file does not exist falls
-     * back to the autodetection with the artificial style emulation.
+     * Every style variation a family does not ship resolves to the one font it does, so a
+     * document using all four styles of such a family holds and embeds a single program.
      *
      * @throws FileException
      * @throws FontException
      * @throws \RangeException
      */
-    public function testCloneFontFallsBackToArtificialStyleWhenStyledFileIsMissing(): void
+    public function testEveryMissingStyleVariationResolvesToOneFont(): void
+    {
+        $this->prepareTestEnvironment();
+        $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
+        $objnum = 1;
+
+        $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
+        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+
+        $expected = ['' => '', 'B' => 'B', 'I' => 'I', 'BI' => 'BI', 'BIU' => 'BI'];
+        foreach ($expected as $style => $fakestyle) {
+            $metric = $stack->insert($objnum, 'freesans', $style, 12);
+            $this->assertEquals('freesans', $metric['key'], 'Style ' . $style);
+            $this->assertEquals($style, $metric['style'], 'Style ' . $style);
+            $this->assertEquals($fakestyle, $metric['fakestyle'], 'Style ' . $style);
+        }
+
+        $this->assertCount(1, $stack->getFonts());
+    }
+
+    /**
+     * Cloning a font with a style whose definition file does not exist reuses the base
+     * font: the glyph program is the same, so a second copy of it is neither buffered nor
+     * embedded, and the style is reported as one the caller has to synthesize.
+     *
+     * @throws FileException
+     * @throws FontException
+     * @throws \RangeException
+     */
+    public function testCloneFontReusesTheBaseFontWhenTheStyledFileIsMissing(): void
     {
         $this->prepareTestEnvironment();
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/';
@@ -496,14 +527,21 @@ class StackTest extends TestUtil
 
         $regular = $stack->insert($objnum, 'freesans', '', 12);
         $clone = $stack->cloneFont($objnum, null, 'B', 12);
-        $this->assertEquals('freesansB', $clone['key']);
 
-        $font = $stack->getFont('freesansB');
+        $this->assertEquals('freesans', $clone['key']);
+        $this->assertEquals('B', $clone['style']);
+        $this->assertEquals('B', $clone['fakestyle']);
+        $this->assertEquals('', $regular['fakestyle']);
+
+        // the two styles are one font, buffered and embedded once
+        $this->assertCount(1, $stack->getFonts());
+
+        $font = $stack->getFont('freesans');
         $this->assertEquals('freesans.json', \basename($font['ifile']));
-        $this->assertTrue($font['fakestyle']);
-        $this->assertTrue($font['mode']['bold']);
+        $this->assertEquals('FreeSans', $font['name']);
+        $this->assertFalse($font['mode']['bold']);
 
-        // artificial bold reuses the regular glyph widths
+        // the synthesis paints the glyphs and leaves the advance widths alone
         $regularWidth = $regular['cw'][65] ?? 0.0;
         $cloneWidth = $clone['cw'][65] ?? 0.0;
         $this->assertGreaterThan(0.0, $regularWidth);

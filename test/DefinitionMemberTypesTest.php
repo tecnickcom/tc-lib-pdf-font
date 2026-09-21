@@ -175,10 +175,10 @@ class DefinitionMemberTypesTest extends TestUtil
     }
 
     /**
-     * A descriptor entry the font data declares as a number is read as one, so the
-     * artificial bold can multiply the stem width.
+     * A descriptor entry the font data declares as something other than a number is
+     * dropped, and the descriptor states the default of that entry.
      *
-     * The bold style is requested and no file declares it, so the artificial styles apply.
+     * The bold style is requested and no file declares it, so the base family is written.
      *
      * @throws \Throwable
      */
@@ -192,10 +192,8 @@ class DefinitionMemberTypesTest extends TestUtil
         );
 
         $block = $this->fontsBlock($stack);
-        // the entry is dropped, so the artificial bold finds no stem width and states the
-        // one it assumes for a bold font
-        $this->assertStringContainsString('/StemV 123', $block);
-        $this->assertStringContainsString('/BaseFont /stemlessBold', $block);
+        $this->assertStringContainsString('/StemV 0', $block);
+        $this->assertStringContainsString('/BaseFont /stemless ', $block);
     }
 
     /**

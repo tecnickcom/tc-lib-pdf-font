@@ -29,12 +29,13 @@ namespace Test;
  */
 class LoadTestHarness extends \Com\Tecnick\Pdf\Font\Load
 {
-    public function __construct(string $key, string $name)
+    public function __construct(string $key, string $name, string $family = '')
     {
         parent::__construct();
         $this->data['type'] = 'TrueType';
         $this->data['key'] = $key;
         $this->data['name'] = $name;
+        $this->data['family'] = $family === '' ? $key : $family;
         $this->data['fakestyle'] = true;
         $this->data['cw'][32] = 500;
     }
@@ -55,6 +56,31 @@ class LoadTestHarness extends \Com\Tecnick\Pdf\Font\Load
     public function getNameValue(): string
     {
         return $this->data['name'];
+    }
+
+    public function getKeyValue(): string
+    {
+        return $this->data['key'];
+    }
+
+    public function setStyleValue(string $style): void
+    {
+        $this->data['style'] = $style;
+    }
+
+    public function getStyleValue(): string
+    {
+        return $this->data['style'];
+    }
+
+    public function isBoldMode(): bool
+    {
+        return $this->data['mode']['bold'];
+    }
+
+    public function isItalicMode(): bool
+    {
+        return $this->data['mode']['italic'];
     }
 
     /**

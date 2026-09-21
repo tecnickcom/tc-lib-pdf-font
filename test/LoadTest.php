@@ -29,18 +29,27 @@ namespace Test;
  */
 class LoadTest extends TestUtil
 {
-    /** @throws \Com\Tecnick\Pdf\Font\Exception */
-    public function testLoadAppliesFallbackStylesForMissingVariantFiles(): void
+    /**
+     * The definition file of the requested variation is missing, so the file of the base
+     * family is read and the font is the base one: the variation is dropped from its
+     * identity and is synthesized by the caller when it draws the text.
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
+    public function testLoadDropsAStyleVariationWithNoDefinitionFile(): void
     {
-        $load = new LoadTestHarness('customfont', '');
+        $load = new LoadTestHarness('customfontBI', 'Custom', 'customfont');
         $load->setModeAndMetrics(true, true, 0, 0, 0);
+        $load->setStyleValue('BIU');
 
         $load->load();
 
-        $this->assertSame('customfontBoldItalic', $load->getNameValue());
-        $this->assertSame(123, $load->getStemVValue());
-        $this->assertSame(-11, $load->getItalicAngleValue());
-        $this->assertSame(64, $load->getFlagsValue());
+        $this->assertSame('customfont', $load->getKeyValue());
+        $this->assertSame('Custom', $load->getNameValue());
+        // the decoration-only letters are not font variations and are left in place
+        $this->assertSame('U', $load->getStyleValue());
+        $this->assertFalse($load->isBoldMode());
+        $this->assertFalse($load->isItalicMode());
     }
 
     /**
@@ -90,17 +99,21 @@ class LoadTest extends TestUtil
         $this->assertNotContains('', $dirs);
     }
 
-    /** @throws \Com\Tecnick\Pdf\Font\Exception */
-    public function testLoadUpdatesExistingBoldAndItalicMetrics(): void
+    /**
+     * The descriptor of the base family describes the glyph program that is embedded, so
+     * dropping the variation leaves every one of its entries untouched.
+     *
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
+    public function testLoadKeepsTheDescriptorOfTheBaseFamily(): void
     {
-        $load = new LoadTestHarness('customfont', 'Custom');
+        $load = new LoadTestHarness('customfontBI', 'Custom', 'customfont');
         $load->setModeAndMetrics(true, true, 100, -20, 1);
 
         $load->load();
 
-        $this->assertSame('CustomBoldItalic', $load->getNameValue());
-        $this->assertSame(175, $load->getStemVValue());
-        $this->assertSame(-31, $load->getItalicAngleValue());
-        $this->assertSame(65, $load->getFlagsValue());
+        $this->assertSame(100, $load->getStemVValue());
+        $this->assertSame(-20, $load->getItalicAngleValue());
+        $this->assertSame(1, $load->getFlagsValue());
     }
 }

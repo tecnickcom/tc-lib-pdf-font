@@ -350,12 +350,12 @@ abstract class Load
     {
         $this->getFontInfo();
         $this->checkType();
-        $this->setName();
-        $this->setDefaultWidth();
         if ($this->data['fakestyle']) {
-            $this->setArtificialStyles();
+            $this->setBaseFamilyIdentity();
         }
 
+        $this->setName();
+        $this->setDefaultWidth();
         $this->setFileData();
     }
 
@@ -542,24 +542,21 @@ abstract class Load
     }
 
     /**
-     * Set artificial styles if the font variation file is missing
+     * Drop the requested style variation from the font identity.
+     *
+     * The definition file of the variation is missing, so the file of the base family
+     * was read instead: the font is the base one, and the caller synthesizes the bold
+     * or italic when it draws the text. Keeping the variation as a font of its own
+     * would hold and embed a second copy of the same glyph program under a descriptor
+     * that does not describe it.
      */
-    protected function setArtificialStyles(): void
+    protected function setBaseFamilyIdentity(): void
     {
-        // artificial bold
-        if ($this->data['mode']['bold']) {
-            $this->data['name'] .= 'Bold';
-            $this->data['desc']['StemV'] = $this->data['desc']['StemV'] === 0
-                ? 123
-                : (int) \round($this->data['desc']['StemV'] * 1.75);
-        }
-
-        // artificial italic
-        if ($this->data['mode']['italic']) {
-            $this->data['name'] .= 'Italic';
-            $this->data['desc']['ItalicAngle'] -= 11;
-            $this->data['desc']['Flags'] |= 64; //bit 7
-        }
+        $this->data['key'] = $this->data['family'];
+        // the decoration-only letters are not font variations and are left in place
+        $this->data['style'] = \str_replace(['B', 'I'], '', $this->data['style']);
+        $this->data['mode']['bold'] = false;
+        $this->data['mode']['italic'] = false;
     }
 
     /**

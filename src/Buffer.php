@@ -341,9 +341,44 @@ abstract class Buffer
         string $ifile = '',
         ?bool $subset = null,
     ): string {
+        return $this->addFont($objnum, $font, $style, $ifile, $subset)['key'];
+    }
+
+    /**
+     * Add a new font to the fonts buffer and report the style it provides.
+     *
+     * A family that ships no definition file for the requested variation is loaded from
+     * the file of its base family and buffered under the base key, so the same glyph
+     * program is neither held nor embedded twice. The variation is then reported as
+     * synthetic and is painted by the caller when it draws the text.
+     *
+     * @param int    $objnum Current PDF object number
+     * @param string $font   Font family.
+     * @param string $style  Font style (see add()).
+     * @param string $ifile  The font definition file (or empty for autodetect).
+     * @param ?bool  $subset If true, embed only the characters used by the document.
+     *
+     * @return array{key: string, style: string, fakestyle: string} Font key, requested
+     *                                                             style, and the part of
+     *                                                             it the font does not
+     *                                                             provide ('', 'B', 'I'
+     *                                                             or 'BI').
+     *
+     * @throws FontException in case of error
+     */
+    public function addFont(
+        int &$objnum,
+        string $font,
+        string $style = '',
+        string $ifile = '',
+        ?bool $subset = null,
+    ): array {
         if ($subset === null) {
             $subset = $this->subset;
         }
+
+        $fobj = new Font($font, $style, $ifile, $subset, $this->unicode, $this->pdfa, true, $this->fileHelper);
+        $reqstyle = $fobj->getFontData()['style'];
 
         // the font key depends only on (family, style, unicode, pdfa), so an already
         // resolved key is reused when the definition file is autodetected
@@ -351,30 +386,69 @@ abstract class Buffer
             $cachedKey = $this->fontKeyCache[$font][$style];
             if (isset($this->font[$cachedKey])) {
                 $this->aggregateSubset($cachedKey, $subset);
-                return $cachedKey;
+                return $this->getStyledFont($cachedKey, $reqstyle);
             }
         }
 
-        $fobj = new Font($font, $style, $ifile, $subset, $this->unicode, $this->pdfa, true, $this->fileHelper);
         $key = $fobj->getFontkey();
+        if (isset($this->font[$key])) {
+            $this->aggregateSubset($key, $subset);
+            if ($ifile === '') {
+                $this->fontKeyCache[$font][$style] = $key;
+            }
+
+            return $this->getStyledFont($key, $reqstyle);
+        }
+
+        $fobj->load();
+        $fdata = $fobj->getFontData();
+        // the loaded font reports the key it is buffered under: a missing style
+        // variation falls back to the base family and is buffered under its key
+        $key = $fdata['key'];
         if ($ifile === '') {
             $this->fontKeyCache[$font][$style] = $key;
         }
 
         if (isset($this->font[$key])) {
             $this->aggregateSubset($key, $subset);
-            return $key;
+            return $this->getStyledFont($key, $reqstyle);
         }
 
-        $fobj->load();
-        $this->font[$key] = $fobj->getFontData();
+        $this->font[$key] = $fdata;
 
         $this->setFontDiff($key);
 
         $this->font[$key]['i'] = ++$this->numfonts;
         $this->font[$key]['n'] = ++$objnum;
 
-        return $key;
+        return $this->getStyledFont($key, $reqstyle);
+    }
+
+    /**
+     * Returns a buffered font with the style that was asked of it.
+     *
+     * @param string $key      Font key.
+     * @param string $reqstyle Requested style.
+     *
+     * @return array{key: string, style: string, fakestyle: string}
+     */
+    protected function getStyledFont(string $key, string $reqstyle): array
+    {
+        $provided = $this->font[$key]['style'] ?? '';
+        $fakestyle = '';
+        foreach (['B', 'I'] as $variation) {
+            if (!\str_contains($reqstyle, $variation) || \str_contains($provided, $variation)) {
+                continue;
+            }
+
+            $fakestyle .= $variation;
+        }
+
+        return [
+            'key' => $key,
+            'style' => $reqstyle,
+            'fakestyle' => $fakestyle,
+        ];
     }
 
     /**

@@ -56,9 +56,13 @@ use Com\Tecnick\Unicode\Data\Type as UnicodeType;
  *
  * @phpstan-type TBBox array{float, float, float, float}
  *
+ * The 'fakestyle' member holds the part of 'style' the font does not provide and that the
+ * caller synthesizes when it draws the text. See Buffer::addFont().
+ *
  * @phpstan-type TStackItem array{
  *        'key': string,
  *        'style': string,
+ *        'fakestyle': string,
  *        'size': float,
  *        'spacing': float,
  *        'stretching': float,
@@ -78,6 +82,7 @@ use Com\Tecnick\Unicode\Data\Type as UnicodeType;
  *     'cwu': array<int, float>,
  *     'descent': float,
  *     'dw': float,
+ *     'fakestyle': string,
  *     'fbbox': array<int, float>,
  *     'height': float,
  *     'idx': int,
@@ -202,10 +207,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         /** @var ?FontException $err */
         $err = null;
         $keys = $this->getNormalizedFontKeys($font);
-        $fontkey = '';
+        $styled = ['key' => '', 'style' => '', 'fakestyle' => ''];
         foreach ($keys as $key) {
             try {
-                $fontkey = $this->add($objnum, $key, $style, $ifile, $subset);
+                $styled = $this->addFont($objnum, $key, $style, $ifile, $subset);
                 $err = null;
                 break;
             } catch (FontException $exc) {
@@ -219,11 +224,10 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         }
 
         // add this font in the stack
-        $data = $this->getFont($fontkey);
-
         $this->stack[++$this->index] = [
-            'key' => $fontkey,
-            'style' => $data['style'],
+            'key' => $styled['key'],
+            'style' => $styled['style'],
+            'fakestyle' => $styled['fakestyle'],
             'size' => $size,
             'spacing' => $spacing,
             'stretching' => $stretching,
@@ -289,6 +293,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             $this->stack[++$this->index] = [
                 'key' => $curfont['key'],
                 'style' => $curfont['style'],
+                'fakestyle' => $curfont['fakestyle'],
                 'size' => $size,
                 'spacing' => $spacing,
                 'stretching' => $stretching,
@@ -730,24 +735,18 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     protected function getFontMetric(int $idx): array
     {
         $font = $this->getStackItem($idx);
-        // cache key built from the fields the metric depends on; the stack index is not one
-        // of them and is patched on the way out
-        $mkey =
-            $font['key']
-            . '|'
-            . $font['size']
-            . '|'
-            . $font['spacing']
-            . '|'
-            . $font['stretching']
-            . '|'
-            . $font['style'];
+        // cache key built from the fields the metric is computed from; the stack index and
+        // the style are not among them and are patched on the way out, so every style of a
+        // font shares one set of scaled glyph widths and bounding boxes
+        $mkey = $font['key'] . '|' . $font['size'] . '|' . $font['spacing'] . '|' . $font['stretching'];
         if (isset($this->metric[$mkey])) {
             $metric = $this->metric[$mkey];
             // move the entry to the most recent end
             unset($this->metric[$mkey]);
             $this->metric[$mkey] = $metric;
             $metric['idx'] = $idx;
+            $metric['style'] = $font['style'];
+            $metric['fakestyle'] = $font['fakestyle'];
             return $metric;
         }
 
@@ -756,6 +755,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $fontspacing = $font['spacing'];
         $fontstretching = $font['stretching'];
         $fontstyle = $font['style'];
+        $fakestyle = $font['fakestyle'];
 
         $usize = $fontsize / $this->kunit;
         $cratio = $fontsize / 1000;
@@ -812,6 +812,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             'cwu' => $cwu,
             'descent' => $descent * $cratio,
             'dw' => $dw * $cratio * $fontstretching,
+            'fakestyle' => $fakestyle,
             'fbbox' => [
                 0 => (\is_numeric($tbox[0]) ? (float) $tbox[0] : 0.0) * $wratio, // left
                 1 => (\is_numeric($tbox[1]) ? (float) $tbox[1] : 0.0) * $cratio, // bottom
