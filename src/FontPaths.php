@@ -44,6 +44,42 @@ class FontPaths
     }
 
     /**
+     * Canonical K_PATH_FONTS directory, set once it resolves to an existing directory.
+     */
+    private static string $configPath = '';
+
+    /**
+     * Returns the K_PATH_FONTS value, or an empty string when it is undefined or empty.
+     *
+     * An existing directory is returned as its canonical realpath, without a trailing separator.
+     * Any other value is returned unchanged.
+     */
+    public static function getConfigPath(): string
+    {
+        if (self::$configPath !== '') {
+            return self::$configPath;
+        }
+
+        if (!\defined('K_PATH_FONTS')) {
+            return '';
+        }
+
+        $kpathfonts = (string) \constant('K_PATH_FONTS');
+        if ($kpathfonts === '') {
+            return '';
+        }
+
+        $resolved = \realpath($kpathfonts);
+        if ($resolved === false || !\is_dir($resolved)) {
+            return $kpathfonts;
+        }
+
+        self::$configPath = $resolved;
+
+        return $resolved;
+    }
+
+    /**
      * Returns the full path of a font file, or an empty string when it is not found.
      *
      * @param string $fontdir Original font directory.
@@ -56,7 +92,7 @@ class FontPaths
         }
 
         $dirobj = new Dir();
-        $kpathfonts = \defined('K_PATH_FONTS') ? (string) \constant('K_PATH_FONTS') : '';
+        $kpathfonts = self::getConfigPath();
         // directories to search, most specific first
         $dirs = \array_unique([
             $fontdir,
@@ -108,10 +144,7 @@ class FontPaths
         ];
 
         if (\defined('K_PATH_FONTS')) {
-            $kpathfonts = (string) \constant('K_PATH_FONTS');
-            if ($kpathfonts !== '') {
-                $roots[] = $kpathfonts;
-            }
+            $roots[] = (string) \constant('K_PATH_FONTS');
         }
 
         $allowed = [];

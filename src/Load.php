@@ -405,14 +405,12 @@ abstract class Load
     {
         $dir = new Dir();
         $dirs = [];
-        if (\defined('K_PATH_FONTS')) {
-            $kpathfonts = (string) \constant('K_PATH_FONTS');
-            if ($kpathfonts !== '') {
-                $dirs[] = $kpathfonts;
-                $glb = \glob($kpathfonts . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
-                if ($glb !== false) {
-                    $dirs = [...$dirs, ...$glb];
-                }
+        $kpathfonts = FontPaths::getConfigPath();
+        if ($kpathfonts !== '') {
+            $dirs[] = $kpathfonts;
+            $glb = \glob($kpathfonts . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+            if ($glb !== false) {
+                $dirs = [...$dirs, ...$glb];
             }
         }
 

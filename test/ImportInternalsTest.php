@@ -17,6 +17,7 @@
 namespace Test;
 
 use Com\Tecnick\File\Exception as FileException;
+use Com\Tecnick\Pdf\Font\FontPaths;
 use Com\Tecnick\Pdf\Font\Import;
 
 /**
@@ -195,7 +196,7 @@ class ImportInternalsTest extends TestUtil
         $this->setupTest();
         $instance = $this->buildImport();
         $result = $this->callStringMethod($instance, 'findOutputPath', ['']);
-        $this->assertSame(constant('K_PATH_FONTS'), $result);
+        $this->assertSame(FontPaths::getConfigPath() . '/', $result);
     }
 
     public function testFindOutputPathReturnsProvidedWritablePath(): void

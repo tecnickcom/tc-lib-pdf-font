@@ -621,11 +621,9 @@ class Import
             return self::withTrailingSlash($output_path);
         }
 
-        if (\defined('K_PATH_FONTS')) {
-            $kpathfonts = (string) \constant('K_PATH_FONTS');
-            if ($kpathfonts !== '' && \is_writable($kpathfonts)) {
-                return self::withTrailingSlash($kpathfonts);
-            }
+        $kpathfonts = FontPaths::getConfigPath();
+        if ($kpathfonts !== '' && \is_writable($kpathfonts)) {
+            return self::withTrailingSlash($kpathfonts);
         }
 
         $dirobj = new Dir();
