@@ -153,3 +153,26 @@ jobs:
         run: composer fonts
       - name: Run unit tests
         run: composer run test
+
+  test-macos:
+    name: Test on php 8.5 and macos-latest
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use php 8.5
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: hash, iconv, json, mbstring, pcre, zlib
+          ini-values: display_errors=on, error_reporting=-1, zend.assertions=1
+      - name: Install dependencies
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: composer install --no-interaction
+      - name: Install fonts
+        run: php util/build_fonts.php
+      - name: Run unit tests
+        run: composer run test
