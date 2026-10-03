@@ -66,6 +66,10 @@ class ArtifactNameSanitizationTest extends TestUtil
      */
     public function testAnExtensionCannotInjectMembersIntoTheDefinitionFile(): void
     {
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('Windows does not allow quotes in file names');
+        }
+
         $this->setupTest();
         $path = $this->stageFont('ttf","name":"PWNED');
 
@@ -86,6 +90,10 @@ class ArtifactNameSanitizationTest extends TestUtil
      */
     public function testTheRecordedFileNameIsTheLinkThatWasCreated(): void
     {
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('Windows does not allow quotes in file names');
+        }
+
         $this->setupTest();
         $path = $this->stageFont('ttf","name":"PWNED');
 

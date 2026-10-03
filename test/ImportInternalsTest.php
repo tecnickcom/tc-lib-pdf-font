@@ -201,7 +201,7 @@ class ImportInternalsTest extends TestUtil
     public function testFindOutputPathReturnsProvidedWritablePath(): void
     {
         $outdir = dirname(__DIR__) . '/target/tmptest/internals/';
-        system('mkdir -p ' . $outdir);
+        self::makeDirectory($outdir);
         $instance = $this->buildImport();
         $result = $this->callStringMethod($instance, 'findOutputPath', [$outdir]);
         $this->assertSame($outdir, $result);
@@ -212,7 +212,7 @@ class ImportInternalsTest extends TestUtil
         // every consumer builds paths as `dir . file`, so a caller-supplied directory
         // without a trailing separator must still yield a usable directory
         $outdir = dirname(__DIR__) . '/target/tmptest/internals';
-        system('mkdir -p ' . $outdir);
+        self::makeDirectory($outdir);
         $instance = $this->buildImport();
         $result = $this->callStringMethod($instance, 'findOutputPath', [$outdir]);
         $this->assertSame($outdir . '/', $result);
@@ -223,7 +223,7 @@ class ImportInternalsTest extends TestUtil
         $this->setupTest();
         $instance = $this->buildImport();
         foreach (['', dirname(__DIR__) . '/target/tmptest/internals'] as $input) {
-            system('mkdir -p ' . dirname(__DIR__) . '/target/tmptest/internals');
+            self::makeDirectory(dirname(__DIR__) . '/target/tmptest/internals');
             $result = $this->callStringMethod($instance, 'findOutputPath', [$input]);
             $this->assertStringEndsWith('/', $result);
         }
@@ -308,8 +308,7 @@ class ImportInternalsTest extends TestUtil
     public function testSaveFontDataRederivesIsUnicodeFromTheFinalType(): void
     {
         $dir = dirname(__DIR__) . '/target/tmptest/saveisunicode/';
-        system('rm -rf ' . escapeshellarg($dir));
-        system('mkdir -p ' . escapeshellarg($dir));
+        self::resetDirectory($dir);
 
         $instance = $this->buildImport();
         $helper = new \Com\Tecnick\File\File(allowedPaths: [rtrim($dir, '/')]);
@@ -342,8 +341,7 @@ class ImportInternalsTest extends TestUtil
     public function testSaveFontDataKeepsIsUnicodeForTrueTypeUnicode(): void
     {
         $dir = dirname(__DIR__) . '/target/tmptest/saveisunicode2/';
-        system('rm -rf ' . escapeshellarg($dir));
-        system('mkdir -p ' . escapeshellarg($dir));
+        self::resetDirectory($dir);
 
         $instance = $this->buildImport();
         $helper = new \Com\Tecnick\File\File(allowedPaths: [rtrim($dir, '/')]);

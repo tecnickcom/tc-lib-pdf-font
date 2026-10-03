@@ -106,7 +106,7 @@ class FontTypeTest extends TestUtil
     {
         $fin = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
         $outdir = \dirname(__DIR__) . '/target/tmptest/fonttype/';
-        \system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
+        self::resetDirectory($outdir);
 
         $import = new Import($fin, $outdir, FontType::Core);
         $this->assertNotSame('', $import->getFontName());

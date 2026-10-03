@@ -85,7 +85,7 @@ class ImportTest extends TestUtil
         $this->expectFontException();
         $fin = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
         $outdir = \dirname(__DIR__) . '/target/tmptest/';
-        \system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
+        self::resetDirectory($outdir);
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir);
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir);
     }
@@ -122,7 +122,7 @@ class ImportTest extends TestUtil
         $this->expectFontException();
         $fin = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/core/Helvetica.afm';
         $outdir = \dirname(__DIR__) . '/target/tmptest/core/';
-        \system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
+        self::resetDirectory($outdir);
         new \Com\Tecnick\Pdf\Font\Import($fin, $outdir, 'ERROR');
     }
 
@@ -135,7 +135,7 @@ class ImportTest extends TestUtil
     {
         $this->expectFontException();
         $outdir = \dirname(__DIR__) . '/target/tmptest/core/';
-        \system('rm -rf ' . $outdir . ' && mkdir -p ' . $outdir);
+        self::resetDirectory($outdir);
         \file_put_contents($outdir . 'test.ttf', 'OTTO 1234');
         new \Com\Tecnick\Pdf\Font\Import($outdir . 'test.ttf', $outdir);
     }
@@ -156,7 +156,8 @@ class ImportTest extends TestUtil
     ): void {
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/' . $fontdir . '/';
         $outdir = \dirname(__DIR__) . '/target/tmptest/' . $fontdir . '/';
-        \system('rm -rf ' . \dirname(__DIR__) . '/target/tmptest/ && mkdir -p ' . $outdir);
+        self::removeDirectory(\dirname(__DIR__) . '/target/tmptest/');
+        self::makeDirectory($outdir);
 
         $import = new \Com\Tecnick\Pdf\Font\Import($indir . $font, $outdir, $type, $encoding);
         $this->assertEquals($outname, $import->getFontName());
@@ -308,7 +309,7 @@ class ImportTest extends TestUtil
     {
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/freefont/';
         $outdir = \dirname(__DIR__) . '/target/tmptest/linked/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
 
         $import = new \Com\Tecnick\Pdf\Font\Import($indir . 'FreeSans.ttf', $outdir, '', '', 32, 3, 1, true);
 
@@ -384,7 +385,7 @@ class ImportTest extends TestUtil
     {
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/freefont/';
         $outdir = \dirname(__DIR__) . '/target/tmptest/linkedtwice/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
 
         // pre-create the link the import is about to make
         \symlink($indir . 'FreeSans.ttf', $outdir . 'freesans.ttf');
@@ -406,7 +407,7 @@ class ImportTest extends TestUtil
     {
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/cid0/';
         $outdir = \dirname(__DIR__) . '/target/tmptest/cid0bad/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
 
         $this->assertThrowsMessage(
             \Com\Tecnick\Pdf\Font\Exception::class,
@@ -427,7 +428,7 @@ class ImportTest extends TestUtil
     {
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/cid0/';
         $outdir = \dirname(__DIR__) . '/target/tmptest/cid0json/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
 
         foreach (['jp' => 'CID0JP', 'kr' => 'CID0KR', 'cs' => 'CID0CS', 'ct' => 'CID0CT'] as $suffix => $type) {
             $import = new \Com\Tecnick\Pdf\Font\Import($indir . 'cid0' . $suffix . '.ttf', $outdir, $type);
@@ -448,7 +449,7 @@ class ImportTest extends TestUtil
     public function testImportRejectsATrueTypeCollection(): void
     {
         $outdir = \dirname(__DIR__) . '/target/tmptest/ttc/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
         \file_put_contents($outdir . 'collection.ttc', 'ttcf' . \str_repeat("\x00", 32));
 
         $this->assertThrowsMessage(
@@ -469,7 +470,7 @@ class ImportTest extends TestUtil
     public function testImportNamesEveryUnsupportedFontFormat(): void
     {
         $outdir = \dirname(__DIR__) . '/target/tmptest/unsupported/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
 
         $cases = [
             'wOFF' => 'WOFF',
@@ -532,7 +533,7 @@ class ImportTest extends TestUtil
     public function testImportRejectsAFileTooShortToDetect(): void
     {
         $outdir = \dirname(__DIR__) . '/target/tmptest/short/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
         \file_put_contents($outdir . 'tiny.ttf', "\x00\x01");
 
         $this->assertThrowsMessage(
@@ -554,7 +555,7 @@ class ImportTest extends TestUtil
     public function testOutputPathRejectsARegularFile(): void
     {
         $outdir = \dirname(__DIR__) . '/target/tmptest/outpath/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
         \file_put_contents($outdir . 'notadir', '');
 
         $class = new \ReflectionClass(\Com\Tecnick\Pdf\Font\Import::class);
@@ -604,7 +605,7 @@ class ImportTest extends TestUtil
     {
         $root = \dirname(__DIR__);
         $outdir = $root . '/target/tmptest/linkedrel/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
 
         $cwd = \getcwd();
         $this->assertIsString($cwd);
@@ -657,7 +658,7 @@ class ImportTest extends TestUtil
     public function testLinkedFontRejectsAnUnresolvableInputPath(): void
     {
         $outdir = \dirname(__DIR__) . '/target/tmptest/linkbad/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
 
         $this->assertThrowsMessage(
             \Com\Tecnick\Pdf\Font\Exception::class,
@@ -681,9 +682,13 @@ class ImportTest extends TestUtil
             $this->markTestSkipped('root ignores the directory permissions');
         }
 
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('Windows ignores the read-only mode of a directory');
+        }
+
         $indir = \dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/freefont/';
         $outdir = \dirname(__DIR__) . '/target/tmptest/linkro/';
-        \system('rm -rf ' . \escapeshellarg($outdir) . ' && mkdir -p ' . \escapeshellarg($outdir));
+        self::resetDirectory($outdir);
         \chmod($outdir, 0o555);
 
         try {

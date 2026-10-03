@@ -685,7 +685,7 @@ class ErrorPathsTest extends TestUtil
         $this->setupTest();
         $parent = \dirname(__DIR__) . '/fonts';
         $sub = $parent . '/vendorpack';
-        \system('mkdir -p ' . \escapeshellarg($sub));
+        self::makeDirectory($sub);
 
         try {
             \file_put_contents(
@@ -701,7 +701,7 @@ class ErrorPathsTest extends TestUtil
 
             $this->assertSame('parentfont', $metric['key']);
         } finally {
-            \system('rm -rf ' . \escapeshellarg($parent));
+            self::removeDirectory($parent);
         }
     }
 

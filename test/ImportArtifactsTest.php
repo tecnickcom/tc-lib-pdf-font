@@ -98,7 +98,7 @@ class ImportArtifactsTest extends TestUtil
         );
 
         $this->assertTrue(\is_link($link), 'the link of the already imported font');
-        $this->assertSame($source, \readlink($link));
+        $this->assertSame(\realpath($source), \realpath($link));
     }
 
     /**

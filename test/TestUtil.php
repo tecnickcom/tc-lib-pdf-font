@@ -40,9 +40,26 @@ class TestUtil extends TestCase
             \define('K_PATH_FONTS', \dirname(__DIR__) . '/target/tmptest/');
         }
 
-        $fontPath = (string) \constant('K_PATH_FONTS');
-        self::removeDirectory($fontPath);
-        \mkdir($fontPath, 0o755, true);
+        self::resetDirectory((string) \constant('K_PATH_FONTS'));
+    }
+
+    /**
+     * Remove a directory, if it exists, and create it again empty.
+     */
+    protected static function resetDirectory(string $path): void
+    {
+        self::removeDirectory($path);
+        \mkdir($path, 0o755, true);
+    }
+
+    /**
+     * Create a directory and its parents, if missing.
+     */
+    protected static function makeDirectory(string $path): void
+    {
+        if (!\is_dir($path)) {
+            \mkdir($path, 0o755, true);
+        }
     }
 
     /**
