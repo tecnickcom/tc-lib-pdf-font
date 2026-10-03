@@ -238,19 +238,33 @@ php util/convert.php --help
 
 ### Bulk Conversion
 
-For batch generation from the mirrored font set:
+For batch generation from the mirrored font set, run from a clone of this repository:
 
 ```bash
-cd util
-make build
+php util/build_fonts.php
 ```
 
-This installs `util` dependencies and runs `bulk_convert.php`, which scans the mirror package and writes converted fonts under `target/fonts/`.
+The script:
+
+1. Installs the library dependencies with `composer install --no-dev` when no Composer autoloader is found.
+2. Installs the `util` dependencies, which download the font sources from GitHub.
+3. Clears `target/fonts/`.
+4. Runs `bulk_convert.php`, which scans the mirror package and writes converted fonts under `target/fonts/`.
+
+It requires PHP, Composer and network access. It does not need make or a POSIX shell, so it also runs on Windows. In a repository clone the same step is available as `composer fonts` and `make fonts`.
+
+When the package is installed as a dependency, run the script from its location in the vendor directory, for example from the project root:
+
+```bash
+php vendor/tecnickcom/tc-lib-pdf-font/util/build_fonts.php
+```
+
+The fonts are written to `vendor/tecnickcom/tc-lib-pdf-font/target/fonts/`. Composer replaces the package directory on update or reinstall, which removes them, so run the script again afterwards.
 
 Notes:
 
-- `bulk_convert.php` also attempts OTF conversion via FontForge (`fontforge -script otf2ttf.ff ...`) before import.
-- If you run bulk conversion directly, customize destination with `php util/bulk_convert.php --outpath=/your/path/`.
+- `build_fonts.php` takes no options. To write the fonts to another directory, run `php util/bulk_convert.php --outpath=/your/path/` after `build_fonts.php` has installed the `util` dependencies at least once.
+- `bulk_convert.php` also attempts OTF conversion via FontForge (`fontforge -script otf2ttf.ff ...`) before import. Without FontForge, OTF files are reported and skipped. The mirrored font set contains no OTF files.
 
 ---
 
@@ -276,11 +290,12 @@ Unchanged:
 
 ```bash
 make deps
+make fonts
 make help
 make qa
 ```
 
-Font generation helpers are also available through Make targets such as `fonts`.
+`make fonts` runs the [Bulk Conversion](#bulk-conversion). The unit tests require the generated fonts.
 
 ---
 

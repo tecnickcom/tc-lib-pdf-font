@@ -78,6 +78,7 @@
     "cs-fix:test": "vendor/bin/mago --config mago.test.toml fmt test",
     "report": "mkdir -p target/report && vendor/bin/pdepend --jdepend-xml=target/report/dependencies.xml --summary-xml=target/report/metrics.xml --jdepend-chart=target/report/dependencies.svg --overview-pyramid=target/report/overview-pyramid.svg --ignore=vendor ./src",
     "check-deps": ["@composer validate --strict --no-check-lock", "@composer audit"],
-    "qa": ["@check-deps", "@fmt-check", "@cs-check", "@analyse", "@test"]
+    "qa": ["@check-deps", "@fmt-check", "@cs-check", "@analyse", "@test"],
+    "fonts": "@php util/build_fonts.php"
   }
 }

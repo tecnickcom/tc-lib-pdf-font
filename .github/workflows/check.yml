@@ -55,7 +55,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: make deps
       - name: Install fonts
-        run: cd util && composer install --no-dev --no-interaction && ./bulk_convert.php && cd ..
+        run: php util/build_fonts.php
       - name: Validate composer.json
         run: composer validate --strict --no-check-lock
       - name: Audit dependencies for known advisories
@@ -126,6 +126,30 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: composer update --prefer-lowest --prefer-stable --no-interaction
       - name: Install fonts
-        run: cd util && composer install --no-dev --no-interaction && ./bulk_convert.php && cd ..
+        run: php util/build_fonts.php
+      - name: Run unit tests
+        run: composer run test
+
+  test-windows:
+    name: Test on php 8.5 and windows-latest
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use php 8.5
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: hash, iconv, json, mbstring, pcre, zlib
+          ini-values: display_errors=on, error_reporting=-1, zend.assertions=1
+      - name: Install dependencies
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: composer install --no-interaction
+      # Font generation must not depend on make or a POSIX shell.
+      - name: Install fonts
+        run: composer fonts
       - name: Run unit tests
         run: composer run test

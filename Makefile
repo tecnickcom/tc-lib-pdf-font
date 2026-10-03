@@ -83,8 +83,11 @@ endif
 # PHP binary
 PHP=$(shell which php)
 
+# Composer binary
+COMPOSER_BINARY=$(shell which composer)
+
 # Composer executable (APC disabled to work around a bug)
-COMPOSER=$(PHP) -d "apc.enable_cli=0" $(shell which composer)
+COMPOSER=$(PHP) -d "apc.enable_cli=0" $(COMPOSER_BINARY)
 
 # phpDocumentor executable file
 PHPDOC=$(shell which phpDocumentor)
@@ -298,10 +301,7 @@ versionup:
 
 ## import and convert fonts
 fonts:
-	rm -rf "$(TARGETDIR)/fonts"
-	test -f vendor/autoload.php || $(COMPOSER) install --no-dev --no-interaction
-	cd util && ($(COMPOSER) install -vvv --no-interaction)
-	cd util && make build
+	COMPOSER_BINARY="$(COMPOSER_BINARY)" $(PHP) util/build_fonts.php
 	
 ## Build fonts RPM packages for RedHat-like Linux distributions
 rpm_fonts:
