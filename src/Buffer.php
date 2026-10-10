@@ -327,7 +327,8 @@ abstract class Buffer
      *                       By default, the name is built from the family and style, in lower case with no spaces.
      * @param ?bool  $subset If true, embed only the characters used by the document.
      *                       Valid only for TrueTypeUnicode fonts.
-     *                       Set to null to use the default value.
+     *                       Set to null to use the default value for a new font,
+     *                       or to keep the mode of a font already in the buffer.
      *                       Subsetting is computational and memory intensive.
      *
      * @return string Font key
@@ -357,6 +358,8 @@ abstract class Buffer
      * @param string $style  Font style (see add()).
      * @param string $ifile  The font definition file (or empty for autodetect).
      * @param ?bool  $subset If true, embed only the characters used by the document.
+     *                       Set to null to use the default value for a new font,
+     *                       or to keep the mode of a font already in the buffer.
      *
      * @return array{key: string, style: string, fakestyle: string} Font key, requested
      *                                                             style, and the part of
@@ -373,11 +376,16 @@ abstract class Buffer
         string $ifile = '',
         ?bool $subset = null,
     ): array {
-        if ($subset === null) {
-            $subset = $this->subset;
-        }
-
-        $fobj = new Font($font, $style, $ifile, $subset, $this->unicode, $this->pdfa, true, $this->fileHelper);
+        $fobj = new Font(
+            $font,
+            $style,
+            $ifile,
+            $subset ?? $this->subset,
+            $this->unicode,
+            $this->pdfa,
+            true,
+            $this->fileHelper,
+        );
         $reqstyle = $fobj->getFontData()['style'];
 
         // the font key depends only on (family, style, unicode, pdfa), so an already
@@ -454,13 +462,18 @@ abstract class Buffer
     /**
      * Record the subsetting mode requested for a font that is already in the buffer.
      *
-     * The font is subset only when every request for it asked for a subset.
+     * The font is subset only when every request that states a mode asked for a subset.
+     * A request that states no mode keeps the recorded one.
      *
      * @param string $key    Font key.
-     * @param bool   $subset True if this request asked for a subset.
+     * @param ?bool  $subset True if this request asked for a subset, null if it stated no mode.
      */
-    protected function aggregateSubset(string $key, bool $subset): void
+    protected function aggregateSubset(string $key, ?bool $subset): void
     {
+        if ($subset === null) {
+            return;
+        }
+
         $this->font[$key]['subset'] = $this->font[$key]['subset'] && $subset;
     }
 

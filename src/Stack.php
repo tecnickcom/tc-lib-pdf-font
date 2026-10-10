@@ -117,12 +117,15 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *
      * 173 = SHY, only rendered when the text is hyphenated at that point.
      * 8203 = ZWSP, a word boundary with no glyph.
+     * 8288 = WJ and 65279 = ZWNBSP, which prevent a line break and have no glyph.
      *
      * @var array<int, bool>
      */
     protected const ZERO_WIDTH = [
         173 => true,
         8203 => true,
+        8288 => true,
+        65_279 => true,
     ];
 
     /**
@@ -178,7 +181,8 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      *                           By default, the name is built from the family and style, in lower case with no spaces.
      * @param ?bool  $subset     If true, embed only the characters used by the document.
      *                           Valid only for TrueTypeUnicode fonts.
-     *                           Set to null to use the default value.
+     *                           Set to null to use the default value for a new font,
+     *                           or to keep the mode of a font already loaded.
      *                           Subsetting is computational and memory intensive.
      *
      * @return TFontMetric Font data
@@ -195,10 +199,6 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         string $ifile = '',
         ?bool $subset = null,
     ): array {
-        if ($subset === null) {
-            $subset = $this->subset;
-        }
-
         $size = $this->getInputSize($size);
         $spacing = $this->getInputSpacing($spacing);
         $stretching = $this->getInputStretching($stretching);

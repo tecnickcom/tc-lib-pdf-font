@@ -129,4 +129,76 @@ class RepeatedSubsetRequestTest extends TestUtil
 
         $this->assertFalse($this->subsetOf($stack));
     }
+
+    /**
+     * A request that states no mode keeps the subset mode stated before it, whatever the
+     * default of the buffer is.
+     *
+     * @throws \Throwable
+     */
+    public function testARequestWithoutModeKeepsAnEarlierSubsetRequest(): void
+    {
+        $this->setupTest();
+        $this->writeFont();
+
+        $stack = new Stack(1);
+        $objnum = 1;
+        $stack->insert($objnum, 'reduced', '', 10, null, null, '', true);
+        $this->assertTrue($this->subsetOf($stack));
+
+        $stack->insert($objnum, 'reduced', '', 12);
+        $this->assertTrue($this->subsetOf($stack));
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testARequestWithoutModeKeepsAnEarlierWholeProgramRequest(): void
+    {
+        $this->setupTest();
+        $this->writeFont();
+
+        $stack = new Stack(1, true);
+        $objnum = 1;
+        $stack->insert($objnum, 'reduced', '', 10, null, null, '', false);
+        $stack->insert($objnum, 'reduced', '', 12);
+
+        $this->assertFalse($this->subsetOf($stack));
+    }
+
+    /**
+     * The first request without a mode takes the default of the buffer, and a later
+     * request for the whole program still wins.
+     *
+     * @throws \Throwable
+     */
+    public function testAWholeProgramRequestWinsOverTheDefaultSubsetMode(): void
+    {
+        $this->setupTest();
+        $this->writeFont();
+
+        $stack = new Stack(1, true);
+        $objnum = 1;
+        $stack->insert($objnum, 'reduced', '', 10);
+        $this->assertTrue($this->subsetOf($stack));
+
+        $stack->insert($objnum, 'reduced', '', 12, null, null, '', false);
+        $this->assertFalse($this->subsetOf($stack));
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testARequestWithoutModeKeepsTheModeWhenTheDefinitionFileIsNamed(): void
+    {
+        $this->setupTest();
+        $this->writeFont();
+
+        $stack = new Stack(1);
+        $objnum = 1;
+        $stack->insert($objnum, 'reduced', '', 10, null, null, '', true);
+        $stack->insert($objnum, 'reduced', '', 12, null, null, $this->getFontPath() . 'reduced.json');
+
+        $this->assertTrue($this->subsetOf($stack));
+    }
 }

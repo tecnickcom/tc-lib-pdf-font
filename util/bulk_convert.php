@@ -137,7 +137,7 @@ $fontdir = \array_diff($entries, array('.', '..', '.git'));
 // URL of websites containing the font sources
 $font_url = array(
     'cid0'     => 'http://unifoundry.com/unifont.html',
-    'core'     => 'https://partners.adobe.com/public/developer/en/pdf/Core14_AFMs.zip',
+    'core'     => 'https://github.com/tecnickcom/tc-font-core14-afms',
     'dejavu'   => 'http://sourceforge.net/projects/dejavu/files/dejavu/2.35/dejavu-fonts-ttf-2.35.zip',
     'freefont' => 'https://ftp.gnu.org/gnu/freefont/freefont-ttf-20120503.zip',
     'pdfa'     => 'https://github.com/tecnickcom/tc-font-pdfa',
