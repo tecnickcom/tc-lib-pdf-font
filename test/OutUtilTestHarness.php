@@ -55,4 +55,12 @@ class OutUtilTestHarness extends \Com\Tecnick\Pdf\Font\OutUtil
     {
         return $this->getGidWidths($font);
     }
+
+    /**
+     * @param array<int, bool> $cids
+     */
+    public function runCidSetBits(array $cids): string
+    {
+        return $this->getCidSetBits($cids);
+    }
 }

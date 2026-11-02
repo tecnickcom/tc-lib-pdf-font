@@ -76,6 +76,8 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * @param Encrypt                   $encrypt     Encrypt object
      * @param ?ObjFile                  $fileHelper  Optional file helper for font loading.
      * @param ?FontSubsetCacheInterface $subsetCache Optional cache for subset font programs.
+     * @param bool                      $cidset      True to add a CIDSet stream to the descriptor of each
+     *                                               subset CIDFont (PDF/A-1).
      *
      * @throws FileException
      * @throws FontException
@@ -86,11 +88,13 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
         Encrypt $encrypt,
         ?ObjFile $fileHelper = null,
         protected ?FontSubsetCacheInterface $subsetCache = null,
+        bool $cidset = false,
     ) {
         $this->fileHelper = $fileHelper ?? new ObjFile(allowedPaths: FontPaths::buildAllowedPaths());
 
         $this->pon = $pon;
         $this->enc = $encrypt;
+        $this->cidset = $cidset;
 
         $this->out = $this->getEncodingDiffs();
         $this->out .= $this->getFontFiles();
@@ -209,6 +213,10 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
 
                     $this->subchars[$file_key][(int) $cid] = true;
                 }
+
+                if ($this->cidset && $font['type'] === 'TrueTypeUnicode') {
+                    $this->addSubsetCids($file_key, $font);
+                }
             }
         }
 
@@ -216,16 +224,23 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
     }
 
     /**
-     * Returns the key identifying the font program file of a font.
+     * Collect the CIDs a TrueTypeUnicode font can reference in the content streams.
      *
-     * The directory is part of the key: two fonts may ship a different program under the
-     * same file name.
+     * A GID encoded font references the glyph indices it recorded, any other font
+     * references the subset characters that have a width.
      *
-     * @param TFontData $font Font data.
+     * @param string    $file_key Key of the font program file.
+     * @param TFontData $font     Font data.
      */
-    protected function fontFileKey(array $font): string
+    protected function addSubsetCids(string $file_key, array $font): void
     {
-        return \md5($font['dir'] . '|' . $font['file']);
+        $cids = $font['gidenc']
+            ? \array_keys($font['usedgid'])
+            : \array_keys(\array_intersect_key($font['cw'], \array_filter($font['subsetchars'])));
+        $this->subcids[$file_key] ??= [];
+        foreach ($cids as $cid) {
+            $this->subcids[$file_key][$cid] = true;
+        }
     }
 
     /**

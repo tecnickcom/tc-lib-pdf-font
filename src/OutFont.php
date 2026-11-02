@@ -57,6 +57,31 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
     protected ObjFile $fileHelper;
 
     /**
+     * True to add a CIDSet stream to the descriptor of each subset CIDFont (PDF/A-1).
+     */
+    protected bool $cidset = false;
+
+    /**
+     * CIDs referenced by the TrueTypeUnicode fonts of each font program file.
+     *
+     * @var array<string, array<int, bool>>
+     */
+    protected array $subcids = [];
+
+    /**
+     * Returns the key identifying the font program file of a font.
+     *
+     * The directory is part of the key: two fonts may ship a different program under the
+     * same file name.
+     *
+     * @param TFontData $font Font data.
+     */
+    protected function fontFileKey(array $font): string
+    {
+        return \md5($font['dir'] . '|' . $font['file']);
+    }
+
+    /**
      * Get the PDF output string for a CID-0 font.
      * A Type 0 CIDFont contains glyph descriptions based on the Adobe Type 1 font format
      *
@@ -313,9 +338,16 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $out .= ' /FontFile2 ' . $fontfilen . ' 0 R';
         }
 
+        $ctgobj = $fontctg !== '' && !$font['gidenc'];
+        $cidset = $this->cidset && $fontsubset;
+        if ($cidset) {
+            // the CIDSet stream follows the descriptor and the optional CIDToGIDMap stream
+            $out .= ' /CIDSet ' . ($this->pon + ($ctgobj ? 2 : 1)) . ' 0 R';
+        }
+
         $out .= ' >>' . "\n" . 'endobj' . "\n";
 
-        if ($fontctg !== '' && !$font['gidenc']) {
+        if ($ctgobj) {
             $out .= ++$this->pon . ' 0 obj' . "\n";
             // embed the CIDToGIDMap: the mapping from CIDs to glyph indices
             $ctgfile = \strtolower($fontctg);
@@ -334,7 +366,45 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $out .= ' >> stream' . "\n" . $stream . "\n" . 'endstream' . "\n" . 'endobj' . "\n";
         }
 
+        if ($cidset) {
+            $out .= $this->getCidSet($this->subcids[$this->fontFileKey($font)] ?? [], $font['compress']);
+        }
+
         return $out;
+    }
+
+    /**
+     * Get the PDF output string for a CIDSet stream object.
+     *
+     * @param array<int, bool> $cids     CIDs present in the font program.
+     * @param bool             $compress True to compress the stream.
+     *
+     * @throws EncException
+     * @throws FontException
+     */
+    protected function getCidSet(array $cids, bool $compress): string
+    {
+        $out = ++$this->pon . ' 0 obj' . "\n" . '<<';
+        $data = $this->getCidSetBits($cids);
+        if ($compress) {
+            $out .= ' /Filter /FlateDecode';
+            $data = Zlib::compress($data, 'Unable to compress CIDSet');
+        }
+
+        $stream = $this->enc->encryptString($data, $this->pon);
+        return (
+            $out
+            . ' /Length '
+            . \strlen($stream)
+            . ' >> stream'
+            . "\n"
+            . $stream
+            . "\n"
+            . 'endstream'
+            . "\n"
+            . 'endobj'
+            . "\n"
+        );
     }
 
     /**

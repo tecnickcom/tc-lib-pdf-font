@@ -143,7 +143,7 @@ interface FontSubsetCacheInterface
 }
 ```
 
-Pass it as the last constructor argument:
+Pass it as the fifth constructor argument:
 
 ```php
 $output = new \Com\Tecnick\Pdf\Font\Output(
@@ -202,6 +202,25 @@ Hashing discards the readable namespace, so scope the underlying PSR-16 pool to
 this library if you share it with other consumers.
 
 ---
+
+## PDF/A-1 CIDSet
+
+ISO 19005-1 requires a `/CIDSet` stream in the font descriptor of every subset
+CIDFont. Set the `cidset` argument of `Output` to add it to each subset
+TrueTypeUnicode font:
+
+```php
+$output = new \Com\Tecnick\Pdf\Font\Output(
+    $fonts,
+    $objectNumber,
+    $encrypt,
+    cidset: true,
+);
+```
+
+The stream lists CID 0 and the CIDs the document references. It is omitted by
+default, as PDF/A-2 and later require a CIDSet, when present, to list every
+glyph of the embedded program.
 
 ## Converting Existing Fonts
 

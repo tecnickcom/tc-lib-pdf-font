@@ -91,6 +91,30 @@ abstract class OutUtil
     }
 
     /**
+     * Returns the CIDSet bit string of the given CIDs.
+     *
+     * The high-order bit of the first byte is CID 0, which is always set (.notdef).
+     * CIDs outside the 0..65535 range are ignored.
+     *
+     * @param array<int, bool> $cids CIDs to flag.
+     */
+    protected function getCidSetBits(array $cids): string
+    {
+        $bits = "\x80";
+        foreach ($cids as $cid => $enabled) {
+            if (!$enabled || $cid < 1 || $cid > 0xFFFF) {
+                continue;
+            }
+
+            $idx = $cid >> 3;
+            $bits = \str_pad($bits, $idx + 1, "\0");
+            $bits[$idx] = \chr(\ord($bits[$idx]) | (0x80 >> ($cid & 7)));
+        }
+
+        return $bits;
+    }
+
+    /**
      * Returns a glyph width as the integer the /W and /Widths arrays are made of.
      *
      * @param mixed $width Raw width read from the font definition.
