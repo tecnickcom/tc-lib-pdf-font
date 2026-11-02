@@ -148,6 +148,19 @@ abstract class Buffer
     }
 
     /**
+     * Set the default subset mode.
+     *
+     * It applies to the fonts loaded afterwards with no explicit mode; the fonts already
+     * in the buffer keep their recorded mode.
+     *
+     * @param bool $subset If true, embed only the characters used by the document.
+     */
+    public function setSubsetMode(bool $subset): void
+    {
+        $this->subset = $subset;
+    }
+
+    /**
      * Returns the fonts buffer
      *
      * @return array<string, TFontData>
@@ -303,6 +316,99 @@ abstract class Buffer
 
         if (!isset($this->font[$key]['usedgid'][$gid])) {
             $this->font[$key]['usedgid'][$gid] = $ord;
+        }
+    }
+
+    /**
+     * Record a glyph used by the document and the text it was selected for, and return the
+     * character code that shows it.
+     *
+     * The code is the glyph index, and the first text recorded for a glyph is kept for it.
+     * When a glyph is used for two texts and one of them is a sequence of codepoints (a
+     * variation sequence), the other text gets an alias code that shows the same glyph,
+     * so each code extracts its own text. Alias codes start at the glyph count of the
+     * font; with no glyph count, or when the codes are exhausted, the glyph index is
+     * returned.
+     *
+     * @param string          $key  The font key
+     * @param int             $gid  The glyph index, in the 0..65535 range
+     * @param array<int, int> $text The Unicode codepoints the glyph was selected for
+     *
+     * @return int The character code.
+     *
+     * @throws FontException if the font is not loaded, the glyph index is out of range or
+     *                       the text is empty
+     */
+    public function addUsedGlyph(string $key, int $gid, array $text): int
+    {
+        if (!isset($this->font[$key])) {
+            throw new FontException('The font ' . $key . ' has not been loaded');
+        }
+
+        if ($gid < 0 || $gid > self::MAX_GID) {
+            throw new FontException('The glyph index ' . $gid . ' is outside the 0..65535 range');
+        }
+
+        $text = \array_values($text);
+        if ($text === []) {
+            throw new FontException('The text of the glyph ' . $gid . ' is empty');
+        }
+
+        if (!isset($this->font[$key]['usedgid'][$gid])) {
+            $this->setUsedCodeText($key, $gid, $text);
+            return $gid;
+        }
+
+        $first = $this->getUsedCodeText($key, $gid);
+        if ($first === $text || \count($first) < 2 && \count($text) < 2) {
+            return $gid;
+        }
+
+        foreach ($this->font[$key]['usedalias'] as $code => $aliasgid) {
+            if ($aliasgid === $gid && $this->getUsedCodeText($key, $code) === $text) {
+                return $code;
+            }
+        }
+
+        $aliases = $this->font[$key]['usedalias'];
+        $code = $aliases === [] ? $this->font[$key]['numGlyphs'] : \max(\array_keys($aliases)) + 1;
+        if ($this->font[$key]['numGlyphs'] < 1 || $code > self::MAX_GID) {
+            return $gid;
+        }
+
+        $this->font[$key]['usedalias'][$code] = $gid;
+        $this->setUsedCodeText($key, $code, $text);
+        return $code;
+    }
+
+    /**
+     * Returns the codepoints recorded for a character code of a GID encoded font.
+     *
+     * @param string $key  The font key
+     * @param int    $code A recorded character code
+     *
+     * @return array<int, int>
+     */
+    protected function getUsedCodeText(string $key, int $code): array
+    {
+        return $this->font[$key]['usedseq'][$code] ?? [$this->font[$key]['usedgid'][$code] ?? 0];
+    }
+
+    /**
+     * Record the codepoints of a character code of a GID encoded font.
+     *
+     * 'usedgid' holds the first codepoint of every code, 'usedseq' the full text of the
+     * codes shown for more than one codepoint.
+     *
+     * @param string          $key  The font key
+     * @param int             $code Character code
+     * @param array<int, int> $text Codepoints, at least one
+     */
+    protected function setUsedCodeText(string $key, int $code, array $text): void
+    {
+        $this->font[$key]['usedgid'][$code] = $text[0] ?? 0;
+        if (\count($text) > 1) {
+            $this->font[$key]['usedseq'][$code] = $text;
         }
     }
 

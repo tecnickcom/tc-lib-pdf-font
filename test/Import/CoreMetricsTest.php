@@ -112,6 +112,7 @@ class CoreMetricsTest extends TestCase
         'file_n' => 0,
         'file_name' => '',
         'gidenc' => false,
+        'gw' => [],
         'i' => 0,
         'ifile' => '',
         'indexToLoc' => [],
@@ -153,8 +154,11 @@ class CoreMetricsTest extends TestCase
         'unitsPerEm' => 0,
         'up' => 0,
         'urk' => 0.0,
+        'usedalias' => [],
         'usedgid' => [],
+        'usedseq' => [],
         'ut' => 0,
+        'uvs' => [],
         'weight' => '',
     ];
 

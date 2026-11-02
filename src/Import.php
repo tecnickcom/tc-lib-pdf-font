@@ -527,6 +527,8 @@ class Import
             $out .= ',"ctgu":{' . \substr($ctgustr, 1) . '}';
         }
 
+        $out .= $this->getVariationSequencesJson();
+
         // store compressed CIDToGIDMap
         FileWriter::write(
             $this->fileHelper,
@@ -535,6 +537,37 @@ class Import
         );
 
         return $out;
+    }
+
+    /**
+     * Returns the definition file members of the variation sequences: the glyph count of
+     * the font, the sequences and the widths of their glyphs, or an empty string when the
+     * font maps no sequence.
+     */
+    private function getVariationSequencesJson(): string
+    {
+        if ($this->fdt['uvs'] === []) {
+            return '';
+        }
+
+        $out = '';
+        foreach ($this->fdt['uvs'] as $base => $selectors) {
+            $seq = '';
+            foreach ($selectors as $selector => $gid) {
+                $seq .= ',"' . $selector . '":' . $gid;
+            }
+
+            $out .= ',"' . $base . '":{' . \substr($seq, 1) . '}';
+        }
+
+        return (
+            ',"numGlyphs":'
+            . $this->fdt['numGlyphs']
+            . ',"uvs":{'
+            . \substr($out, 1)
+            . '}'
+            . self::getWidthMapJson('gw', $this->fdt['gw'])
+        );
     }
 
     /**

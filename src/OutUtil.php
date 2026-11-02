@@ -72,8 +72,8 @@ abstract class OutUtil
     /**
      * Outputs the font widths of a CID keyed font whose character codes are glyph indices.
      *
-     * Only the glyphs used by the document are listed, as no other code can
-     * appear in a content stream.
+     * Only the codes used by the document are listed, as no other code can
+     * appear in a content stream. An alias code takes the width of its glyph.
      *
      * @param TFontData $font Font to process
      *
@@ -82,8 +82,9 @@ abstract class OutUtil
     protected function getGidWidths(array $font): string
     {
         $widths = [];
-        foreach ($font['usedgid'] as $gid => $ord) {
-            $widths[(int) $gid] = self::normalizeWidth($font['cw'][$ord] ?? $font['dw']);
+        foreach ($font['usedgid'] as $code => $ord) {
+            $gid = $font['usedalias'][$code] ?? $code;
+            $widths[(int) $code] = self::normalizeWidth($font['gw'][$gid] ?? $font['cw'][$ord] ?? $font['dw']);
         }
 
         \ksort($widths);

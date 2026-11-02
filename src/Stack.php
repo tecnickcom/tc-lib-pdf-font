@@ -84,6 +84,7 @@ use Com\Tecnick\Unicode\Data\Type as UnicodeType;
  *     'dw': float,
  *     'fakestyle': string,
  *     'fbbox': array<int, float>,
+ *     'gw': array<int, float>,
  *     'height': float,
  *     'idx': int,
  *     'key': string,
@@ -472,9 +473,63 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
-     * Encode an array of codepoints as the 2-byte glyph indices of the current font.
+     * Returns true when the codepoint is a variation selector: U+180B..U+180D, U+180F,
+     * U+FE00..U+FE0F or U+E0100..U+E01EF.
      *
-     * Every glyph is recorded on the font, and its codepoint is added to the subset.
+     * @param int $ord Unicode codepoint.
+     */
+    public static function isVariationSelector(int $ord): bool
+    {
+        return (
+            $ord >= 0xFE00
+            && $ord <= 0xFE0F
+            || $ord >= 0xE_0100
+            && $ord <= 0xE_01EF
+            || $ord >= 0x180B
+            && $ord <= 0x180D
+            || $ord === 0x180F
+        );
+    }
+
+    /**
+     * Returns the glyph index of a variation sequence in the current font.
+     *
+     * @param int $base     Base character.
+     * @param int $selector Variation selector.
+     *
+     * @return int The glyph index, or 0 when the font does not map the sequence.
+     *
+     * @throws FontException
+     */
+    public function getVariationGid(int $base, int $selector): int
+    {
+        return $this->getFontVariationGid($this->getFont($this->getCurrentStackItem()['key']), $base, $selector);
+    }
+
+    /**
+     * Returns the glyph index of a variation sequence in the given font.
+     *
+     * @param TFontData $font     Font data.
+     * @param int       $base     Base character.
+     * @param int       $selector Variation selector.
+     *
+     * @return int The glyph index, or 0 when the font does not map the sequence.
+     */
+    protected function getFontVariationGid(array $font, int $base, int $selector): int
+    {
+        $gid = $font['uvs'][$base][$selector] ?? 0;
+
+        return $gid > 0 && $gid <= self::MAX_GID ? $gid : 0;
+    }
+
+    /**
+     * Encode an array of codepoints as the 2-byte character codes of the current font.
+     *
+     * The codes are glyph indices, or alias codes of the glyphs shown for more than one
+     * text (see Buffer::addUsedGlyph()). A base character followed by a variation selector
+     * the font maps is shown with the glyph of the sequence; a variation selector shows no
+     * glyph of its own. Every glyph is recorded on the font, and its base codepoint is
+     * added to the subset.
      *
      * @param array<int, int> $uniarr Array of character codepoints.
      *
@@ -485,17 +540,33 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $fkey = $this->getCurrentStackItem()['key'];
         $font = $this->getFont($fkey);
         $subset = $font['subset'];
+        $uniarr = \array_values($uniarr);
+        $num = \count($uniarr);
         $str = '';
-        foreach ($uniarr as $ord) {
+        for ($idx = 0; $idx < $num; ++$idx) {
+            $ord = $uniarr[$idx];
+            if (self::isVariationSelector($ord)) {
+                continue;
+            }
+
             $gid = $this->getFontGidForOrd($font, $ord);
+            $text = [$ord];
+            $next = $uniarr[$idx + 1] ?? -1;
+            $vgid = self::isVariationSelector($next) ? $this->getFontVariationGid($font, $ord, $next) : 0;
+            if ($vgid > 0) {
+                $gid = $vgid;
+                $text[] = $next;
+            }
+
+            $code = $gid;
             if ($gid !== 0) {
-                $this->addUsedGid($fkey, $gid, $ord);
+                $code = $this->addUsedGlyph($fkey, $gid, $text);
                 if ($subset) {
                     $this->addSubsetChar($fkey, $ord);
                 }
             }
 
-            $str .= \chr($gid >> 8) . \chr($gid & 0xFF);
+            $str .= \chr($code >> 8) . \chr($code & 0xFF);
         }
 
         return $str;
@@ -561,7 +632,9 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
-     * Returns true if the specified Unicode value is defined in the current font
+     * Returns true if the specified Unicode value is defined in the current font.
+     *
+     * A variation selector needs no glyph of its own and is always defined.
      *
      * @param int $ord Unicode character value to convert
      *
@@ -572,11 +645,13 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $font = $this->getFontMetric($this->index);
         // on a byte encoded font a glyph outside Latin-1 is only listed in the
         // codepoint-keyed map
-        return isset($font['cwu'][$ord]) || isset($font['cw'][$ord]);
+        return isset($font['cwu'][$ord]) || isset($font['cw'][$ord]) || self::isVariationSelector($ord);
     }
 
     /**
-     * Returns the width of the specified character
+     * Returns the width of the specified character.
+     *
+     * A variation selector takes no space.
      *
      * @param int $ord Unicode character value.
      *
@@ -584,7 +659,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
      */
     public function getCharWidth(int $ord): float
     {
-        if (isset(self::ZERO_WIDTH[$ord])) {
+        if (isset(self::ZERO_WIDTH[$ord]) || self::isVariationSelector($ord)) {
             return 0;
         }
 
@@ -609,6 +684,59 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
     }
 
     /**
+     * Returns the width of each codepoint of the string, without the character spacing.
+     *
+     * A variation selector takes no space, and a base character followed by a variation
+     * selector the font maps takes the width of the glyph of the sequence.
+     *
+     * @param array<int, int> $uniarr Array of character codepoints.
+     *
+     * @return array<int, float> Widths in the order of the codepoints.
+     *
+     * @throws FontException
+     */
+    public function getOrdArrCharWidths(array $uniarr): array
+    {
+        $uniarr = \array_values($uniarr);
+        $metric = $this->getFontMetric($this->index);
+        $font = $this->getFont($metric['key']);
+        $widths = [];
+        foreach ($uniarr as $idx => $ord) {
+            $widths[] = $this->getSequenceCharWidth($metric, $font, $ord, $uniarr[$idx + 1] ?? -1);
+        }
+
+        return $widths;
+    }
+
+    /**
+     * Returns the width of a codepoint followed by the given one.
+     *
+     * The zero-width codepoints and the variation selectors take no space; a base character
+     * followed by a variation selector the font maps takes the width of the glyph of the
+     * sequence.
+     *
+     * @param TFontMetric $metric Scaled metrics of the font.
+     * @param TFontData   $font   Font data.
+     * @param int         $ord    Unicode codepoint.
+     * @param int         $next   Unicode codepoint that follows, or -1.
+     */
+    protected function getSequenceCharWidth(array $metric, array $font, int $ord, int $next): float
+    {
+        if (isset(self::ZERO_WIDTH[$ord]) || self::isVariationSelector($ord)) {
+            return 0.0;
+        }
+
+        if (self::isVariationSelector($next)) {
+            $gid = $this->getFontVariationGid($font, $ord, $next);
+            if (isset($metric['gw'][$gid])) {
+                return $metric['gw'][$gid];
+            }
+        }
+
+        return $metric['cwu'][$ord] ?? $metric['cw'][$ord] ?? $metric['dw'];
+    }
+
+    /**
      * Returns various dimensions of the string specified using an array of codepoints.
      *
      * @param array<int, int> $uniarr Array of character codepoints.
@@ -629,21 +757,31 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $curfont = $this->getFontMetric($this->index);
         $fact = $curfont['spacing'] * $curfont['stretching'];
         $fkey = $curfont['key'];
-        $subset = $this->getFont($fkey)['subset'];
+        $font = $this->getFont($fkey);
+        $subset = $font['subset'];
+        $hasSequences = $font['uvs'] !== [];
         $sentinel = \count($uniarr); // position of the appended terminator
         $uniarr[] = 8203; // append a ZWSP to ensure that the last word is processed
         $split = [];
         $prevtotwidth = 0.0;
+        // variation selectors show no glyph, so they get no character spacing
+        $selectors = 0;
         foreach ($uniarr as $idx => $ord) {
+            // U+180B is the lowest variation selector
+            $isSelector = $ord >= 0x180B && self::isVariationSelector($ord);
             // the terminator is internal and must not enter the subset of the font
-            if ($subset && $idx !== $sentinel) {
+            if ($subset && $idx !== $sentinel && !$isSelector) {
                 $this->addSubsetChar($fkey, $ord);
             }
 
             $bidiClass = UnicodeType::getBidiClass($ord);
-            $chrwidth = isset(self::ZERO_WIDTH[$ord])
-                ? 0.0
-                : $curfont['cwu'][$ord] ?? $curfont['cw'][$ord] ?? $curfont['dw'];
+            if ($hasSequences || $isSelector) {
+                $chrwidth = $this->getSequenceCharWidth($curfont, $font, $ord, $uniarr[$idx + 1] ?? -1);
+            } elseif (isset(self::ZERO_WIDTH[$ord])) {
+                $chrwidth = 0.0;
+            } else {
+                $chrwidth = $curfont['cwu'][$ord] ?? $curfont['cw'][$ord] ?? $curfont['dw'];
+            }
             // Split on paragraph/segment separators (B, S), whitespace (WS) and boundary neutrals (BN).
             if (
                 $bidiClass === BidiClass::B
@@ -651,7 +789,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 || $bidiClass === BidiClass::WS
                 || $bidiClass === BidiClass::BN
             ) {
-                $currenttotwidth = $totwidth + ($fact * \max(0, $idx - 1));
+                $currenttotwidth = $totwidth + ($fact * \max(0, $idx - $selectors - 1));
                 $split[$words] = [
                     'pos' => $idx,
                     'ord' => $ord,
@@ -670,8 +808,11 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 }
             }
             $totwidth += $chrwidth;
+            if ($isSelector) {
+                ++$selectors;
+            }
         }
-        $totwidth += $fact * \max(0, $chars - 1);
+        $totwidth += $fact * \max(0, $chars - $selectors - 1);
         $totspacewidth += $fact * \max(0, $spaces - 1);
         return [
             'chars' => $chars,
@@ -773,6 +914,11 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
             $cwu[(int) $codepoint] = (float) $width * $wratio;
         }
 
+        $gw = [];
+        foreach ($data['gw'] as $gid => $width) {
+            $gw[(int) $gid] = (float) $width * $wratio;
+        }
+
         $cbbox = $this->scaleBBoxMap($data['cbbox'], $wratio, $cratio);
         $cbboxu = $this->scaleBBoxMap($data['cbboxu'], $wratio, $cratio);
 
@@ -819,6 +965,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
                 2 => (\is_numeric($tbox[2]) ? (float) $tbox[2] : 0.0) * $wratio, // right
                 3 => (\is_numeric($tbox[3]) ? (float) $tbox[3] : 0.0) * $cratio, // top
             ],
+            'gw' => $gw,
             'height' => ($ascent - $descent) * $cratio,
             'idx' => $idx,
             'key' => $fontkey,

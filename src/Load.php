@@ -133,6 +133,7 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'file_n': int,
  *        'file_name': string,
  *        'gidenc': bool,
+ *        'gw': array<int, int>,
  *        'i': int,
  *        'ifile': string,
  *        'indexToLoc': array<int, int>,
@@ -168,8 +169,11 @@ use Com\Tecnick\Pdf\Font\Exception as FontException;
  *        'unitsPerEm': int,
  *        'up': int,
  *        'urk': float,
+ *        'usedalias': array<int, int>,
  *        'usedgid': array<int, int>,
+ *        'usedseq': array<int, array<int, int>>,
  *        'ut': int,
+ *        'uvs': array<int, array<int, int>>,
  *        'weight': string,
  *    }
  */
@@ -279,6 +283,7 @@ abstract class Load
         'file_n' => 0,
         'file_name' => '',
         'gidenc' => false,
+        'gw' => [],
         'i' => 0,
         'ifile' => '',
         'indexToLoc' => [],
@@ -320,8 +325,11 @@ abstract class Load
         'unitsPerEm' => 0,
         'up' => 0,
         'urk' => 0.0,
+        'usedalias' => [],
         'usedgid' => [],
+        'usedseq' => [],
         'ut' => 0,
+        'uvs' => [],
         'weight' => '',
     ];
 

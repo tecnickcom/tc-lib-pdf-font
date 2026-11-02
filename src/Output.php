@@ -44,7 +44,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * The trailing version segment invalidates the cached subsets when
      * the subsetting algorithm or the key format changes.
      */
-    protected const SUBSET_CACHE_KEY_PREFIX = 'tc-lib-pdf-font:subset:v2:';
+    protected const SUBSET_CACHE_KEY_PREFIX = 'tc-lib-pdf-font:subset:v3:';
 
     /**
      * Array of character subsets for each font file
@@ -52,6 +52,16 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * @var array<string, array<int, bool>>
      */
     protected array $subchars = [];
+
+    /**
+     * Glyph indices used by the GID encoded fonts of each font file, keyed like $subchars.
+     *
+     * A glyph shown for a variation sequence is not reachable from a subset character, so
+     * the subset keeps these glyphs too.
+     *
+     * @var array<string, array<int, bool>>
+     */
+    protected array $subgids = [];
 
     /**
      * Effective subset flag for each font file, keyed like $subchars.
@@ -214,6 +224,11 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     $this->subchars[$file_key][(int) $cid] = true;
                 }
 
+                $this->subgids[$file_key] ??= [];
+                foreach (\array_keys($font['usedgid']) as $code) {
+                    $this->subgids[$file_key][$font['usedalias'][$code] ?? $code] = true;
+                }
+
                 if ($this->cidset && $font['type'] === 'TrueTypeUnicode') {
                     $this->addSubsetCids($file_key, $font);
                 }
@@ -284,18 +299,19 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
                     }
 
                     $subchars = $this->subchars[$dkey];
+                    $subgids = $this->subgids[$dkey] ?? [];
                     // the cache key is derived only when a cache is configured,
                     // as it hashes the whole font program
                     $cache = $this->subsetCache;
                     $cacheKey = '';
                     $subsetFont = null;
                     if ($cache !== null) {
-                        $cacheKey = $this->subsetCacheKey($font_data, $font, $subchars);
+                        $cacheKey = $this->subsetCacheKey($font_data, $font, $subchars, $subgids);
                         $subsetFont = $cache->get($cacheKey);
                     }
 
                     if ($subsetFont === null) {
-                        $sub = new Subset($font_data, $font, $this->fileHelper, $subchars);
+                        $sub = new Subset($font_data, $font, $this->fileHelper, $subchars, $subgids);
                         $subsetFont = $sub->getSubsetFont();
                         $cache?->set($cacheKey, $subsetFont);
                     }
@@ -364,18 +380,20 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
      * Build the cache key identifying a subset font program.
      *
      * The subset output is determined by the uncompressed font program bytes,
-     * the cmap selection metrics (platform_id, encoding_id, type) and the
-     * requested subset characters, so the key combines all of them.
+     * the cmap selection metrics (platform_id, encoding_id, type), the
+     * requested subset characters and glyph indices, so the key combines all of them.
      * The font program is fingerprinted with xxh128, a non-cryptographic hash
      * used for cache addressing only.
      *
      * @param string           $font_data Uncompressed font program bytes.
      * @param TFontData        $font      Extracted font metrics.
      * @param array<int, bool> $subchars  Subset characters (charcode => enabled).
+     * @param array<int, bool> $subgids   Subset glyph indices (gid => enabled).
      */
-    protected function subsetCacheKey(string $font_data, array $font, array $subchars): string
+    protected function subsetCacheKey(string $font_data, array $font, array $subchars, array $subgids = []): string
     {
         \ksort($subchars);
+        \ksort($subgids);
 
         return (
             self::SUBSET_CACHE_KEY_PREFIX
@@ -388,6 +406,8 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             . $font['type']
             . ':'
             . \hash('xxh128', \implode(',', \array_keys(\array_filter($subchars))))
+            . ':'
+            . \hash('xxh128', \implode(',', \array_keys(\array_filter($subgids))))
         );
     }
 

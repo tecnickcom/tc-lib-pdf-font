@@ -43,6 +43,7 @@ It handles font metrics, encodings, and font program references, turning static 
 - Glyph width/bounding-box helpers
 - Character replacement and fallback handling
 - Glyph index encoding of composite fonts, with support for the supplementary planes
+- Unicode Variation Sequences (cmap format 14), including Ideographic Variation Sequences
 
 ---
 
@@ -83,7 +84,7 @@ For larger examples, refer to `test/OutputTest.php` and the conversion tooling i
 
 A `TrueTypeUnicode` font is emitted as a composite (Type0) font with the `Identity-H` encoding, so every character code in a content stream is 2 bytes wide.
 
-The character code is the glyph index of the font (`CID == GID`): the font dictionary declares `/CIDToGIDMap /Identity`, the `/W` array is keyed by glyph index, and a `/ToUnicode` CMap is generated for the glyphs used by the document so that the text stays searchable and extractable.
+The character code is the glyph index of the font (`CID == GID`): the font dictionary declares `/CIDToGIDMap /Identity`, the `/W` array is keyed by glyph index, and a `/ToUnicode` CMap is generated for the glyphs used by the document so that the text stays searchable and extractable. The alias codes of the variation sequences are the exception (see below).
 
 ### Encoding a string
 
@@ -110,6 +111,28 @@ Relevant methods:
 - `Stack::ordArrToGidStr(array $uniarr)`: encodes codepoints as 2-byte glyph indices and records them.
 - `Stack::getGidForOrd(int $ord)`: glyph index of a codepoint, `0` when the font has no glyph for it.
 - `Buffer::addUsedGid(string $key, int $gid, int $ord)`: records a glyph and the codepoint it was encoded from.
+- `Buffer::addUsedGlyph(string $key, int $gid, array $text)`: records a glyph and the codepoints it was selected for, and returns its character code.
+- `Buffer::setSubsetMode(bool $subset)`: sets the subset mode of the fonts loaded afterwards without an explicit mode.
+
+### Variation sequences
+
+A base character followed by a variation selector (U+180B..U+180D, U+180F, U+FE00..U+FE0F, U+E0100..U+E01EF) is shown with the glyph the font maps the sequence to in its cmap format 14 subtable, as used by the Ideographic Variation Sequences of CJK fonts:
+
+```php
+// U+908A followed by VARIATION SELECTOR-18
+$codes = $stack->ordArrToGidStr([0x908A, 0xE0101]);
+```
+
+- The selector shows no glyph of its own and takes no space.
+- A sequence the font does not map is shown with the glyph of the base character.
+- The `/ToUnicode` CMap maps the code to the whole sequence, so copied text keeps the selector.
+- A glyph used both for a sequence and for another text gets an alias code above the glyph count of the font, so each text is extracted correctly. A font with alias codes writes a `/CIDToGIDMap` stream instead of `/Identity`.
+
+Relevant methods:
+
+- `Stack::isVariationSelector(int $ord)`: true for a variation selector.
+- `Stack::getVariationGid(int $base, int $selector)`: glyph index of a sequence, `0` when the font does not map it.
+- `Stack::getOrdArrCharWidths(array $uniarr)`: width of each codepoint, with the variant glyph widths.
 
 ### Font definition files
 
@@ -122,6 +145,14 @@ Codepoints above U+FFFF do not fit that table and are stored in the definition f
 ```
 
 That key is only written when the font is converted with `--encoding_id=10`, which selects the format 12 cmap subtable.
+
+A font with a cmap format 14 subtable also stores its glyph count, its variation sequences (base, then selector, then glyph index) and the widths of their glyphs (keyed by glyph index):
+
+```json
+"numGlyphs": 8, "uvs": {"37002": {"917760": 6, "917761": 7}}, "gw": {"6": 1000, "7": 900}
+```
+
+A font converted with an earlier version has no such keys and must be converted again to use its variation sequences.
 
 ---
 

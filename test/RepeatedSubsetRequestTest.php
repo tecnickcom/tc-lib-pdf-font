@@ -201,4 +201,38 @@ class RepeatedSubsetRequestTest extends TestUtil
 
         $this->assertTrue($this->subsetOf($stack));
     }
+
+    /**
+     * The default mode set after construction applies to the fonts loaded afterwards with
+     * no explicit mode, and leaves the fonts already loaded as they are.
+     *
+     * @throws \Throwable
+     */
+    public function testTheDefaultModeAppliesToTheFontsLoadedAfterIt(): void
+    {
+        $this->setupTest();
+        $this->writeFont();
+        \file_put_contents(
+            $this->getFontPath() . 'reducedb.json',
+            '{"type":"TrueTypeUnicode","name":"reducedb","dw":600,"cw":{"65":400}'
+            . ',"desc":{"FontBBox":"[0 -200 1000 900]","Ascent":900,"Descent":-200}}',
+        );
+
+        $stack = new Stack(1);
+        $this->assertFalse($stack->isSubsetMode());
+        $objnum = 1;
+        $stack->insert($objnum, 'reduced', '', 10);
+        $this->assertFalse($this->subsetOf($stack));
+
+        $stack->setSubsetMode(true);
+        $this->assertTrue($stack->isSubsetMode());
+        $stack->insert($objnum, 'reduced', '', 12);
+        $this->assertFalse($this->subsetOf($stack));
+        $stack->insert($objnum, 'reduced', 'B', 10);
+        $this->assertTrue($stack->getFont('reducedB')['subset']);
+
+        // an explicit mode still wins
+        $stack->insert($objnum, 'reduced', 'B', 12, null, null, '', false);
+        $this->assertFalse($stack->getFont('reducedB')['subset']);
+    }
 }

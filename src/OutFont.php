@@ -317,11 +317,14 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             . $fontdw
             . "\n"
             . ($font['gidenc'] ? $this->getGidWidths($font) : $this->getCharWidths($font, 0));
-        if ($font['gidenc']) {
+        // a GID encoded font maps its codes to themselves, except the alias codes
+        $aliasmap = $font['gidenc'] && $font['usedalias'] !== [];
+        $ctgobj = $aliasmap || $fontctg !== '' && !$font['gidenc'];
+        if ($ctgobj) {
+            $out .= "\n" . '/CIDToGIDMap ' . ($this->pon + 2) . ' 0 R';
+        } elseif ($font['gidenc']) {
             // the character codes are the glyph indices themselves
             $out .= "\n" . '/CIDToGIDMap /Identity';
-        } elseif ($fontctg !== '') {
-            $out .= "\n" . '/CIDToGIDMap ' . ($this->pon + 2) . ' 0 R';
         }
 
         $out .= ' >>' . "\n" . 'endobj' . "\n";
@@ -338,7 +341,6 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             $out .= ' /FontFile2 ' . $fontfilen . ' 0 R';
         }
 
-        $ctgobj = $fontctg !== '' && !$font['gidenc'];
         $cidset = $this->cidset && $fontsubset;
         if ($cidset) {
             // the CIDSet stream follows the descriptor and the optional CIDToGIDMap stream
@@ -347,7 +349,9 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
 
         $out .= ' >>' . "\n" . 'endobj' . "\n";
 
-        if ($ctgobj) {
+        if ($aliasmap) {
+            $out .= $this->getAliasCIDToGIDMap($font);
+        } elseif ($ctgobj) {
             $out .= ++$this->pon . ' 0 obj' . "\n";
             // embed the CIDToGIDMap: the mapping from CIDs to glyph indices
             $ctgfile = \strtolower($fontctg);
@@ -371,6 +375,57 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
         }
 
         return $out;
+    }
+
+    /**
+     * Get the PDF output string for the CIDToGIDMap stream object of a GID encoded font
+     * with alias codes: every code maps to itself, and an alias code to its glyph.
+     *
+     * A compressed map is encoded with the PNG Up predictor over rows of one glyph index,
+     * which turns the identity run into a repeated byte pattern.
+     *
+     * @param TFontData $font Font to process
+     *
+     * @throws EncException
+     * @throws FontException
+     */
+    protected function getAliasCIDToGIDMap(array $font): string
+    {
+        $maxcode = \max(\array_keys($font['usedalias']));
+        $out = ++$this->pon . ' 0 obj' . "\n" . '<<';
+        $data = '';
+        if ($font['compress']) {
+            $prev = 0;
+            for ($code = 0; $code <= $maxcode; ++$code) {
+                $gid = $font['usedalias'][$code] ?? $code;
+                // filter type 2 (Up), then each byte minus the byte above it
+                $data .=
+                    "\x02" . \chr((($gid >> 8) - ($prev >> 8)) & 0xFF) . \chr((($gid & 0xFF) - ($prev & 0xFF)) & 0xFF);
+                $prev = $gid;
+            }
+
+            $out .= ' /Filter /FlateDecode /DecodeParms << /Predictor 12 /Columns 2 >>';
+            $data = Zlib::compress($data, 'Unable to compress CIDToGIDMap');
+        } else {
+            for ($code = 0; $code <= $maxcode; ++$code) {
+                $data .= \pack('n', $font['usedalias'][$code] ?? $code);
+            }
+        }
+
+        $stream = $this->enc->encryptString($data, $this->pon);
+        return (
+            $out
+            . ' /Length '
+            . \strlen($stream)
+            . ' >> stream'
+            . "\n"
+            . $stream
+            . "\n"
+            . 'endstream'
+            . "\n"
+            . 'endobj'
+            . "\n"
+        );
     }
 
     /**
@@ -410,8 +465,9 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
     /**
      * Build the ToUnicode CMap of a font whose character codes are glyph indices.
      *
-     * Only the glyphs used by the document are listed, as no other code can
-     * appear in a content stream.
+     * Only the codes used by the document are listed, as no other code can
+     * appear in a content stream. A code shown for a variation sequence maps to
+     * all the codepoints of the sequence.
      *
      * @param TFontData $font Font to process
      */
@@ -445,8 +501,9 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
         // a bfchar section holds at most 100 entries
         foreach (\array_chunk($usedgid, 100, true) as $chunk) {
             $out .= \count($chunk) . ' beginbfchar' . "\n";
-            foreach ($chunk as $gid => $ord) {
-                $out .= \sprintf("<%04x> <%s>\n", $gid, $this->getUtf16beHex((int) $ord));
+            foreach ($chunk as $code => $ord) {
+                $text = $font['usedseq'][$code] ?? [$ord];
+                $out .= \sprintf("<%04x> <%s>\n", $code, \implode('', \array_map($this->getUtf16beHex(...), $text)));
             }
 
             $out .= 'endbfchar' . "\n";

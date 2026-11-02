@@ -104,6 +104,7 @@ class TypeOneInternalsTest extends TestUtil
         'file_n' => 0,
         'file_name' => '',
         'gidenc' => false,
+        'gw' => [],
         'i' => 0,
         'ifile' => '',
         'indexToLoc' => [],
@@ -145,8 +146,11 @@ class TypeOneInternalsTest extends TestUtil
         'unitsPerEm' => 0,
         'up' => 0,
         'urk' => 1.0,
+        'usedalias' => [],
         'usedgid' => [],
+        'usedseq' => [],
         'ut' => 0,
+        'uvs' => [],
         'weight' => 'normal',
     ];
 

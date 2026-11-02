@@ -291,12 +291,15 @@ class ImportInternalsTest extends TestUtil
             'enc' => '',
             'encoding_id' => 1,
             'file' => 'saveme.z',
+            'gw' => [],
             'italicAngle' => 0,
             'name' => 'saveme',
+            'numGlyphs' => 0,
             'originalsize' => 1234,
             'platform_id' => 3,
             'underlinePosition' => -100,
             'underlineThickness' => 50,
+            'uvs' => [],
         ], $over);
     }
 
