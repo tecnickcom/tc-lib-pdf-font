@@ -153,8 +153,8 @@ class StackTest extends TestUtil
         $objnum = 1;
         $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
 
-        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
-        $cfont = $stack->insert($objnum, 'freesans', '', 12, -0.1, 0.9, '', null);
+        $family = $this->importIsolatedSans();
+        $cfont = $stack->insert($objnum, $family, '', 12, -0.1, 0.9, '', null);
         $this->assertNotEmpty($cfont);
         $this->assertNotEmpty($cfont['cbbox']);
 
@@ -268,17 +268,17 @@ class StackTest extends TestUtil
         $this->assertEquals(0.7, $font['spacing']);
         $this->assertEquals(1.3, $font['stretching']);
 
-        // only the regular FreeSans is imported, so the bold-italic clone above reused it
-        // and the current font key is the one of the base family
+        // only the regular style of the family is available, so the bold-italic clone above
+        // reused it and the current font key is the one of the base family
         $fname = $stack->getFontFamilyName('unknown');
-        $this->assertEquals('freesans', $fname);
+        $this->assertEquals($family, $fname);
 
         new \Com\Tecnick\Pdf\Font\Import($indir . 'pdfa/pfb/PDFACourier.pfb');
         $bfont = $stack->insert($objnum, 'courier', '', null, null, null, '', null);
         $this->assertNotEmpty($bfont);
 
-        $fname = $stack->getFontFamilyName('freesans');
-        $this->assertEquals('freesans', $fname);
+        $fname = $stack->getFontFamilyName($family);
+        $this->assertEquals($family, $fname);
 
         $fname = $stack->getFontFamilyName('cursive');
         $this->assertEquals('pdfatimes', $fname);
@@ -494,12 +494,12 @@ class StackTest extends TestUtil
         $objnum = 1;
 
         $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
-        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $family = $this->importIsolatedSans();
 
         $expected = ['' => '', 'B' => 'B', 'I' => 'I', 'BI' => 'BI', 'BIU' => 'BI'];
         foreach ($expected as $style => $fakestyle) {
-            $metric = $stack->insert($objnum, 'freesans', $style, 12);
-            $this->assertEquals('freesans', $metric['key'], 'Style ' . $style);
+            $metric = $stack->insert($objnum, $family, $style, 12);
+            $this->assertEquals($family, $metric['key'], 'Style ' . $style);
             $this->assertEquals($style, $metric['style'], 'Style ' . $style);
             $this->assertEquals($fakestyle, $metric['fakestyle'], 'Style ' . $style);
         }
@@ -523,12 +523,12 @@ class StackTest extends TestUtil
         $objnum = 1;
 
         $stack = new \Com\Tecnick\Pdf\Font\Stack(0.75, true, true, true);
-        new \Com\Tecnick\Pdf\Font\Import($indir . 'freefont/FreeSans.ttf');
+        $family = $this->importIsolatedSans();
 
-        $regular = $stack->insert($objnum, 'freesans', '', 12);
+        $regular = $stack->insert($objnum, $family, '', 12);
         $clone = $stack->cloneFont($objnum, null, 'B', 12);
 
-        $this->assertEquals('freesans', $clone['key']);
+        $this->assertEquals($family, $clone['key']);
         $this->assertEquals('B', $clone['style']);
         $this->assertEquals('B', $clone['fakestyle']);
         $this->assertEquals('', $regular['fakestyle']);
@@ -536,8 +536,8 @@ class StackTest extends TestUtil
         // the two styles are one font, buffered and embedded once
         $this->assertCount(1, $stack->getFonts());
 
-        $font = $stack->getFont('freesans');
-        $this->assertEquals('freesans.json', \basename($font['ifile']));
+        $font = $stack->getFont($family);
+        $this->assertEquals($family . '.json', \basename($font['ifile']));
         $this->assertEquals('FreeSans', $font['name']);
         $this->assertFalse($font['mode']['bold']);
 

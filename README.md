@@ -154,6 +154,19 @@ A font with a cmap format 14 subtable also stores its glyph count, its variation
 
 A font converted with an earlier version has no such keys and must be converted again to use its variation sequences.
 
+### Font lookup
+
+A font definition named by its family is searched, together with the immediate subdirectories of each directory, in:
+
+1. the `K_PATH_FONTS` directory, when defined;
+2. the package input directory (`fonts/`) and the generated font set (`target/fonts/`), when they exist.
+
+A font in `K_PATH_FONTS` takes precedence over a package font with the same name.
+
+Files inside the two package directories are read through a file helper whose allowlist is those directories (`FontPaths::getPackagePaths()`), so a file helper passed to the library does not need to list them. Every other font file is read through the file helper passed to the library and must be inside its allowlist.
+
+`Import` writes to the given output path, or to `K_PATH_FONTS` when no path is given. It throws an exception when neither is a writable directory.
+
 ---
 
 ## Subset Caching

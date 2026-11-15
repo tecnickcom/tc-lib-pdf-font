@@ -125,23 +125,56 @@ class ErrorPathsTest extends TestUtil
     }
 
     /**
-     * With no output path given and K_PATH_FONTS undefined, the importer falls back to the
-     * library's own fonts directory (or the temp dir when it cannot be located).
+     * With no output path given and K_PATH_FONTS undefined, the importer has no directory
+     * to write to.
      */
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
-    public function testFindOutputPathFallsBackWhenNoConfiguredPathIsUsable(): void
+    public function testFindOutputPathRequiresAPathWhenTheConfigPathIsUndefined(): void
     {
         $this->assertFalse(\defined('K_PATH_FONTS'), 'this test needs a pristine process');
 
+        $this->assertThrowsMessage(
+            \Com\Tecnick\Pdf\Font\Exception::class,
+            'No output path given',
+            static fn() => self::invokeFindOutputPath(''),
+        );
+    }
+
+    /**
+     * A K_PATH_FONTS that is not an existing directory is not used as the output path.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testFindOutputPathRequiresAPathWhenTheConfigPathIsMissing(): void
+    {
+        \define('K_PATH_FONTS', \dirname(__DIR__) . '/target/no-such-font-directory/');
+
+        $this->assertThrowsMessage(
+            \Com\Tecnick\Pdf\Font\Exception::class,
+            'No output path given',
+            static fn() => self::invokeFindOutputPath(''),
+        );
+    }
+
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testFindOutputPathUsesAWritableConfigPath(): void
+    {
+        $this->setupTest();
+
+        $this->assertSame(\rtrim((string) \realpath($this->getFontPath()), '/') . '/', self::invokeFindOutputPath(''));
+    }
+
+    /**
+     * Call Import::findOutputPath() on an instance built without the constructor.
+     *
+     * @throws \ReflectionException
+     */
+    private static function invokeFindOutputPath(string $outputPath): mixed
+    {
         $class = new \ReflectionClass(Import::class);
         $instance = $class->newInstanceWithoutConstructor();
         $ref = new \ReflectionMethod($instance, 'findOutputPath');
-        /** @var mixed $result */
-        $result = $ref->invoke($instance, '');
 
-        $this->assertIsString($result);
-        $this->assertStringEndsWith('/', $result);
-        $this->assertDirectoryExists($result);
+        return $ref->invoke($instance, $outputPath);
     }
 
     public function testBuildAllowedPathsSkipsEmptyRoots(): void
@@ -675,12 +708,12 @@ class ErrorPathsTest extends TestUtil
     // -------------------------------------------------------------------------
 
     /**
-     * A 'fonts' directory above the library root is searched too, together with each of
-     * its immediate subdirectories.
+     * The package input font directory (FontPaths::getInputPath()) is searched too,
+     * together with each of its immediate subdirectories.
      *
      * @throws \Throwable
      */
-    public function testFontDefinitionsAreSearchedInAParentFontsDirectory(): void
+    public function testFontDefinitionsAreSearchedInThePackageInputDirectory(): void
     {
         $this->setupTest();
         $parent = \dirname(__DIR__) . '/fonts';

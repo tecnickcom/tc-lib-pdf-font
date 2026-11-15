@@ -356,7 +356,7 @@ abstract class OutFont extends \Com\Tecnick\Pdf\Font\OutUtil
             // embed the CIDToGIDMap: the mapping from CIDs to glyph indices
             $ctgfile = \strtolower($fontctg);
             $fontfile = $this->getFontFullPath($fontdir, $ctgfile);
-            $content = $this->fileHelper->getLocalFileData($fontfile);
+            $content = FontPaths::readFontFile($this->fileHelper, $fontfile);
             if ($content === false) {
                 throw new FontException('Unable to read font file: ' . $fontfile);
             }

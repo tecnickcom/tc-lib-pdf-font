@@ -278,7 +278,7 @@ class Output extends \Com\Tecnick\Pdf\Font\OutFont
             $dkey = $this->fontFileKey($font);
             if (!isset($done[$dkey])) {
                 $fontfile = $this->getFontFullPath($font['dir'], $font['file']);
-                $font_data = $this->fileHelper->getLocalFileData($fontfile);
+                $font_data = FontPaths::readFontFile($this->fileHelper, $fontfile);
                 if ($font_data === false) {
                     throw new FontException('Unable to read font file: ' . $fontfile);
                 }

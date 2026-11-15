@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace Com\Tecnick\Pdf\Font;
 
-use Com\Tecnick\File\Dir;
 use Com\Tecnick\File\File as ObjFile;
 use Com\Tecnick\Pdf\Font\Exception as FontException;
 
@@ -383,7 +382,7 @@ abstract class Load
         }
 
         // read the font definition file
-        $fdt = $this->fileHelper->getFileData($this->data['ifile']);
+        $fdt = FontPaths::readFontFile($this->fileHelper, $this->data['ifile'], true);
         if ($fdt === false) {
             throw new FontException('unable to read file: ' . $this->data['ifile']);
         }
@@ -411,27 +410,21 @@ abstract class Load
      */
     protected function findFontDirectories(): array
     {
-        $dir = new Dir();
         $dirs = [];
-        $kpathfonts = FontPaths::getConfigPath();
-        if ($kpathfonts !== '') {
-            $dirs[] = $kpathfonts;
-            $glb = \glob($kpathfonts . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+        // K_PATH_FONTS first, so its fonts take precedence over the package fonts
+        foreach ([FontPaths::getConfigPath(), ...FontPaths::getPackagePaths()] as $root) {
+            if ($root === '') {
+                continue;
+            }
+
+            $dirs[] = $root;
+            $glb = \glob($root . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
             if ($glb !== false) {
                 $dirs = [...$dirs, ...$glb];
             }
         }
 
-        $parent_font_dir = \rtrim($dir->findParentDir('fonts', __DIR__), '/\\');
-        if ($parent_font_dir !== '') {
-            $dirs[] = $parent_font_dir;
-            $glb = \glob($parent_font_dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
-            if ($glb !== false) {
-                $dirs = \array_merge($dirs, $glb);
-            }
-        }
-
-        return \array_unique($dirs);
+        return \array_values(\array_unique($dirs));
     }
 
     /**

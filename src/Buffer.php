@@ -256,7 +256,7 @@ abstract class Buffer
         }
 
         $fileHelper = $this->fileHelper ?? new ObjFile(allowedPaths: FontPaths::buildAllowedPaths());
-        $content = $fileHelper->getLocalFileData($ctgfile);
+        $content = FontPaths::readFontFile($fileHelper, $ctgfile);
         if ($content === false) {
             throw new FontException('Unable to read font file: ' . $ctgfile);
         }

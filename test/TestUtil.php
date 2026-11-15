@@ -133,6 +133,24 @@ class TestUtil extends TestCase
     }
 
     /**
+     * Import FreeSans under a family name the generated font set does not contain, so no
+     * styled variant of the family can be found.
+     *
+     * @return string Font family name.
+     *
+     * @throws \Com\Tecnick\File\Exception
+     * @throws \Com\Tecnick\Pdf\Font\Exception
+     */
+    protected function importIsolatedSans(): string
+    {
+        $copy = $this->getFontPath() . 'isolatedsans.ttf';
+        \copy(\dirname(__DIR__) . '/util/vendor/tecnickcom/tc-font-mirror/freefont/FreeSans.ttf', $copy);
+        $import = new \Com\Tecnick\Pdf\Font\Import($copy);
+
+        return $import->getFontName();
+    }
+
+    /**
      * Decode a font definition file into an array of members.
      *
      * @return array<string, mixed>
