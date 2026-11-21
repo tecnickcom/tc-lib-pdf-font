@@ -7,8 +7,8 @@ Copyright: © 0000 Please check the README file for copyright information.
 License: ~#LICENSE#~
 
 License: ~#LICENSE#~
- The font files in this package are free software:
- you can redistribute it and/or modify it under the terms of the
- ~#LICENSE#~ License.
+ The font files and data in this package are distributed under the terms
+ in the LICENSE file, including any notice and exception stated there.
+ SPDX licence expression: ~#LICENSE#~
  Please check the README and LICENSE file for further information.
  Common licenses can be also found in: /usr/share/common-licenses

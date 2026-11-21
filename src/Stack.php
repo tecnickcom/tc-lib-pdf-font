@@ -937,7 +937,7 @@ class Stack extends \Com\Tecnick\Pdf\Font\Buffer
         $outfont = \sprintf('/F%d %F Tf', (int) $data['i'], $fontsize); // PDF output string
         // the four values may be written with any run of whitespace and with or without
         // the enclosing brackets
-        $boxsplit = \preg_split('/\s+/', \trim($fontbbox, "[] \t\n\r\0\x0B"), -1, PREG_SPLIT_NO_EMPTY);
+        $boxsplit = \preg_split('/[\t\n\x0B\f\r ]+/', \trim($fontbbox, "[] \t\n\r\0\x0B"), -1, PREG_SPLIT_NO_EMPTY);
         $tbox = \array_pad(\is_array($boxsplit) ? $boxsplit : [], 4, '0');
         // an AFM based font declares no line layout metric, so the line box is widened to
         // the FontBBox; the descriptor keeps the declared values

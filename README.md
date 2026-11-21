@@ -327,7 +327,28 @@ The fonts are written to `vendor/tecnickcom/tc-lib-pdf-font/target/fonts/`. Comp
 Notes:
 
 - `build_fonts.php` takes no options. To write the fonts to another directory, run `php util/bulk_convert.php --outpath=/your/path/` after `build_fonts.php` has installed the `util` dependencies at least once.
+- `bulk_convert.php --indir=/your/fonts/` reads the font families from another directory, with one sub directory per family, instead of the mirror package.
 - `bulk_convert.php` also attempts OTF conversion via FontForge (`fontforge -script otf2ttf.ff ...`) before import. Without FontForge, OTF files are reported and skipped. The mirrored font set contains no OTF files.
+
+### Font Licences
+
+Each family directory under `target/fonts/` contains:
+
+- `LICENSE`: the full terms of the family source, made of the source `NOTICE` file (when present) followed by the source `LICENSE` file;
+- `README`: the source location and an `SPDX-License-Identifier:` line.
+
+| Family | Source | SPDX expression | Font embedding exception |
+|---|---|---|---|
+| `core` | Adobe Core14 AFM files | `APAFML` | not applicable (metrics only) |
+| `pdfa` | tc-font-pdfa (derived from GNU FreeFont) | `GPL-3.0-or-later WITH Font-exception-2.0` | yes |
+| `freefont` | GNU FreeFont | `GPL-3.0-or-later WITH Font-exception-2.0` | yes |
+| `dejavu` | DejaVu Fonts | `Bitstream-Vera AND LicenseRef-Arev` | not applicable |
+| `unifont` | GNU Unifont | `GPL-2.0-or-later WITH Font-exception-2.0 OR OFL-1.1` | yes |
+| `cid0` | GNU Unifont | `GPL-2.0-or-later WITH Font-exception-2.0` | yes |
+
+`bulk_convert.php` does not convert a family when its `LICENSE` file is missing or empty, its `NOTICE` file is empty, or the terms lack the phrases expected for that family (for example the embedding exception). It reports the family, converts the remaining ones and exits with code `9`. A family without an entry in the table needs only a non-empty `LICENSE` file, and its `README` states `NOASSERTION`.
+
+The RPM and DEB font packages (`make rpm_fonts`, `make deb_fonts`) take their licence field from the `README` of each family, and the build stops when it is missing.
 
 ---
 

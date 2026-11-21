@@ -93,7 +93,7 @@ COMPOSER=$(PHP) -d "apc.enable_cli=0" $(COMPOSER_BINARY)
 PHPDOC=$(shell which phpDocumentor)
 
 # List of fonts to process
-FONTLIST=core pdfa cid0 freefont unifont dejavu noto
+FONTLIST=core pdfa cid0 freefont unifont dejavu
 
 # --- MAKE TARGETS ---
 
